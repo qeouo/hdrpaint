@@ -36,36 +36,41 @@ window.brushes=[];
 
 window.selected_layer = null;
 
-import {} from "./command/drawLine.js"
-import {} from "./command/changeLayerAttribute.js"
-import {} from "./command/changeModifierAttribute.js"
-import {} from "./command/clear.js"
-import {} from "./command/composite.js"
-import {} from "./command/createNewLayer.js"
-import {} from "./command/copylayer.js"
-import {} from "./command/createmodifier.js"
-import {} from "./command/deleteLayer.js"
-import {} from "./command/fill.js"
-import {} from "./command/joinLayer.js"
-import {} from "./command/loadImage.js"
-import {} from "./command/moveLayer.js"
-import {} from "./command/multiCommand.js"
-import {} from "./command/resizeCanvas.js"
-import {} from "./command/resizeLayer.js"
-import {} from "./command/translate.js"
+//コマンド
+import "./command/copy.js"
+import "./command/paste.js"
+import "./command/drawLine.js"
+import "./command/changeLayerAttribute.js"
+import "./command/changeModifierAttribute.js"
+import "./command/clear.js"
+import "./command/composite.js"
+import "./command/createNewLayer.js"
+import "./command/copylayer.js"
+import "./command/createmodifier.js"
+import "./command/deleteLayer.js"
+import "./command/fill.js"
+import "./command/joinLayer.js"
+import "./command/loadImage.js"
+import "./command/moveLayer.js"
+import "./command/multiCommand.js"
+import "./command/resizeCanvas.js"
+import "./command/resizeLayer.js"
+import "./command/translate.js"
 
-import {} from "./blendfuncs/normal.js";
-import {} from "./blendfuncs/mul.js";
-import {} from "./blendfuncs/add.js";
-import {} from "./blendfuncs/sub.js";
-import {} from "./blendfuncs/transmit.js";
+//合成function
+import "./blendfuncs/normal.js";
+import "./blendfuncs/mul.js";
+import "./blendfuncs/add.js";
+import "./blendfuncs/sub.js";
+import "./blendfuncs/transmit.js";
 
-import {} from "./modifier/grayscale.js";
-import {} from "./modifier/shift.js";
-import {} from "./modifier/blur.js";
-import {} from "./modifier/gradient.js";
-import {} from "./modifier/colormap.js";
-import {} from "./modifier/noise.js";
+//モデファイア
+import "./modifier/grayscale.js";
+import "./modifier/shift.js";
+import "./modifier/blur.js";
+import "./modifier/gradient.js";
+import "./modifier/colormap.js";
+import "./modifier/noise.js";
 
 window.Hdrpaint = Hdrpaint;
 window.Brush= Brush;
@@ -205,11 +210,11 @@ var onloadfunc=function(e){
 //		}
 
 		if(inputs["rectangle"].checked){
+			//矩形選択時
 			var sr = Hdrpaint.select_rectangle;
 			sr.x2 = Math.floor(x);
 			sr.y2 = Math.floor(y);
 
-			console.log(sr);
 			var rect =document.querySelector(".select_rectangle");
 			var doc = Hdrpaint.doc;
 			rect.style.left=(Math.min(sr.x,sr.x2) +  doc.canvas_pos[0])+"px";
@@ -360,13 +365,20 @@ var onloadfunc=function(e){
 
 
 		if(inputs["rectangle"].checked && (e.buttons &1)){
-			var sr= Hdrpaint.select_rectangle;
+			var sr= Hdrpaint._select_rectangle;
 			x = Math.floor(x);
 			y = Math.floor(y);
 			sr.x=x;
 			sr.y=y;
 			sr.x2=x;
 			sr.y2=y;
+
+			var rectangle= Hdrpaint.select_rectangle;
+			rectangle.x = Math.min(sr.x,sr.x2);
+			rectangle.y = Math.min(sr.y,sr.y2);
+			rectangle.w = Math.abs(sr.x-sr.x2);
+			rectangle.h = Math.abs(sr.y-sr.y2);
+			
 			var rect =document.querySelector(".select_rectangle");
 			rect.style.display="none"
 			return;
@@ -523,7 +535,32 @@ var onloadfunc=function(e){
 		case 82://R
 			Redraw.compositeAll();
 			break;
-		case 122:
+		case 99://c
+			if(event.ctrlKey){
+				//コピー
+				var data =Hdrpaint.getPosition();
+				var rectangle=JSON.parse(JSON.stringify(Hdrpaint.select_rectangle))
+				Hdrpaint.executeCommand("copy",{"src_layer_id":selected_layer.id,range:rectangle});
+			}
+			break;
+
+		case 118://v
+			if(event.ctrlKey){
+				//ペースト
+			//	var data =Hdrpaint.getPosition();
+			//	Hdrpaint.executeCommand("paste",{"position":data.position,"parent":data.parent_layer.id});
+			}
+			break;
+
+		case 120://x
+			if(event.ctrlKey){
+				//カット
+				var data =Hdrpaint.getPosition();
+				var rectangle=JSON.parse(JSON.stringify(Hdrpaint.select_rectangle))
+				Hdrpaint.executeCommand("copy",{"position":data.position,"parent":data.parent_layer.id,"src_layer_id":selected_layer.id,range:rectangle});
+			}
+			break;
+		case 122://z
 			if(event.ctrlKey){
 				if (event.shiftKey) {
 					//リドゥ
@@ -538,18 +575,12 @@ var onloadfunc=function(e){
 			break;
 		case 46://delete
 			if(selected_layer.type!==0){
+				//通常レイヤ以外は無視
 				break;
 			}
-			var sr = Hdrpaint.select_rectangle;
-			var rectangle =null;
-			if(sr.x !== sr.x2){
-				rectangle={};
-				rectangle.x = Math.min(sr.x,sr.x2);
-				rectangle.y = Math.min(sr.y,sr.y2);
-				rectangle.w = Math.abs(sr.x-sr.x2);
-				rectangle.h = Math.abs(sr.y-sr.y2);
-
-			}
+			var rectangle=JSON.parse(JSON.stringify(Hdrpaint.select_rectangle))
+			
+			//選択範囲をクリア
 			Hdrpaint.executeCommand("clear",{"layer_id":selected_layer.id,range:rectangle});
 			break;
 		case 119://w
@@ -707,20 +738,30 @@ var onloadfunc=function(e){
 	canvas_field = document.getElementById("canvas_field");
 	var canvas_area = document.getElementById("canvas_area");
 	canvas_area.addEventListener("paste", function(e){
-	var data =null;
-	for(var i=0;i<e.clipboardData.types.length;i++){
-		if(e.clipboardData.types[i] ==="Files"){
-			data = e.clipboardData.items[i];
-			break;
-		}
-	}
-	if(!data){
-		return true;
-	}
-	
-	var imageFile = data.getAsFile();
-	Hdrpaint.loadImageFile_(imageFile);
-});
+		//navigator.clipboard.write(data);
+		//if(Hdrpaint.floating_layer){
+
+		//	var data =Hdrpaint.getPosition();
+		//	Hdrpaint.executeCommand("paste",{"position":data.position,"parent":data.parent_layer.id});
+		//}else{
+		//
+		//
+			var data =null;
+
+			for(var i=0;i<navigator.clipboard.types.length;i++){
+				if(navigator.clipboard.types[i] ==="Files"){
+					data = e.clipboardData.items[i];
+					break;
+				}
+			}
+			if(!data){
+				return true;
+			}
+			
+			var imageFile = data.getAsFile();
+			Hdrpaint.loadImageFile_(imageFile);
+		//}
+	});
 	canvas_field.addEventListener( "pointerdown", function(e){
 		if(e.buttons&4){
 			oldpos[0]=e.pageX;
@@ -731,7 +772,6 @@ var onloadfunc=function(e){
 
 	canvas_area.addEventListener("copy", function(e){
 		const selection = document.getSelection();
-		var clip = event.clipboardData;
 
 		//var buffer = root_layer.img.createExr(3);
 		if(selected_layer.type!==0){
@@ -744,23 +784,32 @@ var onloadfunc=function(e){
 navigator.clipboard.write(data);
 },"image/png"
 		);
+		//var clip = event.clipboardData;
 		//var file = dataURIConverter(url);
 		//clip.setData('image/png', file);
 
 		event.preventDefault();
 	});
+
+
+function arrayToBase64(array){
+	return btoa(String.fromCharCode(...array));
+}
+function base64ToArray(base64){
+	var binary = atob(base64);
+	var len = binary.length;
+	var bytes = new Uint8Array(len);
+	for (var i = 0; i < len; i++)        {
+	  bytes[i] = binary.charCodeAt(i);
+	}
+	return bytes;
+}
 function dataURIConverter(dataURI) {
     // base64/URLEncodedデータを文字列としてバイナリデータに変換する
-    var byteString = atob(dataURI.split(',')[1]);
+    var buffer = base64ToArray(dataURI.split(',')[1]);
 
     // mimetypeを抜き出す
     var mimeType = dataURI.split(',')[0].split(':')[1].split(';')[0];
-
-    // バイナリデータを扱えるように、typed arrayに書き換えていく
-    var buffer = new Uint8Array(byteString.length);
-    for (var i = 0; i < byteString.length; i++) {
-        buffer[i] = byteString.charCodeAt(i);// charCodeAtで配列に
-    }
 
     // 第一引数は配列で渡し、Fileオブジェクトを返す。
     return new File([buffer], 'ファイル名', { type:mimeType } );
