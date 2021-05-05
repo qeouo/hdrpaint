@@ -5,6 +5,9 @@ import Layer from "../layer.js";
 import CommandBase from "./commandbase.js";
 
 class CreateNewLayer extends CommandBase{
+	constructor(){
+		super();
+	}
 	undo(){
 		Hdrpaint.removeLayer(this.undo_data.layer);
 		return;

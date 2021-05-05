@@ -14,6 +14,7 @@ class Hdrpaint {
 	static painted_mask=new Float32Array(1024*1024);
 	static _select_rectangle={x:0,y:0,x2:0,y2:0};
 	static select_rectangle={x:0,y:0,x2:0,y2:0};
+	static mode="";
 
 	static refreshActiveLayerParam(){
 		//アクティブレイヤパラメータ更新
@@ -87,6 +88,17 @@ var inputs = Hdrpaint.inputs;
 		}
 		
 	}
+	static refreshLayerRectangle(){
+		if(selected_layer){
+			var rect =document.querySelector(".layer_rectangle");
+			var doc = Hdrpaint.doc;
+			rect.style.left=(selected_layer.position[0]  +  doc.canvas_pos[0])+"px";
+			rect.style.top=(selected_layer.position[1] + doc.canvas_pos[1]) +"px";
+			rect.style.width=selected_layer.size[0] + "px";
+			rect.style.height=selected_layer.size[1]+ "px";
+			rect.style.display="inline-block"
+		}
+	}
 
 	static select(target_layer){
 		//アクティブレイヤ変更
@@ -106,6 +118,18 @@ var inputs = Hdrpaint.inputs;
 		if(inputs["selected_layer_only"].checked){
 			refreshPreview(1);
 		}
+
+		//領域選択されていない場合はレイヤー全体を選択
+		var sr= Hdrpaint._select_rectangle;
+		if(!sr.enable){
+			var rectangle= Hdrpaint.select_rectangle;
+			rectangle.x = 0;
+			rectangle.y = 0;
+			rectangle.w = selected_layer.size[0];
+			rectangle.h = selected_layer.size[1];
+		}
+
+		Hdrpaint.refreshLayerRectangle();
 
 	}
 	static setLayerIdCount(id){

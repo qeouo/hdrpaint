@@ -246,3 +246,12 @@ width:80px;
 	position:absolute;
 	pointer-events:none;
 }
+.layer_rectangle{
+	border:1px solid black;
+	border-image:url('area.png') repeat;
+	border-image-slice:1;
+	border-image-width:1px;
+	display:none;
+	position:absolute;
+	pointer-events:none;
+}

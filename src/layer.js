@@ -517,6 +517,11 @@ export default class Layer{
 		var layer = this;
 		var layers_container = null;
 
+		if(selected_layer ===layer){
+			Hdrpaint.refreshLayerRectangle();
+		}
+		
+
 		if(layer === root_layer){
 			layers_container = document.getElementById("layers_container");
 		}else{
@@ -610,19 +615,19 @@ export default class Layer{
 
 		var can = img.toCanvas();
 		var ctx = Img.ctx;
-		var xr = img.width/64;
-		var yr = img.height/64;
-		var r=xr;
-		if(xr<yr){
-			r = yr;
+		var r=img.width;
+		if(img.width<img.height){
+			r = img.height;
 			layer_img.style.width="auto";
 			layer_img.style.height="100%";
 		}else{
 			layer_img.style.width="100%";
 			layer_img.style.height="auto";
 		}
+		r/=64;
 		var newx = img.width/r|0;
 		var newy = img.height/r|0;
+
 		thumbnail_img.clear(0,0,newx,newy);
 		var data = img.data;
 		var dst_data = thumbnail_img.data;
@@ -631,6 +636,8 @@ export default class Layer{
 		var ev = Number(inputs["ev"].value);
 		var ev2  = Math.pow(2,-ev)*255;
 		var rr255 = 255/(r*r);
+
+
 		for(var yi=0;yi<newy;yi++){
 			for(var xi=0;xi<newx;xi++){
 				Vec4.set(sum,0,0,0,0);
@@ -654,13 +661,15 @@ export default class Layer{
 		}
 		thumbnail_img.width=newx;
 		thumbnail_img.height=newy;
-		thumbnail_img.width=64;
-		thumbnail_img.height=64;
+//		thumbnail_img.width=64;
+//		thumbnail_img.height=64;
 
 		thumbnail_img.toBlob((blob)=>{
 			URL.revokeObjectURL(layer_img.src);
 			layer_img.src = URL.createObjectURL(blob);
 		});
+		thumbnail_img.width=64;
+		thumbnail_img.height=64;
 
 	}
 

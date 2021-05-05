@@ -205,22 +205,33 @@ var onloadfunc=function(e){
 		if(!(e.buttons&1)){
 			return;
 		}
-//		if(!pen_log){
-//			return;
-//		}
 
 		if(inputs["rectangle"].checked){
 			//矩形選択時
-			var sr = Hdrpaint.select_rectangle;
+			var rectangle = Hdrpaint.select_rectangle;
+			var sr = Hdrpaint._select_rectangle;
 			sr.x2 = Math.floor(x);
 			sr.y2 = Math.floor(y);
+			if(Hdrpaint.mode==="areamove"){
+				rectangle.x += (-sr.x +sr.x2);
+				rectangle.y += (-sr.y +sr.y2);
+				sr.x=sr.x2;
+				sr.y=sr.y2;
+			}else{
+				sr.enable=true;
+
+				rectangle.x = Math.min(sr.x,sr.x2);
+				rectangle.y = Math.min(sr.y,sr.y2);
+				rectangle.w = Math.abs(sr.x-sr.x2);
+				rectangle.h = Math.abs(sr.y-sr.y2);
+			}
 
 			var rect =document.querySelector(".select_rectangle");
 			var doc = Hdrpaint.doc;
-			rect.style.left=(Math.min(sr.x,sr.x2) +  doc.canvas_pos[0])+"px";
-			rect.style.top=(Math.min(sr.y,sr.y2) + doc.canvas_pos[1]) +"px";
-			rect.style.width=Math.abs(sr.x2-sr.x) + "px";
-			rect.style.height=Math.abs(sr.y2-sr.y)+ "px";
+			rect.style.left=(rectangle.x +  doc.canvas_pos[0])+"px";
+			rect.style.top=(rectangle.y + doc.canvas_pos[1]) +"px";
+			rect.style.width=rectangle.w + "px";
+			rect.style.height=rectangle.h+ "px";
 			rect.style.display="inline-block"
 
 
@@ -293,8 +304,6 @@ var onloadfunc=function(e){
 				
 
 				//一旦元の座標に戻してから再度移動させる
-				//Command[pen_log.command](pen_log,true);
-
 				pen_log.obj.param.x=x-oldx;
 				pen_log.obj.param.y=y-oldy;
 				pen_log.obj.func();
@@ -332,7 +341,13 @@ var onloadfunc=function(e){
 
 		Layer.enableRefreshThumbnail = true;
 	});
-	document.querySelector("#canvas_field").addEventListener("pointermove",function(e){
+	
+	var drag_start=new Vec2();
+
+
+
+	var canvas_field = document.querySelector("#canvas_field");
+	canvas_field.addEventListener("pointermove",function(e){
 		getPos(e);
 		Redraw.refreshPreviewStatus(e);
 		if(e.buttons){
@@ -344,12 +359,7 @@ var onloadfunc=function(e){
 	preview.addEventListener("contextmenu",function(e){
 		event.preventDefault();
 	},false);
-	
-	var drag_start=new Vec2();
-
-
-
-	window.addEventListener("pointerdown",function(e){
+	canvas_field.addEventListener("pointerdown",function(e){
 		getPos(e);
 		var x =Hdrpaint.cursor_pos[0];
 		var y = Hdrpaint.cursor_pos[1];
@@ -364,20 +374,35 @@ var onloadfunc=function(e){
 
 
 
+		Hdrpaint.mode="";
 		if(inputs["rectangle"].checked && (e.buttons &1)){
+			var rectangle= Hdrpaint.select_rectangle;
 			var sr= Hdrpaint._select_rectangle;
+
 			x = Math.floor(x);
 			y = Math.floor(y);
 			sr.x=x;
 			sr.y=y;
 			sr.x2=x;
 			sr.y2=y;
+			if(sr.enable){
+				if( x >= rectangle.x 
+					&& x < rectangle.x + rectangle.w
+					&& y >= rectangle.y
+					&& y < rectangle.y + rectangle.h){
+					//選択領域内で押下された場合は移動モードにする
+					Hdrpaint.mode="areamove";
+					return;
+				}
+			}
+			Hdrpaint.mode="areaselect";
+		
+			sr.enable=false;
 
-			var rectangle= Hdrpaint.select_rectangle;
-			rectangle.x = Math.min(sr.x,sr.x2);
-			rectangle.y = Math.min(sr.y,sr.y2);
-			rectangle.w = Math.abs(sr.x-sr.x2);
-			rectangle.h = Math.abs(sr.y-sr.y2);
+			rectangle.x = 0;
+			rectangle.y = 0;
+			rectangle.w = selected_layer.size[0];
+			rectangle.h = selected_layer.size[1];
 			
 			var rect =document.querySelector(".select_rectangle");
 			rect.style.display="none"
@@ -487,7 +512,7 @@ var onloadfunc=function(e){
 	});
 
 	var old_tool=null;
-	document.addEventListener('keydown', function(event){
+	document.addEventListener('keydown', async function(event){
 
 		if(event.ctrlKey){
 			ctrlkey = true;
@@ -538,27 +563,66 @@ var onloadfunc=function(e){
 		case 99://c
 			if(event.ctrlKey){
 				//コピー
-				var data =Hdrpaint.getPosition();
-				var rectangle=JSON.parse(JSON.stringify(Hdrpaint.select_rectangle))
-				Hdrpaint.executeCommand("copy",{"src_layer_id":selected_layer.id,range:rectangle});
+				var range=JSON.parse(JSON.stringify(Hdrpaint.select_rectangle))
+				//var data =Hdrpaint.getPosition();
+				//Hdrpaint.executeCommand("copy",{"src_layer_id":selected_layer.id,range:rectangle});
+				var src_layer = selected_layer;
+				var img = new Img(range.w,range.h);
+				Img.copy(img,0,0,src_layer.img,range.x,range.y,range.w,range.h);
+
+				Hdrpaint.clipboard = img;
 			}
 			break;
 
+		case 118-32://V
+			//クリップボードからペースト
+			 navigator.clipboard.read().then(async data => {
+				  for (let i=0; i<data.length; i++) {
+					if (data[i].types == "image/png") {
+					  const blob = await data[i].getType("image/png");
+					  var file = new File([blob],"paste.png",{type:"image/png"});
+			//var imageFile = data.getAsFile();
+						Hdrpaint.loadImageFile_(file);
+					  break;
+					}
+				  }
+				});
+			
+			//var imageFile = data.getAsFile();
+			//Hdrpaint.loadImageFile_(imageFile);
+			event.preventDefault();
+			break;
 		case 118://v
 			if(event.ctrlKey){
 				//ペースト
-			//	var data =Hdrpaint.getPosition();
-			//	Hdrpaint.executeCommand("paste",{"position":data.position,"parent":data.parent_layer.id});
+				var data =Hdrpaint.getPosition();
+				Hdrpaint.executeCommand("paste",{"position":data.position,"parent":data.parent_layer.id});
 			}
 			break;
 
 		case 120://x
 			if(event.ctrlKey){
 				//カット
+				var src_layer = selected_layer;
+				var range=JSON.parse(JSON.stringify(Hdrpaint.select_rectangle))
+				var img = new Img(range.w,range.h);
+				Img.copy(img,0,0,src_layer.img,range.x,range.y,range.w,range.h);
+
+				Hdrpaint.clipboard = img;
 				var data =Hdrpaint.getPosition();
 				var rectangle=JSON.parse(JSON.stringify(Hdrpaint.select_rectangle))
-				Hdrpaint.executeCommand("copy",{"position":data.position,"parent":data.parent_layer.id,"src_layer_id":selected_layer.id,range:rectangle});
+				//Hdrpaint.executeCommand("copy",{"position":data.position,"parent":data.parent_layer.id,"src_layer_id":selected_layer.id,range:rectangle});
+
+				//選択範囲をクリア
+				Hdrpaint.executeCommand("clear",{"layer_id":selected_layer.id,"range":range});
 			}
+			break;
+		case 122-32://Z
+			if(event.ctrlKey){
+				//リドゥ
+				Hdrpaint.redo();
+			}
+			event.preventDefault();
 			break;
 		case 122://z
 			if(event.ctrlKey){
@@ -737,31 +801,31 @@ var onloadfunc=function(e){
 	var oldpos=new Vec2();
 	canvas_field = document.getElementById("canvas_field");
 	var canvas_area = document.getElementById("canvas_area");
-	canvas_area.addEventListener("paste", function(e){
-		//navigator.clipboard.write(data);
-		//if(Hdrpaint.floating_layer){
+	//canvas_area.addEventListener("paste", function(e){
+	//	//navigator.clipboard.write(data);
+	//	//if(Hdrpaint.floating_layer){
 
-		//	var data =Hdrpaint.getPosition();
-		//	Hdrpaint.executeCommand("paste",{"position":data.position,"parent":data.parent_layer.id});
-		//}else{
-		//
-		//
-			var data =null;
+	//	//	var data =Hdrpaint.getPosition();
+	//	//	Hdrpaint.executeCommand("paste",{"position":data.position,"parent":data.parent_layer.id});
+	//	//}else{
+	//	//
+	//	//
+	//		var data =null;
 
-			for(var i=0;i<navigator.clipboard.types.length;i++){
-				if(navigator.clipboard.types[i] ==="Files"){
-					data = e.clipboardData.items[i];
-					break;
-				}
-			}
-			if(!data){
-				return true;
-			}
-			
-			var imageFile = data.getAsFile();
-			Hdrpaint.loadImageFile_(imageFile);
-		//}
-	});
+	//		for(var i=0;i<navigator.clipboard.types.length;i++){
+	//			if(navigator.clipboard.types[i] ==="Files"){
+	//				data = e.clipboardData.items[i];
+	//				break;
+	//			}
+	//		}
+	//		if(!data){
+	//			return true;
+	//		}
+	//		
+	//		var imageFile = data.getAsFile();
+	//		Hdrpaint.loadImageFile_(imageFile);
+	//	//}
+	//});
 	canvas_field.addEventListener( "pointerdown", function(e){
 		if(e.buttons&4){
 			oldpos[0]=e.pageX;
@@ -771,22 +835,15 @@ var onloadfunc=function(e){
 	});
 
 	canvas_area.addEventListener("copy", function(e){
+		//OSのクリップボードにSDR結合画像をコピー
 		const selection = document.getSelection();
 
-		//var buffer = root_layer.img.createExr(3);
-		if(selected_layer.type!==0){
-			return true;
-		}
-		var layer = selected_layer;
-		var url = layer.img.toBlob((blob)=>{
-  let data = [new ClipboardItem({ "image/png": blob})];
+		var url = root_layer.img.toBlob((blob)=>{
+			let data = [new ClipboardItem({ "image/png": blob})];
 
-navigator.clipboard.write(data);
-},"image/png"
+			navigator.clipboard.write(data);
+			},"image/png"
 		);
-		//var clip = event.clipboardData;
-		//var file = dataURIConverter(url);
-		//clip.setData('image/png', file);
 
 		event.preventDefault();
 	});
@@ -799,7 +856,7 @@ function base64ToArray(base64){
 	var binary = atob(base64);
 	var len = binary.length;
 	var bytes = new Uint8Array(len);
-	for (var i = 0; i < len; i++)        {
+	for (var i = 0; i < len; i++) {
 	  bytes[i] = binary.charCodeAt(i);
 	}
 	return bytes;
@@ -847,6 +904,8 @@ function dataURIConverter(dataURI) {
 
 			oldpos[0]=e.pageX;
 			oldpos[1]=e.pageY;
+
+			Hdrpaint.refreshLayerRectangle();
 			
 		}
 	});
