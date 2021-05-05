@@ -577,14 +577,14 @@ var onloadfunc=function(e){
 		case 118-32://V
 			//クリップボードからペースト
 			 navigator.clipboard.read().then(async data => {
-				  for (let i=0; i<data.length; i++) {
-					if (data[i].types == "image/png") {
-					  const blob = await data[i].getType("image/png");
+					if(data.length === 0)return;
+				  for (let i=0; i<data[0].types.length; i++) {
+					  const blob = await data[0].getType("image/png");
+					  if(!blob)break;
 					  var file = new File([blob],"paste.png",{type:"image/png"});
 			//var imageFile = data.getAsFile();
 						Hdrpaint.loadImageFile_(file);
 					  break;
-					}
 				  }
 				});
 			
