@@ -16,6 +16,7 @@ import Util from "./lib/util.js";
 import ColorPickerHDR from "./lib/colorpickerhdr.js";
 import ColorSelector from "./lib/colorselector.js";
 
+
 window.root_layer=null;
 window.inputs=[];
 var shortcuts=[];
@@ -360,6 +361,14 @@ var onloadfunc=function(e){
 		event.preventDefault();
 	},false);
 	canvas_field.addEventListener("pointerdown",function(e){
+
+		if(e.buttons&4){
+			//キャンバス移動
+			oldpos[0]=e.pageX;
+			oldpos[1]=e.pageY;
+			e.preventDefault();
+		}
+
 		getPos(e);
 		var x =Hdrpaint.cursor_pos[0];
 		var y = Hdrpaint.cursor_pos[1];
@@ -826,20 +835,12 @@ var onloadfunc=function(e){
 	//		Hdrpaint.loadImageFile_(imageFile);
 	//	//}
 	//});
-	canvas_field.addEventListener( "pointerdown", function(e){
-		if(e.buttons&4){
-			oldpos[0]=e.pageX;
-			oldpos[1]=e.pageY;
-			e.preventDefault();
-		}
-	});
-
 	canvas_area.addEventListener("copy", function(e){
 		//OSのクリップボードにSDR結合画像をコピー
 		const selection = document.getSelection();
 
 		var url = root_layer.img.toBlob((blob)=>{
-			let data = [new ClipboardItem({ "image/png": blob})];
+			let data = [new ClipboardItem({ [blob.type]: blob})];
 
 			navigator.clipboard.write(data);
 			},"image/png"
@@ -847,6 +848,50 @@ var onloadfunc=function(e){
 
 		event.preventDefault();
 	});
+
+//レイヤパラメータコントロール変更時反映
+document.querySelector("#layer_param").addEventListener("change"
+	,function(e){
+
+	var input = e.target;
+	if(!selected_layer){ return; }
+	if(!input){return;}
+
+	var layer = selected_layer;
+	var member = e.target.id.replace("layer_","");
+	if(member===""){
+		member = e.target.title;
+	}
+
+	if(input.id==="layer_width"  || input.id==="layer_height"){
+		var layer = selected_layer;
+		var width = parseInt(inputs["layer_width"].value);
+		var height= parseInt(inputs["layer_height"].value);
+		Hdrpaint.executeCommand("resizeLayer",{"layer_id":layer.id,"width":width,"height":height});
+		return;
+	}
+	if(input.id==="layer_x"  || input.id==="layer_y"){
+		var layer = selected_layer;
+		var x= parseInt(inputs["layer_x"].value);
+		var y= parseInt(inputs["layer_y"].value);
+		x-=layer.position[0];
+		y-=layer.position[1];
+		Hdrpaint.executeCommand("translateLayer",{"layer_id":layer.id,"x":x,"y":y});
+		return;
+	}
+	if(e.target.getAttribute("type")==="checkbox"){
+		Hdrpaint.executeCommand("changeLayerAttribute",{"layer_id":layer.id,"name":member,"value":e.target.checked});
+	}else if(e.target.getAttribute("type")==="radio"){
+		member = e.target.name;
+		Hdrpaint.executeCommand("changeLayerAttribute",{"layer_id":layer.id,"name":member,"value":e.target.value});
+
+	  }else{
+		Hdrpaint.executeCommand("changeLayerAttribute",{"layer_id":layer.id,"name":member,"value":e.target.value});
+	}
+	
+	
+	
+});
 
 
 function arrayToBase64(array){
@@ -872,14 +917,7 @@ function dataURIConverter(dataURI) {
     return new File([buffer], 'ファイル名', { type:mimeType } );
 }
 
-	canvas_field.addEventListener( "pointerdown", function(e){
-		if(e.buttons&4){
-			oldpos[0]=e.pageX;
-			oldpos[1]=e.pageY;
-			e.preventDefault();
-		}
-	});
-	document.getElementById("canvas_field").addEventListener( "pointermove", function(e){
+	canvas_field.addEventListener( "pointermove", function(e){
 		if(e.buttons&4){
 			//中ボタンドラッグでキャンバス移動
 			//c.scrollLeft-=e.pageX-oldpos[0];

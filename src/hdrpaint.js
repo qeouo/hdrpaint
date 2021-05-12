@@ -5,18 +5,20 @@ import Layer from "./layer.js";
 import CommandLog from "./commandlog.js";
 import {Vec2,Vec3,Vec4} from "./lib/vector.js";
 
-let layer_id_count=0;
 
-class Hdrpaint {
-	static color=new Vec4();
-	static Command = {};
-	static commandObjs={};
-	static painted_mask=new Float32Array(1024*1024);
-	static _select_rectangle={x:0,y:0,x2:0,y2:0};
-	static select_rectangle={x:0,y:0,x2:0,y2:0};
-	static mode="";
+class Hdrpaint{
+	constructor(){
+		this.color=new Vec4();
+		this.Command = {};
+		this.commandObjs={};
+		this.painted_mask=new Float32Array(1024*1024);
+		this._select_rectangle={x:0,y:0,x2:0,y2:0};
+		this.select_rectangle={x:0,y:0,x2:0,y2:0};
+		this.mode="";
+		this.layer_id_count=0;
+	}
 
-	static refreshActiveLayerParam(){
+	refreshActiveLayerParam(){
 		//アクティブレイヤパラメータ更新
 		var layer = selected_layer;
 		if(!layer){
@@ -55,7 +57,7 @@ class Hdrpaint {
 				}
 			}
 		}
-var inputs = Hdrpaint.inputs;
+	var inputs = this.inputs;
 		if(selected_layer.type ===1){
 			inputs["join_layer"].value="子を結合";
 		}else{
@@ -88,10 +90,10 @@ var inputs = Hdrpaint.inputs;
 		}
 		
 	}
-	static refreshLayerRectangle(){
+	refreshLayerRectangle(){
 		if(selected_layer){
 			var rect =document.querySelector(".layer_rectangle");
-			var doc = Hdrpaint.doc;
+			var doc = this.doc;
 			rect.style.left=(selected_layer.position[0]  +  doc.canvas_pos[0])+"px";
 			rect.style.top=(selected_layer.position[1] + doc.canvas_pos[1]) +"px";
 			rect.style.width=selected_layer.size[0] + "px";
@@ -100,7 +102,7 @@ var inputs = Hdrpaint.inputs;
 		}
 	}
 
-	static select(target_layer){
+	select(target_layer){
 		//アクティブレイヤ変更
 		
 		selected_layer=target_layer;
@@ -112,7 +114,7 @@ var inputs = Hdrpaint.inputs;
 				layer.dom.classList.add("active");
 			}
 		});
-		Hdrpaint.refreshActiveLayerParam();
+		this.refreshActiveLayerParam();
 
 
 		if(inputs["selected_layer_only"].checked){
@@ -120,23 +122,23 @@ var inputs = Hdrpaint.inputs;
 		}
 
 		//領域選択されていない場合はレイヤー全体を選択
-		var sr= Hdrpaint._select_rectangle;
+		var sr= this._select_rectangle;
 		if(!sr.enable){
-			var rectangle= Hdrpaint.select_rectangle;
+			var rectangle= this.select_rectangle;
 			rectangle.x = 0;
 			rectangle.y = 0;
 			rectangle.w = selected_layer.size[0];
 			rectangle.h = selected_layer.size[1];
 		}
 
-		Hdrpaint.refreshLayerRectangle();
+		this.refreshLayerRectangle();
 
 	}
-	static setLayerIdCount(id){
-		layer_id_count=id;
+	setLayerIdCount(id){
+		this.layer_id_count=id;
 	}
 
-	static createLayer(img,composite_flg){
+	createLayer(img,composite_flg){
 		var layer = new Layer();
 
 		if(composite_flg){
@@ -156,8 +158,8 @@ var inputs = Hdrpaint.inputs;
 			Vec2.set(layer.size,img.width,img.height);
 		}
 
-		layer.id=layer_id_count;
-		layer_id_count++;
+		layer.id=this.layer_id_count;
+		this.layer_id_count++;
 		layer.name ="layer"+("0000"+layer.id).slice(-4);
 
 		layer.refreshDiv();
@@ -166,9 +168,9 @@ var inputs = Hdrpaint.inputs;
 		return layer;
 
 	}
-	static createModifier(modifier_name){
+	createModifier(modifier_name){
 	//	var layer = new Layer();
-		var layer = new Hdrpaint.modifier[modifier_name]();
+		var layer = new this.modifier[modifier_name]();
 
 		layer.type=2;
 
@@ -179,8 +181,8 @@ var inputs = Hdrpaint.inputs;
 
 		layer.img=null;
 
-		layer.id=layer_id_count;
-		layer_id_count++;
+		layer.id=this.layer_id_count;
+		this.layer_id_count++;
 		layer.modifier=modifier_name;
 		layer.name =modifier_name+("0000"+layer.id).slice(-4);
 
@@ -189,80 +191,81 @@ var inputs = Hdrpaint.inputs;
 		return layer;
 
 	}
-static createNewCompositeLayer(e){
-	//新規コンポジットレイヤを作成
-	var data = Hdrpaint.getPosition();
-	var width= preview.width;
-	var height= preview.height;
-	
-	Hdrpaint.executeCommand("createNewCompositeLayer",{"parent":data.parent_layer.id,"position":data.position,"width":width,"height":height,"composite_flg":1});
 
-}
+	createNewCompositeLayer(e){
+		//新規コンポジットレイヤを作成
+		var data = this.getPosition();
+		var width= preview.width;
+		var height= preview.height;
+		
+		this.executeCommand("createNewCompositeLayer",{"parent":data.parent_layer.id,"position":data.position,"width":width,"height":height,"composite_flg":1});
 
-static createNewModifier(e){
-	if(e.target.value ===""){return;}
-	var modifier = e.target.value;
-	//新規モディファイア
-	var data = Hdrpaint.getPosition();
-	
-	Hdrpaint.executeCommand("createmodifier",{"modifier":modifier,"parent_layer_id":data.parent_layer.id,"position":data.position
-		,"width":data.parent_layer.size[0],"height":data.parent_layer.size[1]});
-}
-
-static copylayer(e){
-	//レイヤコピー
-
-	var data =Hdrpaint.getPosition();
-	
-	Hdrpaint.executeCommand("copylayer",{"position":data.position,"parent":data.parent_layer.id,"src_layer_id":selected_layer.id});
-}
-
-static redo(){
-	//リドゥ
-
-	var option_index = inputs["history"].selectedIndex;
-	var options = inputs["history"].options;
-	if(option_index === options.length-1){
-		return;
-	}	
-	option_index++;
-	var option = options[option_index];
-	inputs["history"].selectedIndex = option_index;
-
-	CommandLog.moveLog(parseInt(option.value));
-
-}
-
-static undo(){
-	//アンドゥ
-
-	var option_index = inputs["history"].selectedIndex;
-	var options = inputs["history"].options;
-	if(option_index === 0){
-		return;
-	}	
-	var option = options[option_index-1];
-	if(option.disabled){
-		return;
 	}
-	option_index--;
-	inputs["history"].selectedIndex = option_index;
 
-	CommandLog.moveLog(parseInt(option.value));
+	createNewModifier(e){
+		if(e.target.value ===""){return;}
+		var modifier = e.target.value;
+		//新規モディファイア
+		var data = this.getPosition();
+		
+		this.executeCommand("createmodifier",{"modifier":modifier,"parent_layer_id":data.parent_layer.id,"position":data.position
+			,"width":data.parent_layer.size[0],"height":data.parent_layer.size[1]});
+	}
 
-}
+	copylayer(e){
+		//レイヤコピー
 
-static createNewLayer(e){
-	//新規レイヤを作成
+		var data =this.getPosition();
+		
+		this.executeCommand("copylayer",{"position":data.position,"parent":data.parent_layer.id,"src_layer_id":selected_layer.id});
+	}
 
-	var data = Hdrpaint.getPosition();
+	redo(){
+		//リドゥ
 
-	var width= data.parent_layer.size[0];
-	var height= data.parent_layer.size[1];
-	
-	Hdrpaint.executeCommand("createNewLayer",{"position":data.position,"parent":data.parent_layer.id,"width":width,"height":height});
-}
-	static getPosition(){
+		var option_index = inputs["history"].selectedIndex;
+		var options = inputs["history"].options;
+		if(option_index === options.length-1){
+			return;
+		}	
+		option_index++;
+		var option = options[option_index];
+		inputs["history"].selectedIndex = option_index;
+
+		CommandLog.moveLog(parseInt(option.value));
+
+	}
+
+	undo(){
+		//アンドゥ
+
+		var option_index = inputs["history"].selectedIndex;
+		var options = inputs["history"].options;
+		if(option_index === 0){
+			return;
+		}	
+		var option = options[option_index-1];
+		if(option.disabled){
+			return;
+		}
+		option_index--;
+		inputs["history"].selectedIndex = option_index;
+
+		CommandLog.moveLog(parseInt(option.value));
+
+	}
+
+	createNewLayer(e){
+		//新規レイヤを作成
+
+		var data = this.getPosition();
+
+		var width= data.parent_layer.size[0];
+		var height= data.parent_layer.size[1];
+		
+		this.executeCommand("createNewLayer",{"position":data.position,"parent":data.parent_layer.id,"width":width,"height":height});
+	}
+	getPosition(){
 		var data={};
 		if(!selected_layer){
 			data.parent_layer_id = root_layer.id;
@@ -282,10 +285,10 @@ static createNewLayer(e){
 		return data;
 	}
 
-	static loadImageFile_(file){
-		var data = Hdrpaint.getPosition();
+	loadImageFile_(file){
+		var data = this.getPosition();
 		var fu =function(img){
-			var log =Hdrpaint.executeCommand("loadImage",{"img":img,"file":file.name
+			var log =this.executeCommand("loadImage",{"img":img,"file":file.name
 				,"parent_layer_id":data.parent_layer_id,"position":data.position});
 		}
 	 	if(/.*exr$/.test(file.name)){
@@ -295,7 +298,7 @@ static createNewLayer(e){
 	 	}
 	}
 
-	static createDif(layer,left,top,width,height){
+	createDif(layer,left,top,width,height){
 		//更新領域の古い情報を保存
 		var img = new Img(width,height);
 		Img.copy(img,0,0,layer.img,left,top,width,height);
@@ -306,7 +309,7 @@ static createNewLayer(e){
 		return dif;
 	}
 
-	static removeLayer(layer){
+	removeLayer(layer){
 		var parent_layer = layer.parent;
 		var layers = parent_layer.children;
 		var idx = layers.indexOf(layer);
@@ -325,7 +328,7 @@ static createNewLayer(e){
 		parent_layer.bubbleComposite();
 	}
 
-	static onlyExecute= function(command,param){
+	onlyExecute= function(command,param){
 		if(param.layer_id && command !=="changeLayerAttribute"){
 			var layer = Layer.findById(param.layer_id);
 			if(layer){
@@ -340,7 +343,7 @@ static createNewLayer(e){
 		log.obj.param = param;
 		log.obj.func();
 	}
-	static executeCommand(command,param,flg){
+	executeCommand(command,param,flg){
 
 		if(param.layer_id && command !=="changeLayerAttribute" && command!=="moveLayer"){
 			var layer = Layer.findById(param.layer_id);
@@ -364,9 +367,9 @@ static createNewLayer(e){
 	}
 
 //ブレンドファンクション
-	static blendfuncs={};
+	blendfuncs={};
 
-	static blendfuncsname= [ "normal"
+	blendfuncsname= [ "normal"
 		,"mul"
 		,"add"
 		,"sub"
@@ -375,11 +378,7 @@ static createNewLayer(e){
 
 
 
-	static init(){
-	}
-
-
-	static addFilter(id,name){
+	addFilter(id,name){
 
 		var a= document.createElement("a");
 		a.id=id;
@@ -389,7 +388,7 @@ static createNewLayer(e){
 		area.appendChild( a);
 		
 	}
-	static addDialog= function(id,html){
+	addDialog= function(id,html){
 		var div= document.createElement("div");
 		div.id=id;
 		div.style.display="none";
@@ -400,11 +399,11 @@ static createNewLayer(e){
 		var dialog_parent= document.querySelector(".dialog_parent");
 		dialog_parent.appendChild(div);
 	}
-	static showDialog(id){
+	showDialog(id){
 		document.getElementById(id).style.display="inline";
 		document.querySelector(".dialog_parent").style.display="flex";
 	}
-	static closeDialog(){
+	closeDialog(){
 		var parent= document.querySelector(".dialog_parent")
 		parent.style.display="none";
 		for(var i=0;i<parent.children.length;i++){
@@ -414,8 +413,8 @@ static createNewLayer(e){
 
 
 
-	static modifier={};
-	static registModifier = (mod,name,html)=>{
+	modifier={};
+	registModifier = (mod,name,html)=>{
 		mod.prototype.typename=name;
 
 		this.modifier[name] = mod;
@@ -439,73 +438,16 @@ static createNewLayer(e){
 	}
 
 
-static undo(){
-	//アンドゥ
-
-	var option_index = inputs["history"].selectedIndex;
-	var options = inputs["history"].options;
-	if(option_index === 0){
-		return;
-	}	
-	var option = options[option_index-1];
-	if(option.disabled){
-		return;
+	clearSelectArea{
+		//選択解除
+		this.selected_area_enable= false;
+		
 	}
-	option_index--;
-	inputs["history"].selectedIndex = option_index;
-
-	CommandLog.moveLog(parseInt(option.value));
 
 }
+const hdrpaint = new Hdrpaint();
+export default hdrpaint;
 
 
-}
-Hdrpaint.init();
 
-
-	//レイヤパラメータコントロール変更時反映
-	document.querySelector("#layer_param").addEventListener("change"
-		,function(e){
-
-		var input = e.target;
-		if(!selected_layer){ return; }
-		if(!input){return;}
-
-		var layer = selected_layer;
-		var member = e.target.id.replace("layer_","");
-		if(member===""){
-			member = e.target.title;
-		}
-
-		if(input.id==="layer_width"  || input.id==="layer_height"){
-			var layer = selected_layer;
-			var width = parseInt(inputs["layer_width"].value);
-			var height= parseInt(inputs["layer_height"].value);
-			Hdrpaint.executeCommand("resizeLayer",{"layer_id":layer.id,"width":width,"height":height});
-			return;
-		}
-		if(input.id==="layer_x"  || input.id==="layer_y"){
-			var layer = selected_layer;
-			var x= parseInt(inputs["layer_x"].value);
-			var y= parseInt(inputs["layer_y"].value);
-			x-=layer.position[0];
-			y-=layer.position[1];
-			Hdrpaint.executeCommand("translateLayer",{"layer_id":layer.id,"x":x,"y":y});
-			return;
-		}
-		if(e.target.getAttribute("type")==="checkbox"){
-			Hdrpaint.executeCommand("changeLayerAttribute",{"layer_id":layer.id,"name":member,"value":e.target.checked});
-		}else if(e.target.getAttribute("type")==="radio"){
-			member = e.target.name;
-			Hdrpaint.executeCommand("changeLayerAttribute",{"layer_id":layer.id,"name":member,"value":e.target.value});
-
-		  }else{
-			Hdrpaint.executeCommand("changeLayerAttribute",{"layer_id":layer.id,"name":member,"value":e.target.value});
-		}
-		
-		
-		
-	});
-
-export default Hdrpaint;
 
