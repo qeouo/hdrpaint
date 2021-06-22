@@ -438,7 +438,7 @@ class Hdrpaint{
 	}
 
 
-	clearSelectArea{
+	clearSelectArea = ()=>{
 		//選択解除
 		this.selected_area_enable= false;
 		
