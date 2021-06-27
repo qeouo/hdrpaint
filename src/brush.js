@@ -9,14 +9,12 @@ import Layer from "./layer.js";
 let refresh_flg=false;
 let pen_preview_img;
 let pen_preview_command; //ブラシの描画プレビュー作成用のコマンドオブジェクト
-let brush_inputs=[];
 let brush_id_count=0;
 	var getBrushFromDiv=function(div){
 		var result_brush = null;
 		return Hdrpaint.brushes.find(function(a){
 			return (a.dom===div);});
 	}
-	let refreshpen_flg=true;
 
 var brushselect=function(e){
 //ブラシー一覧クリック時、クリックされたものをアクティブ化する
@@ -71,7 +69,7 @@ export default class Brush{
 		this.eraser=0;
 		this.weight_pressure_effect=0;
 		this.alpha_pressure_effect=0;
-		this.stroke_correction=0;
+		this.stroke_correction=1;
 		this.stroke_interpolation=1;
 		this.shortcut='';
 
@@ -96,8 +94,6 @@ export default class Brush{
 
 	static init(){
 		var f = document.getElementById("brush_param");
-		brush_inputs = Array.prototype.slice.call(f.getElementsByTagName("input"));
-		brush_inputs = brush_inputs.concat(Array.prototype.slice.call(f.getElementsByTagName("select")));
 
 		document.querySelector("#up_brush").addEventListener(
 			"click"
@@ -117,15 +113,15 @@ export default class Brush{
 				Hdrpaint.brushes.splice(num+1,0,Hdrpaint.selected_brush);
 				Brush.refreshBrush();
 			});
-		document.querySelector("#update_brush").addEventListener(
+		document.querySelector("#overwrite_brush").addEventListener(
 			"click"
-			  ,function(){Hdrpaint.selected_brush.update();});
+			  ,function(){Hdrpaint.selected_brush.overwrite();});
 		document.querySelector("#create_brush").addEventListener(
 			"click"
 			,function(){
 				var brush = Brush.create()
 				Hdrpaint.brushes.push(brush);
-				brush.update();
+				brush.overwrite();
 				brush.select();
 				Brush.refreshBrush();
 			});
@@ -197,25 +193,16 @@ export default class Brush{
 		Brush.refreshPen(this);
 	}
 
-	update(){
-		//現在の内容でアクティブブラシを更新
-		var inputs=brush_inputs;
+	overwrite(){
+		//現在の内容でアクティブブラシを上書き
 		var brush = this;
 
-		for(var i=0;i<brush_inputs.length;i++){
-			var input = brush_inputs[i];
-			switch(input.id){
-			default:
-				var member = input.id.replace("brush_","");
-				if(member in brush){
-					if(input.getAttribute("type")==="checkbox"){
-						brush[member] = Number(input.checked);
-					}else{
-						brush[member]=input.value;
-					}
-				}
-			}
-		}
+		var members = Object.keys(Hdrpaint.brush_status);
+
+		members.forEach((member)=>{
+			if(member === "id")return;
+			brush[member]=Hdrpaint.brush_status[member];
+		});
 
 		brush.refresh();
 	}
@@ -227,25 +214,25 @@ export default class Brush{
 		}
 
 		static setParam(param){
-			//param.color = new Float32Array(doc.draw_col);
+			var brush = Hdrpaint.brush_status;
 			param.color = new Float32Array(4);
 			param.color[0] = Hdrpaint.color[0];
 			param.color[1] = Hdrpaint.color[1];
 			param.color[2] = Hdrpaint.color[2];
 			param.color[3] = Hdrpaint.color[3];
-			param.weight=Number(inputs["weight"].value);
-			param.softness=Number(inputs["softness"].value);
-			param.antialias=Number(inputs["brush_antialias"].checked);
-			param.eraser = Number(inputs["eraser"].checked);
-			param.alpha = inputs["brush_alpha"].value;
+			param.weight=Number(brush.weight);
+			param.softness=Number(brush.softness);
+			param.antialias=Number(brush.antialias);
+			param.eraser = Number(brush.eraser);
+			param.alpha = brush.alpha;
 
 			
-			param.overlap=parseInt(inputs["brush_overlap"].value);
+			param.overlap=parseInt(brush.overlap);
 			param.pressure_effect_flgs= 
-				  (1 * Number(inputs["weight_pressure_effect"].checked))
-				| (2 * Number(inputs["alpha_pressure_effect"].checked));
-			param.alpha_pressure_effect = inputs["alpha_pressure_effect"].checked;
-			param.stroke_interpolation = inputs["stroke_interpolation"].checked;
+				  (1 * Number(brush.weight_pressure_effect))
+				| (2 * Number(brush.alpha_pressure_effect));
+			param.alpha_pressure_effect = brush.alpha_pressure_effect;
+			param.stroke_interpolation = brush.stroke_interpolation;
 
 		}
 
@@ -309,10 +296,9 @@ export default class Brush{
 			}
 		}
 		static refreshPreview_(){
-			if(refreshpen_flg){
-				Brush.refreshPen();
-				refresh_flg=false;
-			}
+			Brush.refreshPen();
+			refresh_flg=false;
+			
 		}
 
 		select(){
@@ -334,21 +320,10 @@ export default class Brush{
 			if(!brush){
 				return;
 			}
-			for(var i=0;i<brush_inputs.length;i++){
-				var input = brush_inputs[i];
-				switch(input.id){
-				default:
-					var member = input.id.replace("brush_","");
-					if(member in brush){
-						if(input.getAttribute("type")==="checkbox"){
-							input.checked=brush[member];
-						}else{
-							input.value=brush[member];
-						}
-						Util.fireEvent(input,"input");
-					}
-				}
-			}
+			var members = Object.keys(brush);
+			members.forEach((member)=>{
+				Hdrpaint.brush_status[member] = brush[member];
+			});
 
 			//ブラシ選択状態にする
 			inputs["pen"].checked=true;

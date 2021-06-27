@@ -15,6 +15,8 @@ import Layer from "./layer.js";
 import Util from "./lib/util.js";
 import ColorPickerHDR from "./lib/colorpickerhdr.js";
 import ColorSelector from "./lib/colorselector.js";
+import Binder from "./lib/binder.js";
+var binder =new Binder();
 
 
 window.root_layer=null;
@@ -1060,7 +1062,6 @@ function dataURIConverter(dataURI) {
 	brush.name="ペン"
 	brush.shortcut="a";
 	brush.weight_pressure_effect=true;
-	brush.stroke_correction=true;
 	brush.weight=5;
 	Hdrpaint.brushes.push(brush);
 	brush.refresh();
@@ -1076,6 +1077,19 @@ function dataURIConverter(dataURI) {
 	Brush.refreshBrush();
 
 	brush1.select();
+
+
+	binder.init(Hdrpaint);
+
+
+//	var nodes = document.querySelectorAll("[bind\\:]");
+//	nodes.forEach((node)=>{
+//		const bind = binder.binds.find(function(elem){return elem.node===node});
+//		if(!bind)return;
+//		node.addEventListener("change",function(){
+//			bind.feedBackValue(this.value);
+//		});
+//	});
 
 }
 

@@ -23,6 +23,9 @@ class Hdrpaint{
 		this.selected_brush=null;
 		//全ブラシ
 		this.brushes=[];
+
+		//ブラシ設定
+		this.brush_status={}
 	}
 
 	refreshActiveLayerParam(){

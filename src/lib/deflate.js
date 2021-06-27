@@ -155,11 +155,6 @@ export default class Deflate{
 	}
 }
 
-	//src ソース
-	//offset srcの開始オフセット
-	//size ソースサイズ
-	//final最終ブロックかどうか
-	//comp_type 0・・・無圧縮 1・・・圧縮
 	var encBlock=function(src,offset,size,final,comp_type){
 		//1ブロック分出力する
 

@@ -58,29 +58,32 @@
 
 	<div class="area" id="brush_param" onchange="{Brush.refreshPreview();}">
 		<div class="label">ブラシ</div>
-		<div style="clear:both;">名前<input type="text" id="brush_name" style="width:80px;" >
-		ショトカ<input type="text" id="brush_shortcut" style="width:20px;"></div>
-		<div>
-		<img width="128" height="32" id="pen_preview" style="float:left;">
-		<label><input type="checkbox" id="brush_antialias"/>AA</label><br>
-		<label><input type="checkbox" id="eraser"/>消しゴム</label>
+		<div style="clear:both;">
+			名前<input type="text" id="brush_name" style="width:80px;" feedback bind:="brush_status.name" >
+			ショトカ<input type="text" id="brush_shortcut" feedback bind:="brush_status.shortcut" style="width:20px;">
 		</div>
-		<div>直径<input class="slider" id="weight" max="100"  value="3"/></div>
-		<div>縁ぼかし<input class="slider" id="softness" max="1"  value="0"/></div>
-		<div>不透明度<input class="slider" id="brush_alpha" max="1"  value="0"/></div>
+		<div>
+			<img width="128" height="32" id="pen_preview" style="float:left;">
+			<label><input type="checkbox" id="brush_antialias" feedback bind:="brush_status.antialias"/>AA</label><br>
+			<label><input type="checkbox" id="eraser" feedback bind:="brush_status.eraser"/>消しゴム</label>
+		</div>
+		<div>直径<input class="slider" id="weight" max="100"  feedback bind:="brush_status.weight"/></div>
+		<div>縁ぼかし<input class="slider" id="softness" max="1"  feedback bind:="brush_status.softness"/></div>
+		<div>不透明度<input class="slider" id="brush_alpha" max="1" feedback bind:="brush_status.alpha"/></div>
 		<div>
 			筆圧影響
-			<label><input type="checkbox" id="weight_pressure_effect"/>径</label>
-			<label><input type="checkbox" id="alpha_pressure_effect"/>アルファ</label>
+			<label><input type="checkbox" feedback bind:="brush_status.weight_pressure_effect"
+		   id="weight_pressure_effect"/>径</label>
+			<label><input type="checkbox" feedback bind:="brush_status.alpha_pressure_effect" id="alpha_pressure_effect"/>アルファ</label>
 		</div>
 		<div>
 		
 		</div>
 		<div>
-			<label><input type="checkbox" id="stroke_correction"/>補正</label>
-			<label><input type="checkbox" id="stroke_interpolation" checked/>補間</label>
+			<label><input type="checkbox" id="stroke_correction" feedback bind:="brush_status.stroke_correction"/>補正</label>
+			<label><input type="checkbox" id="stroke_interpolation" feedback bind:="brush_status.stroke_interpolation"/>補間</label>
 		</div>
-		上書き処理<select id="brush_overlap">
+		上書き処理<select id="brush_overlap" feedback bind:="brush_status.overlap">
 			<option value="0">大きいα優先</option>
 			<option value="1">αブレンド</option>
 			<option value="2">α直書</option>
@@ -93,7 +96,7 @@
 				<input type="button" id="up_brush" value="↑" >
 			</div>
 			<div style="text-align:right;">
-				<input type="button" id="update_brush" value="上書" >
+				<input type="button" id="overwrite_brush" value="上書" >
 				<input type="button" id="create_brush" value="新規保存" >
 				<input type="button" id="delete_brush" value="削除" ><br>
 			</div>
