@@ -517,7 +517,7 @@ export default class Layer{
 		var layer = this;
 		var layers_container = null;
 
-		if(selected_layer ===layer){
+		if(Hdrpaint.selected_layer ===layer){
 			Hdrpaint.refreshLayerRectangle();
 		}
 		
@@ -526,7 +526,7 @@ export default class Layer{
 			layers_container = document.getElementById("layers_container");
 		}else{
 			//layer.dom.className="layer";
-			if(selected_layer === layer){
+			if(Hdrpaint.selected_layer === layer){
 				layer.dom.classList.add("active");
 			}else{
 				layer.dom.classList.remove("active");
@@ -582,7 +582,7 @@ export default class Layer{
 		}
 
 
-		if(layer === selected_layer){
+		if(layer === Hdrpaint.selected_layer){
 			Hdrpaint.refreshActiveLayerParam();
 		}
 

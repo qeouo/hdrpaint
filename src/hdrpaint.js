@@ -12,15 +12,22 @@ class Hdrpaint{
 		this.Command = {};
 		this.commandObjs={};
 		this.painted_mask=new Float32Array(1024*1024);
-		this._select_rectangle={x:0,y:0,x2:0,y2:0};
-		this.select_rectangle={x:0,y:0,x2:0,y2:0};
+		//選択レイヤ
+		this.selected_layer=null;
+		//選択範囲
+		this.select_rectangle=null;//{x:0,y:0,x2:0,y2:0};
 		this.mode="";
 		this.layer_id_count=0;
+
+		//現在選択状態にあるブラシ
+		this.selected_brush=null;
+		//全ブラシ
+		this.brushes=[];
 	}
 
 	refreshActiveLayerParam(){
 		//アクティブレイヤパラメータ更新
-		var layer = selected_layer;
+		var layer = this.selected_layer;
 		if(!layer){
 			return;
 		}
@@ -58,7 +65,7 @@ class Hdrpaint{
 			}
 		}
 	var inputs = this.inputs;
-		if(selected_layer.type ===1){
+		if(this.selected_layer.type ===1){
 			inputs["join_layer"].value="子を結合";
 		}else{
 			inputs["join_layer"].value="下のレイヤと結合";
@@ -68,7 +75,7 @@ class Hdrpaint{
 		for(var i=0;i<elems.length;i++){
 			elems[i].style.display="none";
 		}
-		var elem = document.querySelector("#div_" + selected_layer.modifier);
+		var elem = document.querySelector("#div_" + this.selected_layer.modifier);
 		if(elem){
 			elem.style.display="inline";
 
@@ -91,21 +98,37 @@ class Hdrpaint{
 		
 	}
 	refreshLayerRectangle(){
-		if(selected_layer){
-			var rect =document.querySelector(".layer_rectangle");
-			var doc = this.doc;
-			rect.style.left=(selected_layer.position[0]  +  doc.canvas_pos[0])+"px";
-			rect.style.top=(selected_layer.position[1] + doc.canvas_pos[1]) +"px";
-			rect.style.width=selected_layer.size[0] + "px";
-			rect.style.height=selected_layer.size[1]+ "px";
-			rect.style.display="inline-block"
-		}
+		if(!this.selected_layer)return;
+
+		var rect =document.querySelector(".layer_rectangle");
+		var doc = this.doc;
+		rect.style.left=(this.selected_layer.position[0]  +  doc.canvas_pos[0] - 1)+"px";
+		rect.style.top=(this.selected_layer.position[1] + doc.canvas_pos[1] -1) +"px";
+		rect.style.width=this.selected_layer.size[0] + "px";
+		rect.style.height=this.selected_layer.size[1]+ "px";
+		rect.style.display="inline-block"
 	}
 
+	getSelectArea(){
+		//領域選択されていない場合はレイヤー全体を選択
+		var rectangle= {};
+		if(!this.select_rectangle){
+			rectangle.x = 0;
+			rectangle.y = 0;
+			rectangle.w = this.selected_layer.size[0];
+			rectangle.h = this.selected_layer.size[1];
+		}else{
+			rectangle.x = this.select_rectangle.x;
+			rectangle.y = this.select_rectangle.y;
+			rectangle.w = this.select_rectangle.w;
+			rectangle.h = this.select_rectangle.h;
+		}
+		return rectangle;
+	}
 	select(target_layer){
 		//アクティブレイヤ変更
 		
-		selected_layer=target_layer;
+		this.selected_layer=target_layer;
 		Layer.eachLayers(function(layer){
 			if(target_layer !== layer){
 				//アクティブレイヤ以外の表示を非アクティブにする
@@ -121,15 +144,6 @@ class Hdrpaint{
 			refreshPreview(1);
 		}
 
-		//領域選択されていない場合はレイヤー全体を選択
-		var sr= this._select_rectangle;
-		if(!sr.enable){
-			var rectangle= this.select_rectangle;
-			rectangle.x = 0;
-			rectangle.y = 0;
-			rectangle.w = selected_layer.size[0];
-			rectangle.h = selected_layer.size[1];
-		}
 
 		this.refreshLayerRectangle();
 
@@ -217,7 +231,7 @@ class Hdrpaint{
 
 		var data =this.getPosition();
 		
-		this.executeCommand("copylayer",{"position":data.position,"parent":data.parent_layer.id,"src_layer_id":selected_layer.id});
+		this.executeCommand("copylayer",{"position":data.position,"parent":data.parent_layer.id,"src_layer_id":this.selected_layer.id});
 	}
 
 	redo(){
@@ -267,19 +281,19 @@ class Hdrpaint{
 	}
 	getPosition(){
 		var data={};
-		if(!selected_layer){
+		if(!this.selected_layer){
 			data.parent_layer_id = root_layer.id;
 			data.parent_layer = root_layer;
 			data.position = root_layer.length;
 		}else{
-			if(selected_layer.children && selected_layer.dom.classList.contains("open")){
-				data.parent_layer_id = selected_layer.id;
-				data.parent_layer = selected_layer;
-				data.position = selected_layer.length;
+			if(this.selected_layer.children && this.selected_layer.dom.classList.contains("open")){
+				data.parent_layer_id = this.selected_layer.id;
+				data.parent_layer = this.selected_layer;
+				data.position = this.selected_layer.length;
 			}else{
-				data.parent_layer_id = selected_layer.parent.id;
-				data.parent_layer = selected_layer.parent;
-				data.position = selected_layer.parent.children.indexOf(selected_layer)+1;
+				data.parent_layer_id = this.selected_layer.parent.id;
+				data.parent_layer = this.selected_layer.parent;
+				data.position = this.selected_layer.parent.children.indexOf(this.selected_layer)+1;
 			}
 		}
 		return data;
@@ -315,7 +329,7 @@ class Hdrpaint{
 		var idx = layers.indexOf(layer);
 
 		layers.splice(idx,1);
-		if(layer == selected_layer){
+		if(layer == this.selected_layer){
 			if(parent_layer.children.length>0){
 				if(parent_layer.children.length<=idx){
 					idx= parent_layer.children.length-1;

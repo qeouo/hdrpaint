@@ -75,7 +75,7 @@ var refresh_stack=[] ;
 			var img = bloom_img;
 			var img_data = img.data;
 			var img_width = img.width;
-			var layer = selected_layer;
+			var layer = Hdrpaint.selected_layer;
 			
 			bloom_img.clear(left,top,width,height);
 			layer.getAbsolutePosition(absolute);
@@ -235,7 +235,7 @@ export default class Redraw{
 
 	static refreshActiveLayerParam(){
 		//アクティブレイヤパラメータ更新
-		var layer = selected_layer;
+		var layer = Hdrpaint.selected_layer;
 		if(!layer){
 			return;
 		}

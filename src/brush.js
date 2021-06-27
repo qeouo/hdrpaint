@@ -8,12 +8,12 @@ import Redraw from "./redraw.js";
 import Layer from "./layer.js";
 let refresh_flg=false;
 let pen_preview_img;
-let pen_preview_log;
+let pen_preview_command; //ブラシの描画プレビュー作成用のコマンドオブジェクト
 let brush_inputs=[];
 let brush_id_count=0;
 	var getBrushFromDiv=function(div){
 		var result_brush = null;
-		return brushes.find(function(a){
+		return Hdrpaint.brushes.find(function(a){
 			return (a.dom===div);});
 	}
 	let refreshpen_flg=true;
@@ -51,11 +51,11 @@ var brushselect=function(e){
 			return;
 		}
 
-		var num = brushes.indexOf(drag_brush);
-		var num2= brushes.indexOf(drop_brush);
-		brushes.splice(num,1);
+		var num = Hdrpaint.brushes.indexOf(drag_brush);
+		var num2= Hdrpaint.brushes.indexOf(drop_brush);
+		Hdrpaint.brushes.splice(num,1);
 
-		brushes.splice(num2,0,drag_brush);
+		Hdrpaint.brushes.splice(num2,0,drag_brush);
 		Brush.refreshBrush();
 	}
 export default class Brush{
@@ -102,41 +102,41 @@ export default class Brush{
 		document.querySelector("#up_brush").addEventListener(
 			"click"
 			  ,function(){
-				var num = brushes.indexOf(selected_brush);
+				var num = Hdrpaint.brushes.indexOf(Hdrpaint.selected_brush);
 				if(num<=0){ return; }
-				brushes.splice(num,1);
-				brushes.splice(num-1,0,selected_brush);
+				Hdrpaint.brushes.splice(num,1);
+				Hdrpaint.brushes.splice(num-1,0,Hdrpaint.selected_brush);
 				Brush.refreshBrush();
 			});
 		document.querySelector("#down_brush").addEventListener(
 			"click"
 			  ,function(){
-				var num = brushes.indexOf(selected_brush);
-				if(num+1>=brushes.length){ return; }
-				brushes.splice(num,1);
-				brushes.splice(num+1,0,selected_brush);
+				var num = Hdrpaint.brushes.indexOf(Hdrpaint.selected_brush);
+				if(num+1>=Hdrpaint.brushes.length){ return; }
+				Hdrpaint.brushes.splice(num,1);
+				Hdrpaint.brushes.splice(num+1,0,Hdrpaint.selected_brush);
 				Brush.refreshBrush();
 			});
 		document.querySelector("#update_brush").addEventListener(
 			"click"
-			  ,function(){selected_brush.update();});
+			  ,function(){Hdrpaint.selected_brush.update();});
 		document.querySelector("#create_brush").addEventListener(
 			"click"
 			,function(){
 				var brush = Brush.create()
-				brushes.push(brush);
+				Hdrpaint.brushes.push(brush);
 				brush.update();
 				brush.select();
 				Brush.refreshBrush();
 			});
 		document.querySelector("#delete_brush").addEventListener(
 			"click"
-			  ,function(){selected_brush.delete();});
+			  ,function(){Hdrpaint.selected_brush.delete();});
 
 
 		//ブラシプレビュー準備
-		pen_preview_log= new Hdrpaint.commandObjs.brush();
-		var param = pen_preview_log.param;
+		pen_preview_command= new Hdrpaint.commandObjs.brush();
+		var param = pen_preview_command.param;
 		var pen_preview=  document.getElementById('pen_preview');
 		pen_preview_img= new Img(pen_preview.width,pen_preview.height);
 		param.layer =Hdrpaint.createLayer(pen_preview_img,0);
@@ -160,14 +160,14 @@ export default class Brush{
 	}
 	//削除
 	delete (){
-		var num = brushes.indexOf(this);
-		brushes.splice(num,1);
+		var num = Hdrpaint.brushes.indexOf(this);
+		Hdrpaint.brushes.splice(num,1);
 
-		if(num>=brushes.length){
-			num=brushes.length-1;
+		if(num>=Hdrpaint.brushes.length){
+			num=Hdrpaint.brushes.length-1;
 		}
 		if(num>=0){
-			brushes[num].select();
+			Hdrpaint.brushes[num].select();
 		}
 		Brush.refreshBrush();
 
@@ -181,7 +181,7 @@ export default class Brush{
 
 		brush.id=brush_id_count;
 		brush_id_count++;
-		//brushes.push(brush);
+		//Hdrpaint.brushes.push(brush);
 
 		brush.name ="brush"+("0000"+brush.id).slice(-4);
 
@@ -220,8 +220,8 @@ export default class Brush{
 		brush.refresh();
 	}
 		delete(){
-			var num = brushes.indexOf(selected_brush);
-			brushes.splice(num,1);
+			var num = Hdrpaint.brushes.indexOf(Hdrpaint.selected_brush);
+			Hdrpaint.brushes.splice(num,1);
 
 			Brush.refreshBrush();
 		}
@@ -250,7 +250,7 @@ export default class Brush{
 		}
 
 		static refreshPen(brush){
-			var param = pen_preview_log.param;
+			var param = pen_preview_command.param;
 			if(!brush){
 				Brush.setParam(param);
 			}else{
@@ -273,7 +273,7 @@ export default class Brush{
 
 			Hdrpaint.painted_mask.fill(0);
 			if(param.eraser){
-				//黒でクリア
+				//消しゴムの場合は黒でクリア
 				var data = pen_preview_img.data;
 				var size = data.length;
 				for(var i=0;i<size;i+=4){
@@ -283,13 +283,13 @@ export default class Brush{
 					data[i+3]=1;
 				}
 			}else{
-				//透明でクリア
+				//通常ブラシの場合は透明でクリア
 				pen_preview_img.clear();
 			}
 
-			var points = pen_preview_log.param.points;
+			var points = pen_preview_command.param.points;
 			for(var li=1;li<points.length;li++){
-				pen_preview_log.draw(li);
+				pen_preview_command.draw(li);
 			}
 			var dataurl = pen_preview_img.toDataURL();
 			if(brush){
@@ -302,7 +302,7 @@ export default class Brush{
 		}
 
 
-		static refreshPreview (){
+		static refreshPreview(){
 			if(!refresh_flg){
 				window.requestAnimationFrame(Brush.refreshPreview_);
 				refresh_flg=true;
@@ -317,11 +317,11 @@ export default class Brush{
 
 		select(){
 			//アクティブブラシ変更
-			selected_brush=this;
-			for(var bi=0;bi<brushes.length;bi++){
-				var brush = brushes[bi];
+			Hdrpaint.selected_brush=this;
+			for(var bi=0;bi<Hdrpaint.brushes.length;bi++){
+				var brush = Hdrpaint.brushes[bi];
 
-				if(selected_brush !== brush){
+				if(Hdrpaint.selected_brush !== brush){
 					//アクティブブラシ以外の表示を非アクティブにする
 					brush.dom.classList.remove("active");
 				}else{
@@ -358,12 +358,13 @@ export default class Brush{
 
 
 	static refreshBrush(brush){
+		//ブラシ一覧更新
 		if(!brush){
 			var container = document.getElementById("brushes_container");
 			//子ブラシセット
 			while (container.firstChild)container.removeChild(container.firstChild);
-			for(var li=0;li<brushes.length;li++){
-				container.appendChild(brushes[li].dom);
+			for(var li=0;li<Hdrpaint.brushes.length;li++){
+				container.appendChild(Hdrpaint.brushes[li].dom);
 			}
 
 

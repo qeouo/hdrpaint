@@ -29,13 +29,8 @@ window.preview=null;
 window.preview_ctx=null;
 window.preview_ctx_imagedata=null;
 
-//現在選択状態にあるブラシ
-window.selected_brush=null;
 
-//全ブラシ
-window.brushes=[];
 
-window.selected_layer = null;
 
 //コマンド
 import "./command/copy.js"
@@ -185,7 +180,7 @@ var onloadfunc=function(e){
 			//カラーピッカー
 			var img= root_layer.img;
 			if(inputs["selected_layer_only"].checked){
-				img= selected_layer.img;
+				img= Hdrpaint.selected_layer.img;
 			}
 			if(x<0 || x>=img.width || y<0 || y>img.height){
 			}else{
@@ -203,28 +198,30 @@ var onloadfunc=function(e){
 			return;
 		}
 
-		if(!(e.buttons&1)){
-			return;
-		}
 
 		if(inputs["rectangle"].checked){
+			if(!(e.buttons&1)){
+				return;
+			}
 			//矩形選択時
 			var rectangle = Hdrpaint.select_rectangle;
-			var sr = Hdrpaint._select_rectangle;
-			sr.x2 = Math.floor(x);
-			sr.y2 = Math.floor(y);
+			var x2 = Math.floor(x);
+			var y2 = Math.floor(y);
 			if(Hdrpaint.mode==="areamove"){
-				rectangle.x += (-sr.x +sr.x2);
-				rectangle.y += (-sr.y +sr.y2);
-				sr.x=sr.x2;
-				sr.y=sr.y2;
+				rectangle.x += (-drag_start[0] +x2);
+				rectangle.y += (-drag_start[1] +y2);
+				drag_start[0]=x2;
+				drag_start[1]=y2;
 			}else{
-				sr.enable=true;
+				if(!rectangle){
+					rectangle={x:0,y:0,w:0,h:0};
+					Hdrpaint.select_rectangle=rectangle;
+				}
 
-				rectangle.x = Math.min(sr.x,sr.x2);
-				rectangle.y = Math.min(sr.y,sr.y2);
-				rectangle.w = Math.abs(sr.x-sr.x2);
-				rectangle.h = Math.abs(sr.y-sr.y2);
+				rectangle.x = Math.min(drag_start[0],x2);
+				rectangle.y = Math.min(drag_start[1],y2);
+				rectangle.w = Math.abs(drag_start[0]-x2);
+				rectangle.h = Math.abs(drag_start[1]-y2);
 			}
 
 			var rect =document.querySelector(".select_rectangle");
@@ -292,7 +289,7 @@ var onloadfunc=function(e){
 				pen_log=null;
 			}	
 
-		pen_func.actualDraw();
+			pen_func.actualDraw();
 
 			
 		}else if(inputs["translate"].checked) {
@@ -377,7 +374,7 @@ var onloadfunc=function(e){
 
 		Layer.enableRefreshThumbnail = false;
 
-		if(selected_layer===null){
+		if(Hdrpaint.selected_layer===null){
 			return;
 		}
 
@@ -386,15 +383,10 @@ var onloadfunc=function(e){
 		Hdrpaint.mode="";
 		if(inputs["rectangle"].checked && (e.buttons &1)){
 			var rectangle= Hdrpaint.select_rectangle;
-			var sr= Hdrpaint._select_rectangle;
 
 			x = Math.floor(x);
 			y = Math.floor(y);
-			sr.x=x;
-			sr.y=y;
-			sr.x2=x;
-			sr.y2=y;
-			if(sr.enable){
+			if(Hdrpaint.select_rectangle){
 				if( x >= rectangle.x 
 					&& x < rectangle.x + rectangle.w
 					&& y >= rectangle.y
@@ -405,19 +397,14 @@ var onloadfunc=function(e){
 				}
 			}
 			Hdrpaint.mode="areaselect";
+			Hdrpaint.select_rectangle=null;
 		
-			sr.enable=false;
-
-			rectangle.x = 0;
-			rectangle.y = 0;
-			rectangle.w = selected_layer.size[0];
-			rectangle.h = selected_layer.size[1];
 			
 			var rect =document.querySelector(".select_rectangle");
 			rect.style.display="none"
 			return;
 		}else if(inputs["fill"].checked && (e.buttons &1)){
-			if(selected_layer.type === 1){
+			if(Hdrpaint.selected_layer.type === 1){
 				return;
 			}
 			//塗りつぶし
@@ -427,8 +414,8 @@ var onloadfunc=function(e){
 				//範囲外は無視
 				return;
 			}
-			var layer = selected_layer;
-			//selected_layer.getAbsolutePosition(absolute);
+			var layer = Hdrpaint.selected_layer;
+			//Hdrpaint.selected_layer.getAbsolutePosition(absolute);
 			//x -= absolute[0];
 			//y -= absolute[1];
 			if(x<0 || x>=layer.img.width || y<0 || y>=layer.img.height){
@@ -438,7 +425,7 @@ var onloadfunc=function(e){
 			var color = new Float32Array(4);
 			Vec4.copy(color,Hdrpaint.color);
 			var flg_active_layer_only = inputs["selected_layer_only"].checked;
-			Hdrpaint.executeCommand("fill",{"layer_id":selected_layer.id,"x":x,"y":y,"color":color,"is_layer":flg_active_layer_only});
+			Hdrpaint.executeCommand("fill",{"layer_id":Hdrpaint.selected_layer.id,"x":x,"y":y,"color":color,"is_layer":flg_active_layer_only});
 
 		}else if(inputs["translate"].checked && (e.buttons &1) ){
 			//レイヤ位置移動
@@ -448,20 +435,19 @@ var onloadfunc=function(e){
 			var flg_active_layer_only = inputs["selected_layer_only"].checked;
 			//if(flg_active_layer_only){
 				//アクティブレイヤ
-				layer_id=selected_layer.id;
+				layer_id=Hdrpaint.selected_layer.id;
 			//}
-			pen_log = Hdrpaint.executeCommand("translateLayer",{"layer_id":layer_id,"x":0,"y":0} ,{"x":selected_layer.position[0],"y":selected_layer.position[1]},1);
+			pen_log = Hdrpaint.executeCommand("translateLayer",{"layer_id":layer_id,"x":0,"y":0} ,{"x":Hdrpaint.selected_layer.position[0],"y":Hdrpaint.selected_layer.position[1]},1);
 
 
 		}else if((inputs["pen"].checked) && (e.buttons &1) ){
 			//ペンもしくは消しゴム
-
-			if(selected_layer.type !== 0){
+			if(Hdrpaint.selected_layer.type !== 0){
 				//通常レイヤ以外は無効
 				return;
 			}
 
-			if(selected_layer.mask_alpha
+			if(Hdrpaint.selected_layer.mask_alpha
 			&& inputs["eraser"].checked){
 				//アルファマスクありで消しゴムの場合無視
 				return;
@@ -472,9 +458,9 @@ var onloadfunc=function(e){
 
 			var param={};
 			Brush.setParam(param);
-			param.alpha_mask = selected_layer.mask_alpha;
+			param.alpha_mask = Hdrpaint.selected_layer.mask_alpha;
 			param.points=[];
-			param.layer_id = selected_layer.id;
+			param.layer_id = Hdrpaint.selected_layer.id;
 			pen_log = Hdrpaint.executeCommand("brush",param);
 			if(pen_log){
 				pen_func= new PenFunc();
@@ -548,8 +534,8 @@ var onloadfunc=function(e){
 			}
 			return;
 		}
-		for(var bi=0;bi<brushes.length;bi++){
-			var brush = brushes[bi];
+		for(var bi=0;bi<Hdrpaint.brushes.length;bi++){
+			var brush = Hdrpaint.brushes[bi];
 			if(!brush.shortcut)continue;
 			var shortcut = brush.shortcut.charCodeAt(0);
 			if(shortcut === keycode){
@@ -572,10 +558,8 @@ var onloadfunc=function(e){
 		case 99://c
 			if(event.ctrlKey){
 				//コピー
-				var range=JSON.parse(JSON.stringify(Hdrpaint.select_rectangle))
-				//var data =Hdrpaint.getPosition();
-				//Hdrpaint.executeCommand("copy",{"src_layer_id":selected_layer.id,range:rectangle});
-				var src_layer = selected_layer;
+				var range=Hdrpaint.getSelectArea();
+				var src_layer = Hdrpaint.selected_layer;
 				var img = new Img(range.w,range.h);
 				Img.copy(img,0,0,src_layer.img,range.x,range.y,range.w,range.h);
 
@@ -612,18 +596,18 @@ var onloadfunc=function(e){
 		case 120://x
 			if(event.ctrlKey){
 				//カット
-				var src_layer = selected_layer;
-				var range=JSON.parse(JSON.stringify(Hdrpaint.select_rectangle))
+				var src_layer = Hdrpaint.selected_layer;
+				var range= Hdrpaint.getSelectArea();
 				var img = new Img(range.w,range.h);
 				Img.copy(img,0,0,src_layer.img,range.x,range.y,range.w,range.h);
 
 				Hdrpaint.clipboard = img;
 				var data =Hdrpaint.getPosition();
-				var rectangle=JSON.parse(JSON.stringify(Hdrpaint.select_rectangle))
-				//Hdrpaint.executeCommand("copy",{"position":data.position,"parent":data.parent_layer.id,"src_layer_id":selected_layer.id,range:rectangle});
+				var rectangle=Hdrpaint.getSelectArea();
+				//Hdrpaint.executeCommand("copy",{"position":data.position,"parent":data.parent_layer.id,"src_layer_id":Hdrpaint.selected_layer.id,range:rectangle});
 
 				//選択範囲をクリア
-				Hdrpaint.executeCommand("clear",{"layer_id":selected_layer.id,"range":range});
+				Hdrpaint.executeCommand("clear",{"layer_id":Hdrpaint.selected_layer.id,"range":range});
 			}
 			break;
 		case 122-32://Z
@@ -647,14 +631,14 @@ var onloadfunc=function(e){
 			event.preventDefault();
 			break;
 		case 46://delete
-			if(selected_layer.type!==0){
+			if(Hdrpaint.selected_layer.type!==0){
 				//通常レイヤ以外は無視
 				break;
 			}
-			var rectangle=JSON.parse(JSON.stringify(Hdrpaint.select_rectangle))
+			var rectangle=Hdrpaint.getSelectArea();
 			
 			//選択範囲をクリア
-			Hdrpaint.executeCommand("clear",{"layer_id":selected_layer.id,range:rectangle});
+			Hdrpaint.executeCommand("clear",{"layer_id":Hdrpaint.selected_layer.id,range:rectangle});
 			break;
 		case 119://w
 			//if(!flg_active_layer_only){
@@ -710,7 +694,7 @@ var onloadfunc=function(e){
 	inputs["btn_resize_layer"].addEventListener("click",function(e){
 		var width = parseInt(preview.width);
 		var height= parseInt(preview.height);
-		Hdrpaint.executeCommand("resizeLayer",{"layer_id":selected_layer.id,"width":width,"height":height});
+		Hdrpaint.executeCommand("resizeLayer",{"layer_id":Hdrpaint.selected_layer.id,"width":width,"height":height});
 
 	});
 	inputs["btn_resize_layers"].addEventListener("click",function(e){
@@ -764,32 +748,32 @@ var onloadfunc=function(e){
 	});
 
 	inputs["down_layer"].addEventListener("click",function(e){
-		if(!selected_layer){
+		if(!Hdrpaint.selected_layer){
 			return;
 		}
-		var parent_layer =  selected_layer.parent;
+		var parent_layer =  Hdrpaint.selected_layer.parent;
 		var layers = parent_layer.children;
-		var position = layers.indexOf(selected_layer);
+		var position = layers.indexOf(Hdrpaint.selected_layer);
 		if(position<=0){return;}
-		Hdrpaint.executeCommand("moveLayer",{"layer_id":selected_layer.id,"parent_layer_id":parent_layer.id,"position":position-1});
+		Hdrpaint.executeCommand("moveLayer",{"layer_id":Hdrpaint.selected_layer.id,"parent_layer_id":parent_layer.id,"position":position-1});
 	});
 	inputs["up_layer"].addEventListener("click",function(e){
-		var parent_layer =  selected_layer.parent;
+		var parent_layer =  Hdrpaint.selected_layer.parent;
 		var layers = parent_layer.children;
-		var position = layers.indexOf(selected_layer);
+		var position = layers.indexOf(Hdrpaint.selected_layer);
 		if(position+1>=layers.length){return;}
-		Hdrpaint.executeCommand("moveLayer",{"layer_id":selected_layer.id,"parent_layer_id":parent_layer.id,"position":position+1});
+		Hdrpaint.executeCommand("moveLayer",{"layer_id":Hdrpaint.selected_layer.id,"parent_layer_id":parent_layer.id,"position":position+1});
 	});
 
 	//レイヤ結合ボタン押下時
 	inputs["join_layer"].addEventListener("click",function(e){
-		if(selected_layer.type===1){
+		if(Hdrpaint.selected_layer.type===1){
 			Hdrpaint.executeCommand("composite"
-				,{"layer_id":selected_layer.id});
+				,{"layer_id":Hdrpaint.selected_layer.id});
 			return;
 		}
-		var parent_layer = selected_layer.parent;
-		var position = parent_layer.children.indexOf(selected_layer);
+		var parent_layer = Hdrpaint.selected_layer.parent;
+		var position = parent_layer.children.indexOf(Hdrpaint.selected_layer);
 
 		if(position===0){
 			return;
@@ -800,11 +784,11 @@ var onloadfunc=function(e){
 		}
 
 		var id2= parent_layer.children[position-1].id;
-		Hdrpaint.executeCommand("joinLayer",{"layer_id":id2,"layer_id2":selected_layer.id});
+		Hdrpaint.executeCommand("joinLayer",{"layer_id":id2,"layer_id2":Hdrpaint.selected_layer.id});
 	});
 
 	inputs["delete_layer"].addEventListener("click",function(e){
-		Hdrpaint.executeCommand("deleteLayer",{"layer_id":selected_layer.id});
+		Hdrpaint.executeCommand("deleteLayer",{"layer_id":Hdrpaint.selected_layer.id});
 	});
 
 	var oldpos=new Vec2();
@@ -854,24 +838,24 @@ document.querySelector("#layer_param").addEventListener("change"
 	,function(e){
 
 	var input = e.target;
-	if(!selected_layer){ return; }
+	if(!Hdrpaint.selected_layer){ return; }
 	if(!input){return;}
 
-	var layer = selected_layer;
+	var layer = Hdrpaint.selected_layer;
 	var member = e.target.id.replace("layer_","");
 	if(member===""){
 		member = e.target.title;
 	}
 
 	if(input.id==="layer_width"  || input.id==="layer_height"){
-		var layer = selected_layer;
+		var layer = Hdrpaint.selected_layer;
 		var width = parseInt(inputs["layer_width"].value);
 		var height= parseInt(inputs["layer_height"].value);
 		Hdrpaint.executeCommand("resizeLayer",{"layer_id":layer.id,"width":width,"height":height});
 		return;
 	}
 	if(input.id==="layer_x"  || input.id==="layer_y"){
-		var layer = selected_layer;
+		var layer = Hdrpaint.selected_layer;
 		var x= parseInt(inputs["layer_x"].value);
 		var y= parseInt(inputs["layer_y"].value);
 		x-=layer.position[0];
@@ -1078,7 +1062,7 @@ function dataURIConverter(dataURI) {
 	brush.weight_pressure_effect=true;
 	brush.stroke_correction=true;
 	brush.weight=5;
-	brushes.push(brush);
+	Hdrpaint.brushes.push(brush);
 	brush.refresh();
 
 	brush = Brush.create();
@@ -1086,8 +1070,9 @@ function dataURIConverter(dataURI) {
 	brush.eraser=true;
 	brush.shortcut="s";
 	brush.weight=10;
-	brushes.push(brush);
+	Hdrpaint.brushes.push(brush);
 	brush.refresh();
+
 	Brush.refreshBrush();
 
 	brush1.select();
