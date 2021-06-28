@@ -177,22 +177,22 @@
 		<div class="label" >レイヤ/モディファイア</div>
 		<div id="layer_param" >
 			<div style="width:100%;">
-				名前<input type="text" id="layer_name" style="width:100px;" >
-				<label><input type="checkbox" id="layer_display"/>表示</label>
-				<label><input type="checkbox" id="layer_lock"/>ロック</label>
+				名前<input type="text" id="layer_name" style="width:100px;" bind:="selected_layer.name">
+				<label><input type="checkbox" id="layer_display" bind:="selected_layer.display"/>表示</label>
+				<label><input type="checkbox" id="layer_lock" bind:="selected_layer.lock"/>ロック</label>
 			</div>
 
 			<div id="modifier_param_area" >
 				<div id="div_layer" class="modifier_param">
-					位置<input type="text" id="layer_x" value="" class="size">
-					<input type="text" id="layer_y" value="" class="size">
-					サイズ<input type="text" id="layer_width" value="" class="size">
-					<input type="text" id="layer_height" value="" class="size"><br>
-					<div id="div_blendfunc">合成func<select type="text" id="layer_blendfunc">
+					位置<input type="text" id="layer_x" value="" class="size" bind:="selected_layer.position.0">
+					<input type="text" id="layer_y" value="" class="size" bind:="selected_layer.position.1">
+					サイズ<input type="text" id="layer_width" value="" class="size" bind:="selected_layer.img.width">
+					<input type="text" id="layer_height" value="" class="size" bind:="selected_layer.img.height"><br>
+					<div id="div_blendfunc">合成func<select type="text" id="layer_blendfunc" bind:="selected_layer.blendfunc">
 					</select></div>
-					α<input class="slider" id="layer_alpha" max="1"/>
-					<label><input type="checkbox" id="layer_mask_alpha"/>αロック</label><br>
-					明るさ<input class="slider" id="layer_power" min="-10" max="10"/><br>
+					α<input class="slider" id="layer_alpha" max="1" bind:="selected_layer.alpha"/>
+					<label><input type="checkbox" id="layer_mask_alpha" bind:="selected_layer.mask_alpha"/>αロック</label><br>
+					明るさ<input class="slider" id="layer_power" min="-10" max="10" bind:="selected_layer.power"/><br>
 				</div>
 			</div>
 		</div>

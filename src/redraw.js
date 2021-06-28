@@ -232,48 +232,6 @@ export default class Redraw{
 	}
 
 
-
-	static refreshActiveLayerParam(){
-		//アクティブレイヤパラメータ更新
-		var layer = Hdrpaint.selected_layer;
-		if(!layer){
-			return;
-		}
-		var layer_inputs = Array.prototype.slice.call(document.getElementById("layer_param").getElementsByTagName("input"));
-		layer_inputs = layer_inputs.concat(Array.prototype.slice.call(document.getElementById("layer_param").getElementsByTagName("select")));
-		for(var i=0;i<layer_inputs.length;i++){
-			var input = layer_inputs[i];
-			switch(input.id){
-				case "layer_x":
-				input.value = layer.position[0];
-				break;
-			case "layer_y":
-				input.value = layer.position[1];
-				break;
-			case "layer_width":
-				if(layer.img){
-					input.value = layer.img.width;
-				}
-				break;
-			case "layer_height":
-				if(layer.img){
-					input.value = layer.img.height;
-				}
-				break;
-			default:
-				var member = input.id.replace("layer_","");
-				if(member in layer){
-					if(input.getAttribute("type")==="checkbox"){
-						input.checked=layer[member];
-					}else{
-						input.value=layer[member];
-					}
-					Util.fireEvent(input,"input");
-				}
-			}
-		}
-		
-	}
 	static refreshPreviewStatus(e){
 		//カーソル下情報表示
 		var img = root_layer.img;
