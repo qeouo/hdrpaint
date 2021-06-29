@@ -26,6 +26,15 @@ class Hdrpaint{
 
 		//ブラシ設定
 		this.brush_status={}
+
+		this.post_effect={
+			ch_bloom:false
+			,bloom_power:0
+			,bloom_size:0
+			,ev:0
+			,ch_gamma:false
+			,gamma:2.2
+		};
 	}
 
 	refreshLayerRectangle(){

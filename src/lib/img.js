@@ -497,6 +497,7 @@ export default class Img{
 	}
 
 	gauss(d,size,left,top,w,h){
+		if(!size)return;
 		var src = this;
 		d = Math.max(1,d);
 		var MAX = size|0;

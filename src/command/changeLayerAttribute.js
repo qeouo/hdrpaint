@@ -26,5 +26,5 @@ class ChangeLayerAttribute extends CommandBase{
 
 	}
 };
-ChangeLayerAttribute.prototype.name="changLayerAttirbute";
+ChangeLayerAttribute.prototype.name="changeLayerAttribute";
 Hdrpaint.commandObjs["changeLayerAttribute"] = ChangeLayerAttribute;

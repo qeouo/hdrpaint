@@ -29,6 +29,9 @@ class Bind{
 				value = node.checked;
 			}else{
 				value = node.value;
+				if(node.hasAttribute("number")){
+					value = Number(value);
+				}
 			}
 		}
 		//バインド変数にコントロールの値をセットする

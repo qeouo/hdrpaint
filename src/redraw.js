@@ -30,7 +30,7 @@ var refresh_stack=[] ;
 		if( typeof step === 'undefined'){
 			step=0;
 		}
-		var bloom_size = parseFloat(inputs["bloom_size"].value);
+		var bloom_size = parseFloat(Hdrpaint.post_effect.bloom_size);
 		var joined_img = root_layer.img;
 
 		
@@ -93,7 +93,7 @@ var refresh_stack=[] ;
 
 			if(step<=0){
 
-				if(inputs["ch_bloom"].checked ){
+				if(Hdrpaint.post_effect.ch_bloom ){
 					//ブルーム処理ありの場合は前処理を行う
 
 					bloom_img.copy(left-bloom_size,top-bloom_size
@@ -108,12 +108,12 @@ var refresh_stack=[] ;
 			//ブルーム処理
 			//ブルーム前の絵はjoined_imgに残し、結果はbloomed_imgに出力
 			if(step<=1){
-				var bloom = parseFloat(inputs["bloom_power"].value);
+				var bloom = parseFloat(Hdrpaint.post_effect.bloom_power);
 				var _bloom = 1- bloom;
 
 				var bloom_img_data = bloom_img.data;
 				var bloomed_img_data = bloomed_img.data;
-				if(inputs["ch_bloom"].checked && bloom>0){
+				if(Hdrpaint.post_effect.ch_bloom && bloom>0){
 					for(var yi=top;yi<bottom;yi++){
 						var idx = yi * joined_img_width + left << 2;
 						var max = yi * joined_img_width + right<< 2;
@@ -133,12 +133,12 @@ var refresh_stack=[] ;
 		if(step<=2){
 			//ガンマ補正とトーンマッピング
 			var ctx_imagedata_data = preview_ctx_imagedata.data;
-			var ev = parseFloat(inputs["ev"].value);
-			var gamma = 1.0/parseFloat(inputs["gamma"].value);
+			var ev = parseFloat(Hdrpaint.post_effect.ev);
+			var gamma = 1.0/parseFloat(Hdrpaint.post_effect.gamma);
 
 			joined_img_data = bloom_img.data;
 
-			if(inputs["ch_gamma"].checked){
+			if(Hdrpaint.post_effect.ch_gamma){
 				var r = Math.pow(2,-ev);
 				for(var yi=top;yi<bottom;yi++){
 					var idx = yi * joined_img_width + left << 2;

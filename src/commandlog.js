@@ -70,18 +70,19 @@ export default class CommandLog{
 
 		if(command_log_cursor>=0 && !flg){
 			var current_log=CommandLog.command_logs[command_log_cursor];
-			if(command === current_log.command){
+			var log_command = current_log.obj;
+			if(command === log_command.name){
 				if(command === "changeLayerAttribute"){
-					if(current_log.param.layer_id === param.layer_id
-					&& current_log.param.name === param.name){
+					if(log_command.param.layer_id === param.layer_id
+					&& log_command.param.name === param.name){
 						log = current_log;
 					}
 				}else if(command === "translateLayer"){
-					if(current_log.param.layer_id === param.layer_id){
+					if(log_command.param.layer_id === param.layer_id){
 						log = current_log;
 					}
 				}else if(command === "moveLayer"){
-					if(current_log.param.layer_id === param.layer_id){
+					if(log_command.param.layer_id === param.layer_id){
 						log = current_log;
 					}
 				}

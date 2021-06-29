@@ -666,6 +666,11 @@ var onloadfunc=function(e){
 
 	document.getElementById("post_effect").addEventListener("change",function(e){
 
+		var node =e.target;
+		const bind = binder.binds.find(function(elem){return elem.node===node});
+		if(!bind)return;
+		bind.feedBack();
+
 		//refreshColor();
 		if(e.target.id==="bloom_power"){
 			Redraw.refreshPreview(1);
@@ -845,38 +850,41 @@ document.querySelector("#layer_param").addEventListener("change"
 	if(!input){return;}
 
 	var layer = Hdrpaint.selected_layer;
-	var member = e.target.id.replace("layer_","");
+	var member = input.id.replace("layer_","");
+	if(input.getAttribute("type")==="radio"){
+		member = input.name;
+	}
 	if(member===""){
-		member = e.target.title;
+		member = input.title;
+	}
+	var value;
+	if(input.getAttribute("type")==="checkbox"){
+		value = input.checked;
+	}else{
+		value = input.value;
+	}
+	if(input.hasAttribute("number")){
+		value = Number(value);
 	}
 
-	if(input.id==="layer_width"  || input.id==="layer_height"){
-		var layer = Hdrpaint.selected_layer;
-		var width = parseInt(inputs["layer_width"].value);
-		var height= parseInt(inputs["layer_height"].value);
-		Hdrpaint.executeCommand("resizeLayer",{"layer_id":layer.id,"width":width,"height":height});
-		return;
+	switch(member){
+		case "width":
+		case "height":
+			var width = parseInt(inputs["layer_width"].value);
+			var height= parseInt(inputs["layer_height"].value);
+			Hdrpaint.executeCommand("resizeLayer",{"layer_id":layer.id,"width":width,"height":height});
+			break;
+		case "x":
+		case "y":
+			var x= parseInt(inputs["layer_x"].value);
+			var y= parseInt(inputs["layer_y"].value);
+			x-=layer.position[0];
+			y-=layer.position[1];
+			Hdrpaint.executeCommand("translateLayer",{"layer_id":layer.id,"x":x,"y":y});
+			break;
+		default:
+			Hdrpaint.executeCommand("changeLayerAttribute",{"layer_id":layer.id,"name":member,"value":value});
 	}
-	if(input.id==="layer_x"  || input.id==="layer_y"){
-		var layer = Hdrpaint.selected_layer;
-		var x= parseInt(inputs["layer_x"].value);
-		var y= parseInt(inputs["layer_y"].value);
-		x-=layer.position[0];
-		y-=layer.position[1];
-		Hdrpaint.executeCommand("translateLayer",{"layer_id":layer.id,"x":x,"y":y});
-		return;
-	}
-	if(e.target.getAttribute("type")==="checkbox"){
-		Hdrpaint.executeCommand("changeLayerAttribute",{"layer_id":layer.id,"name":member,"value":e.target.checked});
-	}else if(e.target.getAttribute("type")==="radio"){
-		member = e.target.name;
-		Hdrpaint.executeCommand("changeLayerAttribute",{"layer_id":layer.id,"name":member,"value":e.target.value});
-
-	  }else{
-		Hdrpaint.executeCommand("changeLayerAttribute",{"layer_id":layer.id,"name":member,"value":e.target.value});
-	}
-	
-	
 	
 });
 

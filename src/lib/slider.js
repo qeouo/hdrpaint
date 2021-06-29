@@ -45,6 +45,7 @@ var replace= function(node,slider){
 	node.parentNode.replaceChild(slider.node,node);
 	//node.setAttribute("class","js-text");
 	node.classList.remove("slider");
+	node.setAttribute("number","");
 	node.setAttribute("type","text");
 	slider.node.replaceChild(node,slider.input);
 	slider.input = node;
