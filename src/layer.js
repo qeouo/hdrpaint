@@ -582,9 +582,9 @@ export default class Layer{
 		}
 
 
-		if(layer === Hdrpaint.selected_layer){
-			Hdrpaint.refreshActiveLayerParam();
-		}
+//		if(layer === Hdrpaint.selected_layer){
+//			Hdrpaint.refreshActiveLayerParam();
+//		}
 
 	}
 

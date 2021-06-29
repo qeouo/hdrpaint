@@ -89,6 +89,7 @@ var canvas_field;
 	//最初に全コントロールを配列に入れる
 	var elements= Array.prototype.slice.call(document.getElementsByTagName("input"));
 	elements = elements.concat(Array.prototype.slice.call(document.getElementsByTagName("select")));
+	elements = elements.concat(Array.prototype.slice.call(document.getElementsByTagName("button")));
 	for(var i=0;i<elements.length;i++){
 		var input = elements[i];
 		var id= input.getAttribute("id");
@@ -1090,6 +1091,7 @@ function dataURIConverter(dataURI) {
 //			bind.feedBackValue(this.value);
 //		});
 //	});
+	//
 
 }
 

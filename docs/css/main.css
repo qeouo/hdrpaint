@@ -255,3 +255,26 @@ width:80px;
 	position:absolute;
 	pointer-events:none;
 }
+
+#join_layer::before{
+	content:'下のレイヤと結合';
+}
+div[layertype='1'] #join_layer::before{
+	content:'子を結合';
+}
+
+button{
+	color:#ddd;
+	background:#336;
+	cursor:pointer;
+	appearance: none;
+	white-space:pre-wrap;
+	line-height:90%;
+}
+
+div.modifier_param{
+	display:none;
+}
+#modifier_param_area[modifier="layer"] div#div_layer{
+	display:inline;
+}

@@ -40,7 +40,7 @@
 		<div class="label">ツール</div>
 		<div id="tools">
 			<ul>
-				<li><label><input type="radio" id="pen" name="tool" checked>ブラシ</label>
+				<li><label><input type="radio" id="pen" name="tool" checked>ブラシ</label></li>
 				<li><label><input type="radio" id="rectangle" name="tool" shortcut="r">[r]矩形選択</label></li>
 				<li><label><input type="radio" id="translate" name="tool" shortcut="t">[t]移動</label></li>
 				<li><label><input type="radio" id="fill" name="tool" shortcut="f">[f]塗り潰し</label></li>
@@ -173,7 +173,7 @@
 </div>
 
 <div class="right">
-	<div class="area">
+	<div class="area" bind:layertype="selected_layer.type">
 		<div class="label" >レイヤ/モディファイア</div>
 		<div id="layer_param" >
 			<div style="width:100%;">
@@ -182,7 +182,7 @@
 				<label><input type="checkbox" id="layer_lock" bind:="selected_layer.lock"/>ロック</label>
 			</div>
 
-			<div id="modifier_param_area" >
+			<div id="modifier_param_area"  bind:modifier="selected_layer.modifier">
 				<div id="div_layer" class="modifier_param">
 					位置<input type="text" id="layer_x" value="" class="size" bind:="selected_layer.position.0">
 					<input type="text" id="layer_y" value="" class="size" bind:="selected_layer.position.1">
@@ -201,7 +201,8 @@
 			<div style="float:left;text-align:left;">
 				<input type="button" id="down_layer" value="↓">
 				<input type="button" id="up_layer" value="↑" >
-				<input type="button" id="join_layer" value="一個下のレイヤと結合" >
+				<!-- input type="button" id="join_layer" value="一個下のレイヤと結合" -->
+				<button type="button" id="join_layer" ></button>
 			</div>
 			<div style="text-align:right;">
 				<input type="button" id="delete_layer" value="レイヤ削除" ><br>

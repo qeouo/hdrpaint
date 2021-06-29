@@ -54,11 +54,13 @@ class Bind{
 			case "INPUT":
 			case "SELECT":
 			case "TEXTAREA":
-			if(node.value !== value){
-				node.value = value;
-			}
 			if(node.getAttribute("type")==="checkbox"){
 				node.checked = value;
+			}
+			if(node.getAttribute("type")==="radio"){
+				node.checked=Boolean(value === node.value);
+			}else{
+				node.value = value;
 			}
 				Util.fireEvent(node,"input");
 			break;

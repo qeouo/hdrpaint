@@ -28,78 +28,6 @@ class Hdrpaint{
 		this.brush_status={}
 	}
 
-	refreshActiveLayerParam(){
-		//アクティブレイヤパラメータ更新
-		var layer = this.selected_layer;
-		if(!layer){
-			return;
-		}
-		var layer_inputs = Array.prototype.slice.call(document.getElementById("layer_param").getElementsByTagName("input"));
-		layer_inputs = layer_inputs.concat(Array.prototype.slice.call(document.getElementById("layer_param").getElementsByTagName("select")));
-		//for(var i=0;i<layer_inputs.length;i++){
-		//	var input = layer_inputs[i];
-		//	switch(input.id){
-		//		case "layer_x":
-		//		input.value = layer.position[0];
-		//		break;
-		//	case "layer_y":
-		//		input.value = layer.position[1];
-		//		break;
-		//	case "layer_width":
-		//		if(layer.img){
-		//			input.value = layer.img.width;
-		//		}
-		//		break;
-		//	case "layer_height":
-		//		if(layer.img){
-		//			input.value = layer.img.height;
-		//		}
-		//		break;
-		//	default:
-		//		var member = input.id.replace("layer_","");
-		//		if(member in layer){
-		//			if(input.getAttribute("type")==="checkbox"){
-		//				input.checked=layer[member];
-		//			}else{
-		//				input.value=layer[member];
-		//			}
-		//			Util.fireEvent(input,"input");
-		//		}
-		//	}
-		//}
-	var inputs = this.inputs;
-		if(this.selected_layer.type ===1){
-			inputs["join_layer"].value="子を結合";
-		}else{
-			inputs["join_layer"].value="下のレイヤと結合";
-		}
-
-		var elems = document.querySelector("#modifier_param_area").children;
-		for(var i=0;i<elems.length;i++){
-			elems[i].style.display="none";
-		}
-		var elem = document.querySelector("#div_" + this.selected_layer.modifier);
-		if(elem){
-			elem.style.display="inline";
-
-			var elems = elem.querySelectorAll("input,select");
-			for(var i=0;i<elems.length;i++){
-				var input = elems[i];
-				var name = input.title;
-				if(name in layer){
-					if(input.type==="checkbox"){
-						input.checked=Boolean(layer[name]);
-					}else if(input.type==="radio"){
-						input.checked=Boolean(layer[name] === input.value);
-					}else{
-						input.value=layer[name];
-					}
-					Util.fireEvent(input,"input");
-				}
-			}
-		}
-		
-	}
 	refreshLayerRectangle(){
 		if(!this.selected_layer)return;
 
@@ -140,7 +68,6 @@ class Hdrpaint{
 				layer.dom.classList.add("active");
 			}
 		});
-		this.refreshActiveLayerParam();
 
 
 		if(inputs["selected_layer_only"].checked){
@@ -442,6 +369,14 @@ class Hdrpaint{
 		div.classList.add("modifier_param");
 		div.insertAdjacentHTML('beforeend',html);
 
+		var nodes = div.querySelectorAll("*[name]");
+		for(var i=0;i<nodes.length;i++){
+			var node = nodes[i];
+			var nodename = node.getAttribute("name");
+			node.setAttribute("title",nodename);
+			node.setAttribute("bind:","selected_layer." + nodename);
+		}
+
 		var dialog_parent= document.querySelector("#modifier_param_area");
 		dialog_parent.appendChild(div);
 
@@ -452,6 +387,12 @@ class Hdrpaint{
 		input.title=name;
 		input.value=name;
 		area.appendChild(input);
+
+		this.stylesheet.insertRule(` 
+			#modifier_param_area[modifier="${name}"] div#div_${name}{
+				display:inline;
+			}
+		`, this.stylesheet.cssRules.length);
 	}
 
 
@@ -463,6 +404,11 @@ class Hdrpaint{
 
 }
 const hdrpaint = new Hdrpaint();
+
+	//動的スタイルシート生成
+	var newStyle = document.createElement('style');newStyle.type = "text/css";
+	document.getElementsByTagName('head').item(0).appendChild(newStyle);
+	hdrpaint.stylesheet = document.styleSheets.item(document.styleSheets.length-1);
 export default hdrpaint;
 
 

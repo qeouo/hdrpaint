@@ -39,7 +39,7 @@ Hdrpaint.registModifier(
 
 }
 	,"blur"
-	,`ぼかし半径:<input class="slider modifier_scale" title="scale" step="1" min="1" max="128"><br>`
+	,`ぼかし半径:<input class="slider modifier_scale" name="scale" step="1" min="1" max="128" ><br>`
 );
 
 Slider.init();

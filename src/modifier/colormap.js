@@ -59,8 +59,8 @@ class ColorMap extends Layer{
 	}
 };
 var html = `
-		<input type="radio" name="gradtype" title="gradtype" value="0"/>明るさで判定
-		<input type="radio" name="gradtype" title="gradtype" value="1"/>アルファ値で判定
+		<label><input type="radio" name="gradtype"  value="0" />明るさで判定</label>
+		<label><input type="radio" name="gradtype"  value="1" />アルファ値で判定</label>
 	`;
 ColorMap.prototype.name="colormap";
 Hdrpaint.registModifier(ColorMap,"colormap",html);
