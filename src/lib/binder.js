@@ -125,7 +125,7 @@ export default class Binder {
 		this.binds.push(bind);
 
 		if(node.hasAttribute("feedback")){
-			node.addEventListener("change",()=>{
+			node.addEventListener("input",()=>{
 				bind.feedBack();
 			});
 		}

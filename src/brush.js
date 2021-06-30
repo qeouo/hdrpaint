@@ -6,15 +6,17 @@ import CommandLog from "./commandlog.js";
 import Hdrpaint from "./hdrpaint.js";
 import Redraw from "./redraw.js";
 import Layer from "./layer.js";
+
 let refresh_flg=false;
 let pen_preview_img;
 let pen_preview_command; //ブラシの描画プレビュー作成用のコマンドオブジェクト
 let brush_id_count=0;
-	var getBrushFromDiv=function(div){
-		var result_brush = null;
-		return Hdrpaint.brushes.find(function(a){
-			return (a.dom===div);});
-	}
+
+var getBrushFromDiv=function(div){
+	var result_brush = null;
+	return Hdrpaint.brushes.find(function(a){
+		return (a.dom===div);});
+}
 
 var brushselect=function(e){
 //ブラシー一覧クリック時、クリックされたものをアクティブ化する
@@ -26,36 +28,37 @@ var brushselect=function(e){
 	e.stopPropagation();
 
 }
-	var drag_brush=null;
-	var DragStart=function(event) {
-		//ドラッグ開始
-		drag_brush= getBrushFromDiv(event.currentTarget);
-	//     event.dataTransfer.setData("text", drag_brush.id);
+var drag_brush=null;
+var DragStart=function(event) {
+	//ドラッグ開始
+	drag_brush= getBrushFromDiv(event.currentTarget);
+//     event.dataTransfer.setData("text", drag_brush.id);
 
-		event.stopPropagation();
+	event.stopPropagation();
+}
+//ドラッグ＆ドロップによるブラシ順編集
+var dragover_handler = function(event) {
+ event.preventDefault();
+ event.dataTransfer.dropEffect = "move";
+}	
+var DragEnter =function(event) {
+	//ドラッグ移動時
+	var drop_brush = getBrushFromDiv(event.currentTarget);
+
+	event.stopPropagation();
+	if(drag_brush=== drop_brush){
+		//自分自身の場合は無視
+		return;
 	}
-	//ドラッグ＆ドロップによるブラシ順編集
-	var dragover_handler = function(event) {
-	 event.preventDefault();
-	 event.dataTransfer.dropEffect = "move";
-	}	
-	var DragEnter =function(event) {
-		//ドラッグ移動時
-		var drop_brush = getBrushFromDiv(event.currentTarget);
 
-		event.stopPropagation();
-		if(drag_brush=== drop_brush){
-			//自分自身の場合は無視
-			return;
-		}
+	var num = Hdrpaint.brushes.indexOf(drag_brush);
+	var num2= Hdrpaint.brushes.indexOf(drop_brush);
+	Hdrpaint.brushes.splice(num,1);
 
-		var num = Hdrpaint.brushes.indexOf(drag_brush);
-		var num2= Hdrpaint.brushes.indexOf(drop_brush);
-		Hdrpaint.brushes.splice(num,1);
+	Hdrpaint.brushes.splice(num2,0,drag_brush);
+	Brush.refreshBrush();
+}
 
-		Hdrpaint.brushes.splice(num2,0,drag_brush);
-		Brush.refreshBrush();
-	}
 export default class Brush{
 //ブラシ
 	constructor(){
@@ -93,7 +96,6 @@ export default class Brush{
 	};
 
 	static init(){
-		var f = document.getElementById("brush_param");
 
 		document.querySelector("#up_brush").addEventListener(
 			"click"
@@ -346,9 +348,6 @@ export default class Brush{
 		}else{
 			var div= brush.dom.getElementsByClassName("name")[0];
 			div.innerHTML="[" + brush.shortcut + "]"  + brush.name;
-			var span = brush.dom.getElementsByClassName("attributes")[0];
-			var txt="";
-			span.innerHTML = txt;
 
 		}
 	}
