@@ -11,7 +11,7 @@ class Bind{
 	getBindValue(n){
 		//バインドされた変数の値を取得
 		var bind = this;
-		var value=this.binder.args_root;
+		var value=this.variable_root;
 		for(var j=0;j<bind.variable.length-n;j++){
 			value = value[bind.variable[j]];
 			if(value == undefined){
@@ -48,9 +48,9 @@ class Bind{
 			return;
 		}
 		var node = bind.node;
-		node.setAttribute(bind.attribute_name,value);
 
-		if(bind.attribute_name !=="content"){
+		if(bind.attribute_name !==""){
+			node.setAttribute(bind.attribute_name,value);
 			return;
 		}
 		switch(node.tagName){
@@ -82,22 +82,26 @@ class Bind{
 export default class Binder {
 	constructor(){
 		this.binds=[];
-		this.args_root = window;
+		this.variable_root = window;
 	}
 
-	//初期化&バインド
-	init(_args_root){
-		if(_args_root){
-			this.args_root = _args_root;
+	init(_variable_root){
+		//初期化&バインド
+		if(_variable_root){
+			this.variable_root = _variable_root;
 		}
-		this.binds=[];
+		//this.binds=[];
 
 		var bindedNodes = document.querySelectorAll("*");
 		bindedNodes.forEach((node)=>{
 			for(var i=0;i<node.attributes.length;i++){
-				var name = node.attributes[i].name;
-				if(name.indexOf("bind:")!==0)continue;
-				this.bind(node,name);
+				var attribute_name = node.attributes[i].name;
+				if(attribute_name.indexOf("bind:")!==0)continue;
+
+				var variable_name = node.getAttribute(attribute_name);
+
+				attribute_name = attribute_name.replace("bind:","");
+				this.bind(node,attribute_name,variable_name,_variable_root);
 			
 			};
 		});
@@ -110,29 +114,30 @@ export default class Binder {
 		func();
 	}
 
-	//ノードとバインド変数を渡してバインド情報を登録する
-	bind(node,attribute_name){
+	bind(node,attribute_name,variable_name,variable_root){
+		//ノードとバインド変数を渡してバインド情報を登録する
 		var bind=new Bind();
 		bind.node = node;
 
-		bind.attribute_name = attribute_name.replace("bind:","");
-		if(bind.attribute_name ===""){
-			bind.attribute_name="content";
+		bind.attribute_name = attribute_name;
+
+		bind.variable = variable_name.split(".");
+		if(!variable_root){
+			variable_root = this.variable_root;
 		}
-		bind.variable = bind.node.getAttribute(attribute_name).split(".");
-		bind.args_root = this.args_root;
+		bind.variable_root = variable_root;
 		bind.binder=this;
 		this.binds.push(bind);
 
 		if(node.hasAttribute("feedback")){
-			node.addEventListener("input",()=>{
+			node.addEventListener("change",()=>{
 				bind.feedBack();
 			});
 		}
 	}
 
-	//バインドしたノードに変数の値をセット
 	refresh(){
+		//バインドしたノードに変数の値をセット
 		for(var i=0;i<this.binds.length;i++){
 			this.binds[i].refresh();
 		}

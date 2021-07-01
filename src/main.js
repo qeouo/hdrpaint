@@ -17,6 +17,7 @@ import ColorPickerHDR from "./lib/colorpickerhdr.js";
 import ColorSelector from "./lib/colorselector.js";
 import Binder from "./lib/binder.js";
 var binder =new Binder();
+window.binder=binder;
 
 
 window.root_layer=null;

@@ -186,6 +186,9 @@ export default class Layer{
 
 		this.dom = dom;
 
+		binder.bind(dom.querySelector(".name"),"","name",this);
+
+
 	};
 
 	static enableRefreshThumbnail=true;
@@ -554,7 +557,7 @@ export default class Layer{
 			if(this.mask_alpha){
 				name +="(αlock)";
 			}
-			div.innerHTML=name;
+			//div.innerHTML=name;
 			
 			var span = layer.dom.getElementsByClassName("layer_attributes")[0];
 			var txt="";
