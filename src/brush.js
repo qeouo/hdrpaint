@@ -78,7 +78,7 @@ export default class Brush{
 
 		var html=` 
 				<img draggable="false">
-				<span class="name"></span>
+				<span class="name">[<span bind:="shortcut"></span>]<span bind:="name"></span></span>
 				<div class="attributes"></div>
 			`
 
@@ -91,6 +91,9 @@ export default class Brush{
 		dom.addEventListener("dragstart",DragStart);
 		dom.addEventListener("dragover",dragover_handler);
 		dom.addEventListener("dragenter",DragEnter);
+
+
+		binder.bindNodes(dom,this);
 
 		this.dom=dom;
 	};
@@ -346,8 +349,8 @@ export default class Brush{
 
 
 		}else{
-			var div= brush.dom.getElementsByClassName("name")[0];
-			div.innerHTML="[" + brush.shortcut + "]"  + brush.name;
+//			var div= brush.dom.getElementsByClassName("name")[0];
+//			div.innerHTML="[" + brush.shortcut + "]"  + brush.name;
 
 		}
 	}

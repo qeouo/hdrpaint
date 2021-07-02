@@ -51,6 +51,7 @@ class Bind{
 
 		if(bind.attribute_name !==""){
 			node.setAttribute(bind.attribute_name,value);
+			bind.old_value = value;
 			return;
 		}
 		switch(node.tagName){
@@ -101,7 +102,7 @@ export default class Binder {
 				var variable_name = node.getAttribute(attribute_name);
 
 				attribute_name = attribute_name.replace("bind:","");
-				this.bind(node,attribute_name,variable_name,_variable_root);
+				this.bind(node,attribute_name,variable_name);
 			
 			};
 		});
@@ -115,8 +116,12 @@ export default class Binder {
 	}
 
 	bind(node,attribute_name,variable_name,variable_root){
+		var bind = this.binds.find((e)=>{return (e.node == node && e.attribute_name == attribute_name);});
+		if(bind){
+			return bind;
+		}
 		//ノードとバインド変数を渡してバインド情報を登録する
-		var bind=new Bind();
+		bind=new Bind();
 		bind.node = node;
 
 		bind.attribute_name = attribute_name;
@@ -134,6 +139,23 @@ export default class Binder {
 				bind.feedBack();
 			});
 		}
+		return bind;
+	}
+	bindNodes(node,variable_root){
+		var bindedNodes = node.querySelectorAll("*");
+		bindedNodes.forEach((node)=>{
+			for(var i=0;i<node.attributes.length;i++){
+				var attribute_name = node.attributes[i].name;
+				if(attribute_name.indexOf("bind:")!==0)continue;
+
+				var variable_name = node.getAttribute(attribute_name);
+
+				attribute_name = attribute_name.replace("bind:","");
+				this.bind(node,attribute_name,variable_name,variable_root);
+			
+			};
+		});
+		
 	}
 
 	refresh(){
