@@ -78,7 +78,7 @@ export default class Brush{
 
 		var html=` 
 				<img draggable="false">
-				<span class="name">[<span bind:="shortcut"></span>]<span bind:="name"></span></span>
+				<span class="name"></span>
 				<div class="attributes"></div>
 			`
 
@@ -93,7 +93,11 @@ export default class Brush{
 		dom.addEventListener("dragenter",DragEnter);
 
 
-		binder.bindNodes(dom,this);
+		//binder.bindNodes(dom,this);
+		binder.bind(dom.querySelector(".name"),"",this,["shortcut","name"],
+			function(variables){
+				return "["+variables[0]+"]"+variables[1];
+		});
 
 		this.dom=dom;
 	};

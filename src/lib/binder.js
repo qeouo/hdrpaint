@@ -5,15 +5,17 @@ class Bind{
 	constructor(node,variable){
 		this.node=node;
 		this.attribute_name="";
-		this.variable=variable;
+		this.variables=[];
+		this.old={};
 	}
 
-	getBindValue(n){
+	getBindValue(n,n2){
 		//バインドされた変数の値を取得
 		var bind = this;
 		var value=this.variable_root;
-		for(var j=0;j<bind.variable.length-n;j++){
-			value = value[bind.variable[j]];
+		var v=bind.variables[n];
+		for(var j=0;j<v.length-n2;j++){
+			value = value[v[j]];
 			if(value == undefined){
 				value=null;
 				break;
@@ -35,23 +37,34 @@ class Bind{
 			}
 		}
 		//バインド変数にコントロールの値をセットする
-		var val =this.getBindValue(1); //対象の変数の親を取得
-		val[this.variable[this.variable.length-1]]=value;
+		var val =this.getBindValue(0,1); //対象の変数の親を取得
+		val[this.variables[0][this.variables[0].length-1]]=value;
 		this.old_value=null;
 	}
 
 	refresh(){
 		//バインドされた変数の値をノード属性にセット
 		var bind = this;
-		var value = this.getBindValue(0);
-		if(bind.old_value  === value){
+		var check=false;
+		this.variables.forEach((e,idx)=>{
+			var value = this.getBindValue(idx,0);
+			if(bind.old[idx] != value){
+				bind.old[idx]=value;
+				check=true;
+			}
+		});
+		if(!check){
 			return;
 		}
 		var node = bind.node;
 
+		var value = bind.old[0];
+		if(bind.func){
+			value=bind.func(bind.old);
+		}
+
 		if(bind.attribute_name !==""){
 			node.setAttribute(bind.attribute_name,value);
-			bind.old_value = value;
 			return;
 		}
 		switch(node.tagName){
@@ -102,7 +115,7 @@ export default class Binder {
 				var variable_name = node.getAttribute(attribute_name);
 
 				attribute_name = attribute_name.replace("bind:","");
-				this.bind(node,attribute_name,variable_name);
+				this.bind(node,attribute_name,null,variable_name);
 			
 			};
 		});
@@ -115,7 +128,7 @@ export default class Binder {
 		func();
 	}
 
-	bind(node,attribute_name,variable_name,variable_root){
+	bind(node,attribute_name,variable_root,variable_names,func){
 		var bind = this.binds.find((e)=>{return (e.node == node && e.attribute_name == attribute_name);});
 		if(bind){
 			return bind;
@@ -126,11 +139,20 @@ export default class Binder {
 
 		bind.attribute_name = attribute_name;
 
-		bind.variable = variable_name.split(".");
 		if(!variable_root){
 			variable_root = this.variable_root;
 		}
 		bind.variable_root = variable_root;
+		if(!Array.isArray(variable_names)){
+			variable_names = [variable_names];
+		}
+		bind.variables=[];
+		variable_names.forEach((v)=>{
+			bind.variables.push(v.split("."));
+		});
+
+		bind.func=func;
+
 		bind.binder=this;
 		this.binds.push(bind);
 
@@ -151,7 +173,7 @@ export default class Binder {
 				var variable_name = node.getAttribute(attribute_name);
 
 				attribute_name = attribute_name.replace("bind:","");
-				this.bind(node,attribute_name,variable_name,variable_root);
+				this.bind(node,attribute_name,variable_root,variable_name);
 			
 			};
 		});

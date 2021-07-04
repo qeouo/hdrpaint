@@ -139,8 +139,9 @@
 	<div class="area canvas_area" id="canvas_area">
 		<div class="label">ビュー</div>
 		<div class="canvas_status2">
-			キャンバスサイズ<input type="text" id="canvas_width" value="256" class="size">x
-			<input type="text" id="canvas_height" value="256" class="size">
+			キャンバスサイズ
+			<input type="text" id="canvas_width" bind:="root_layer.img.width" class="size">x
+			<input type="text" id="canvas_height" bind:="root_layer.img.height" class="size">
 			<input type="button" id="btn_resize_layer" value="アクティブレイヤをキャンバスに合わせる" >
 			<input type="button" id="btn_resize_layers" value="全レイヤをキャンバスに合わせる" >
 			背景色<input type="input" id="background_color" class="colorpickerhdr" value="1,1,1,1" style="width:10px;" readonly="readonly">
@@ -153,7 +154,7 @@
 			<div class="layer_rectangle"></div>
 		</div>
 		<div class="canvas_status">
-			<span id="status2">
+			<span id="status2" >
 			</span>
 			<div class="color_status color_monitor" style="display:inline-block;">
 				<ul>

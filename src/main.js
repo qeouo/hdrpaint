@@ -20,7 +20,6 @@ var binder =new Binder();
 window.binder=binder;
 
 
-window.root_layer=null;
 window.inputs=[];
 var shortcuts=[];
 window.pen_log=null;
@@ -182,7 +181,7 @@ var onloadfunc=function(e){
 
 		if((e.buttons & 2) || (inputs["color_picker"].checked)){
 			//カラーピッカー
-			var img= root_layer.img;
+			var img= Hdrpaint.root_layer.img;
 			if(inputs["selected_layer_only"].checked){
 				img= Hdrpaint.selected_layer.img;
 			}
@@ -331,7 +330,7 @@ var onloadfunc=function(e){
 		rgb[2]=Number(sp[2]);
 		rgb[3]=Number(sp[3]);
 
-		root_layer.composite();
+		Hdrpaint.root_layer.composite();
 	});
 
 	window.addEventListener("pointerup",function(e){
@@ -351,7 +350,7 @@ var onloadfunc=function(e){
 	var canvas_field = document.querySelector("#canvas_field");
 	canvas_field.addEventListener("pointermove",function(e){
 		getPos(e);
-		Redraw.refreshPreviewStatus(e);
+		//Redraw.refreshPreviewStatus(e);
 		if(e.buttons){
 			drawfunc(e);
 			e.preventDefault();
@@ -413,7 +412,7 @@ var onloadfunc=function(e){
 			}
 			//塗りつぶし
 
-			var joined_img = root_layer.img;
+			var joined_img = Hdrpaint.root_layer.img;
 			if(x<0 || x>=joined_img.width || y<0 || y>=joined_img.height){
 				//範囲外は無視
 				return;
@@ -832,7 +831,7 @@ var onloadfunc=function(e){
 		//OSのクリップボードにSDR結合画像をコピー
 		const selection = document.getSelection();
 
-		var url = root_layer.img.toBlob((blob)=>{
+		var url = Hdrpaint.root_layer.img.toBlob((blob)=>{
 			let data = [new ClipboardItem({ [blob.type]: blob})];
 
 			navigator.clipboard.write(data);
@@ -984,7 +983,7 @@ function dataURIConverter(dataURI) {
 		preview.style.width = (preview.width* doc.scale/100 ) + "px";
 		preview.style.height= (preview.height*doc.scale/100) + "px";
 
-		Redraw.refreshPreviewStatus(e);
+		//Redraw.refreshPreviewStatus(e);
 
 	}) ;
 
@@ -1042,7 +1041,7 @@ function dataURIConverter(dataURI) {
 		//	loadHpd(buffer);
 		//});
 	}else{
-		root_layer = Hdrpaint.createLayer(new Img(1,1),1);
+		Hdrpaint.root_layer = Hdrpaint.createLayer(new Img(1,1),1);
 		//Hdrpaint.executeCommand("resizeLayer",{"layer_id":root_layer.id,"width":512,"height":512});
 
 		Hdrpaint.executeCommand("resizeCanvas",{"width":512,"height":512});
@@ -1056,15 +1055,50 @@ function dataURIConverter(dataURI) {
 
 		CommandLog.reset();
 
-		Hdrpaint.executeCommand("createNewLayer",{"position":1,"parent":root_layer.id,"width":preview.width,"height":preview.height});
-		var layer = root_layer.children[0];
+		Hdrpaint.executeCommand("createNewLayer",{"position":1,"parent":Hdrpaint.root_layer.id,"width":preview.width,"height":preview.height});
+		var layer = Hdrpaint.root_layer.children[0];
 		layer.name="default"
 		layer.refreshDiv();
 		layer.registRefreshThumbnail();
 
-		root_layer.refreshDiv();
+		Hdrpaint.root_layer.refreshDiv();
 		//refreshTab("tools");
 	}
+
+	binder.bind(document.querySelector("#status2")
+		,"",Hdrpaint,["cursor_pos.0","cursor_pos.1"],(v)=>{
+			var img = Hdrpaint.root_layer.img;
+			var data = img.data;
+			var width=img.width;
+			var height=img.height;
+
+			if(v[0]<0 || v[1]<0 || v[0]>=width || v[1]>=height){
+
+				Hdrpaint.cursor_color[0]=NaN;
+				Hdrpaint.cursor_color[1]=NaN;
+				Hdrpaint.cursor_color[2]=NaN;
+				Hdrpaint.cursor_color[3]=NaN;
+				return "倍率" + "X:- Y:-";
+			}
+
+			var idx=img.getIndex(v[0]|0,v[1]|0)<<2;
+			Hdrpaint.cursor_color[0]= data[idx];
+			Hdrpaint.cursor_color[1]= data[idx+1];
+			Hdrpaint.cursor_color[2]= data[idx+2];
+			Hdrpaint.cursor_color[3]= data[idx+3];
+			return "倍率" + "X:" + v[0] +" Y:" + v[1];
+	});
+
+	var f = (v)=>isNaN(v[0])?"-":v[0].toFixed(3);
+
+	binder.bind(document.querySelector("#pos_R")
+		,"",Hdrpaint,["cursor_color.0"],f);
+	binder.bind(document.querySelector("#pos_G")
+		,"",Hdrpaint,["cursor_color.1"],f);
+	binder.bind(document.querySelector("#pos_B")
+		,"",Hdrpaint,["cursor_color.2"],f);
+	binder.bind(document.querySelector("#pos_A")
+		,"",Hdrpaint,["cursor_color.3"],f);
 
 	Brush.init();
 	var brush = Brush.create();

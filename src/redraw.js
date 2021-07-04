@@ -31,7 +31,7 @@ var refresh_stack=[] ;
 			step=0;
 		}
 		var bloom_size = parseFloat(Hdrpaint.post_effect.bloom_size);
-		var joined_img = root_layer.img;
+		var joined_img = Hdrpaint.root_layer.img;
 
 		
 
@@ -97,7 +97,7 @@ var refresh_stack=[] ;
 					//ブルーム処理ありの場合は前処理を行う
 
 					bloom_img.copy(left-bloom_size,top-bloom_size
-						,root_layer.img
+						,Hdrpaint.root_layer.img
 						,left-bloom_size,top-bloom_size,right-left+bloom_size*2,bottom-top+bloom_size*2);
 					bloom_img.gauss(bloom_size>>1,bloom_size,left,top,right-left,bottom-top);
 					bloomed_img.copy(left,top,bloom_img
@@ -196,8 +196,8 @@ export default class Redraw{
 			refresh_stack=[];
 			x = 0;
 			y = 0;
-			w = root_layer.img.width;
-			h = root_layer.img.height;
+			w = Hdrpaint.root_layer.img.width;
+			h = Hdrpaint.root_layer.img.height;
 		}
 
 		if(refresh_stack.length===0){
@@ -228,13 +228,13 @@ export default class Redraw{
 			}
 
 		}
-		f(root_layer);
+		f(Hdrpaint.root_layer);
 	}
 
 
 	static refreshPreviewStatus(e){
 		//カーソル下情報表示
-		var img = root_layer.img;
+		var img = Hdrpaint.root_layer.img;
 		var data = img.data;
 		var doc = Hdrpaint.doc;
 
@@ -249,21 +249,17 @@ export default class Redraw{
 		var b= 0;
 		var a= 0;
 		if(x<0 || y<0 || x>=width || y>=height){
-			var str="倍率[scale]% X:[x],Y:[y]";
-			str=str.replace(/\[scale\]/,doc.scale);
-			str=str.replace(/\[x\]/,"-");
-			str=str.replace(/\[y\]/,"-");
-			Util.setText(status2,str);
-
-
-			Util.setText(document.getElementById("pos_R"),"-");
-			Util.setText(document.getElementById("pos_G"),"-");
-			Util.setText(document.getElementById("pos_B"),"-");
-			Util.setText(document.getElementById("pos_A"),"-");
+			Hdrpaint.cursor_color[0]=NaN;
+			Hdrpaint.cursor_color[1]=NaN;
+			Hdrpaint.cursor_color[2]=NaN;
+			Hdrpaint.cursor_color[3]=NaN;
 
 		}else{
 			var idx=img.getIndex(x|0,y|0)<<2;
-			r= data[idx];
+			Hdrpaint.cursor_color[0]= data[idx];
+			Hdrpaint.cursor_color[1]= data[idx+1];
+			Hdrpaint.cursor_color[2]= data[idx+2];
+			Hdrpaint.cursor_color[3]= data[idx+3];
 			g= data[idx+1];
 			b= data[idx+2];
 			a= data[idx+3];
@@ -276,7 +272,7 @@ export default class Redraw{
 			str=str.replace(/\[x\]/,x);
 			str=str.replace(/\[y\]/,y);
 
-			Util.setText(status2,str );
+//			Util.setText(status2,str );
 
 			Util.setText(document.getElementById("pos_R"),r.toFixed(3));
 			Util.setText(document.getElementById("pos_G"),g.toFixed(3));

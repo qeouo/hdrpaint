@@ -186,7 +186,7 @@ export default class Layer{
 
 		this.dom = dom;
 
-		binder.bind(dom.querySelector(".name"),"","name",this);
+		binder.bind(dom.querySelector(".name"),"",this,"name");
 
 
 	};
@@ -282,7 +282,7 @@ export default class Layer{
 		composite_img.height= bottom-top;
 
 
-		if(this === root_layer){
+		if(this === Hdrpaint.root_layer){
 			var bg = Hdrpaint.doc.background_color;
 			composite_img.fill(bg[0],bg[1],bg[2],bg[3],0,0,composite_img.width,composite_img.height);
 		}else{
@@ -319,7 +319,7 @@ export default class Layer{
 			, composite_area[3] 
 		);
 
-		if(this === root_layer){
+		if(this === Hdrpaint.root_layer){
 			//ルートレイヤの場合はプレビュー更新
 			Redraw.refreshPreview(0,composite_area[0],composite_area[1],composite_area[2],composite_area[3]);
 		}else{
@@ -369,7 +369,7 @@ export default class Layer{
 
 
 	static eachLayers(f){
-		if(!root_layer){
+		if(!Hdrpaint.root_layer){
 			return;
 		}
 		var cb = function(layer){
@@ -389,7 +389,7 @@ export default class Layer{
 			}
 			return false;
 		}
-		return cb(root_layer);
+		return cb(Hdrpaint.root_layer);
 	}
 
 	static findById(layer_id){
@@ -525,7 +525,7 @@ export default class Layer{
 		}
 		
 
-		if(layer === root_layer){
+		if(layer === Hdrpaint.root_layer){
 			layers_container = document.getElementById("layers_container");
 		}else{
 			//layer.dom.className="layer";

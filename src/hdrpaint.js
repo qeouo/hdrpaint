@@ -8,7 +8,9 @@ import {Vec2,Vec3,Vec4} from "./lib/vector.js";
 
 class Hdrpaint{
 	constructor(){
+		this.root_layer=null;
 		this.color=new Vec4();
+		this.cursor_color=new Vec4();
 		this.Command = {};
 		this.commandObjs={};
 		this.painted_mask=new Float32Array(1024*1024);
@@ -221,9 +223,9 @@ class Hdrpaint{
 	getPosition(){
 		var data={};
 		if(!this.selected_layer){
-			data.parent_layer_id = root_layer.id;
-			data.parent_layer = root_layer;
-			data.position = root_layer.length;
+			data.parent_layer_id = Hdrpaint.root_layer.id;
+			data.parent_layer = Hdrpaint.root_layer;
+			data.position = Hdrpaint.root_layer.length;
 		}else{
 			if(this.selected_layer.children && this.selected_layer.dom.classList.contains("open")){
 				data.parent_layer_id = this.selected_layer.id;

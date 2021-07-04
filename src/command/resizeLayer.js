@@ -85,4 +85,5 @@ class ResizeLayer extends CommandBase{
 		}
 	}
 };
+ResizeLayer.prototype.name="resizeLayer";
 Hdrpaint.commandObjs["resizeLayer"] = ResizeLayer;
