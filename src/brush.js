@@ -335,7 +335,7 @@ export default class Brush{
 			});
 
 			//ブラシ選択状態にする
-			inputs["pen"].checked=true;
+			Hdrpaint.selected_tool = "pen";
 			Brush.refreshPreview();
 			
 		}

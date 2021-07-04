@@ -58,7 +58,7 @@ var fillCheckAlpha= function(layer,joined,x,y){
 var fillCheck=fillCheckAll;
 var fillSub=function(layer,y,left,right){
 	var target = layer.img;
-	var joined_img = root_layer.img;
+	var joined_img = Hdrpaint.root_layer.img;
 
 	var mode=0;
 
@@ -149,7 +149,7 @@ class Fill extends CommandBase{
 
 		//塗りつぶし対象色
 		var target= layer.img;
-		var joined_img = root_layer.img;
+		var joined_img = Hdrpaint.root_layer.img;
 		var idx = joined_img.getIndex(x+layer.position[0],y+layer.position[1])<<2;
 		joined_r=joined_img.data[idx];
 		joined_g=joined_img.data[idx+1];

@@ -278,3 +278,10 @@ div.modifier_param{
 #modifier_param_area[modifier="layer"] div#div_layer{
 	display:inline;
 }
+
+#tool_status div{
+display:none;
+}
+#tool_status.fill div.tool_fill{
+	display:inline-block;
+}

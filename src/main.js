@@ -20,6 +20,7 @@ var binder =new Binder();
 window.binder=binder;
 
 
+window.Redraw = Redraw;
 window.inputs=[];
 var shortcuts=[];
 window.pen_log=null;
@@ -179,7 +180,7 @@ var onloadfunc=function(e){
 		var x =Hdrpaint.cursor_pos[0];
 		var y = Hdrpaint.cursor_pos[1];
 
-		if((e.buttons & 2) || (inputs["color_picker"].checked)){
+		if((e.buttons & 2) || (Hdrpaint.selected_tool === "color_picker")){
 			//カラーピッカー
 			var img= Hdrpaint.root_layer.img;
 			if(inputs["selected_layer_only"].checked){
@@ -202,7 +203,7 @@ var onloadfunc=function(e){
 		}
 
 
-		if(inputs["rectangle"].checked){
+		if(Hdrpaint.selected_tool==="rectangle"){
 			if(!(e.buttons&1)){
 				return;
 			}
@@ -236,7 +237,7 @@ var onloadfunc=function(e){
 			rect.style.display="inline-block"
 
 
-		}else if(inputs["pen"].checked){
+		}else if(Hdrpaint.selected_tool==="pen"){//inputs["pen"].checked){
 			//ペンのとき
 			if(!pen_log)return;
 
@@ -295,7 +296,7 @@ var onloadfunc=function(e){
 			pen_func.actualDraw();
 
 			
-		}else if(inputs["translate"].checked) {
+		}else if(Hdrpaint.selected_tool==="translate") {
 			//移動のとき
 			if((e.buttons & 1) && pen_log){
 				var oldx =pen_log.obj.param.x;
@@ -384,7 +385,7 @@ var onloadfunc=function(e){
 
 
 		Hdrpaint.mode="";
-		if(inputs["rectangle"].checked && (e.buttons &1)){
+		if(Hdrpaint.selected_tool==="rectangle" && (e.buttons &1)){
 			var rectangle= Hdrpaint.select_rectangle;
 
 			x = Math.floor(x);
@@ -406,7 +407,7 @@ var onloadfunc=function(e){
 			var rect =document.querySelector(".select_rectangle");
 			rect.style.display="none"
 			return;
-		}else if(inputs["fill"].checked && (e.buttons &1)){
+		}else if(Hdrpaint.selected_tool==="fill" && (e.buttons &1)){
 			if(Hdrpaint.selected_layer.type === 1){
 				return;
 			}
@@ -430,7 +431,7 @@ var onloadfunc=function(e){
 			var flg_active_layer_only = inputs["selected_layer_only"].checked;
 			Hdrpaint.executeCommand("fill",{"layer_id":Hdrpaint.selected_layer.id,"x":x,"y":y,"color":color,"is_layer":flg_active_layer_only});
 
-		}else if(inputs["translate"].checked && (e.buttons &1) ){
+		}else if(Hdrpaint.selected_tool ==="translate" && (e.buttons &1) ){
 			//レイヤ位置移動
 			drag_start[0]= x | 0;
 			drag_start[1]= y | 0;
@@ -443,7 +444,7 @@ var onloadfunc=function(e){
 			pen_log = Hdrpaint.executeCommand("translateLayer",{"layer_id":layer_id,"x":0,"y":0} ,{"x":Hdrpaint.selected_layer.position[0],"y":Hdrpaint.selected_layer.position[1]},1);
 
 
-		}else if((inputs["pen"].checked) && (e.buttons &1) ){
+		}else if((Hdrpaint.selected_tool==="pen") && (e.buttons &1) ){
 			//ペンもしくは消しゴム
 			if(Hdrpaint.selected_layer.type !== 0){
 				//通常レイヤ以外は無効
@@ -497,7 +498,7 @@ var onloadfunc=function(e){
 		switch(event.keyCode){
 		case 81://q
 			if(old_tool){
-				old_tool.checked=true;
+				Hdrpaint.selected_tool = old_tool;
 				old_tool=null;
 			}
 			break;
@@ -551,9 +552,9 @@ var onloadfunc=function(e){
 		switch(keycode){
 		case 113://q
 			if(!old_tool){
-				old_tool  = document.querySelector("input[name='tool']:checked");
+				old_tool  = Hdrpaint.selected_tool;
 			}
-			inputs["color_picker"].checked=true;
+			Hdrpaint.selected_tool = "color_picker";
 			break;
 		case 82://R
 			Redraw.compositeAll();
@@ -664,32 +665,12 @@ var onloadfunc=function(e){
 
 
 
-	document.getElementById("post_effect").addEventListener("change",function(e){
-
-		var node =e.target;
-		const bind = binder.binds.find(function(elem){return elem.node===node});
-		if(!bind)return;
-		bind.feedBack();
-
-		//refreshColor();
-		if(e.target.id==="bloom_power"){
-			Redraw.refreshPreview(1);
-		}
-		if(e.target.id==="ch_bloom" || e.target.id==="bloom_size"){
-			Redraw.refreshPreview(0);
-		}
-		if(e.target.id==="ch_gamma" || e.target.id==="gamma" || e.target.id==="ev"){
-			Redraw.refreshPreview(2);
-			Layer.eachLayers(function(layer){
-				//refresh_thumbnail.push(layer);
-				layer.registRefreshThumbnail();
-			});
-		}
-		
-	  });
-	document.getElementById("tools").addEventListener("change",function(e){
-		refreshTab("tools");
-	});
+	window.changeGamma=function(arg){
+		Redraw.refreshPreview(2);
+		Layer.eachLayers(function(layer){
+			layer.registRefreshThumbnail();
+		});
+	}
 
 
 	var resizeCanvas=function(){
@@ -1062,7 +1043,6 @@ function dataURIConverter(dataURI) {
 		layer.registRefreshThumbnail();
 
 		Hdrpaint.root_layer.refreshDiv();
-		//refreshTab("tools");
 	}
 
 	binder.bind(document.querySelector("#status2")
@@ -1156,18 +1136,4 @@ function dataURIConverter(dataURI) {
 
 
 
-var refreshTab = function(target_id){
-	var tool_radios = document.getElementById(target_id).getElementsByTagName("input");
-	for(var i=0;i<tool_radios.length;i++){
-		var input = tool_radios[i];
-		var div=document.getElementById("tab_"+input.id);
-		if(!div)continue;
-		if(input.checked){
-			div.style.display="inline-block";
-			}else{
-			div.style.display="none";
-		}
-	}
-}
-window.refreshTab=refreshTab;
 document.body.onload=onloadfunc;

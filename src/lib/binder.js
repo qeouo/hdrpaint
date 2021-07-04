@@ -29,6 +29,8 @@ class Bind{
 			var node = this.node;
 			if(node.getAttribute("type")==="checkbox"){
 				value = node.checked;
+			}else if(node.getAttribute("type")==="radio"){
+				value = node.value;
 			}else{
 				value = node.value;
 				if(node.hasAttribute("number")){
@@ -115,7 +117,13 @@ export default class Binder {
 				var variable_name = node.getAttribute(attribute_name);
 
 				attribute_name = attribute_name.replace("bind:","");
-				this.bind(node,attribute_name,null,variable_name);
+
+				var func=null;
+				if(node.hasAttribute("bindfunc")){
+					func = node.getAttribute("bindfunc");
+					func = new Function('arg', func);
+				}
+				this.bind(node,attribute_name,null,variable_name,func);
 			
 			};
 		});

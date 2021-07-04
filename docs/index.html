@@ -40,15 +40,15 @@
 		<div class="label">ツール</div>
 		<div id="tools">
 			<ul>
-				<li><label><input type="radio" id="pen" name="tool" checked>ブラシ</label></li>
-				<li><label><input type="radio" id="rectangle" name="tool" shortcut="r">[r]矩形選択</label></li>
-				<li><label><input type="radio" id="translate" name="tool" shortcut="t">[t]移動</label></li>
-				<li><label><input type="radio" id="fill" name="tool" shortcut="f">[f]塗り潰し</label></li>
-				<li><label><input type="radio" id="color_picker" name="tool" >(q)カラーピッカー</label></li>
+				<li><label><input type="radio" name="tool" feedback id="pen" g value="pen" bind:="selected_tool" >ブラシ</label></li>
+				<li><label><input type="radio" name="tool" feedback id="rectangle" g value="rectangle"  bind:="selected_tool" shortcut="r">[r]矩形選択</label></li>
+				<li><label><input type="radio" name="tool" feedback id="translate" g value="translate" bind:="selected_tool" shortcut="t">[t]移動</label></li>
+				<li><label><input type="radio" name="tool" feedback id="fill" g value="fill" bind:="selected_tool" shortcut="f">[f]塗り潰し</label></li>
+				<li><label><input type="radio" name="tool" feedback id="color_picker" value="color_picker" bind:="selected_tool">(q)カラーピッカー</label></li>
 			</ul>
 		</div>
-		<div id="tool_status">
-			<div id="tab_fill">
+		<div id="tool_status" bind:class="selected_tool">
+			<div class="tool_fill">
 				<label><input type="checkbox" id="fill_alpha"/>α=1境界</label><br>
 				
 			
@@ -229,12 +229,28 @@
 
 	<div id="post_effect" class="area">
 		<div class="label">ポストエフェクト</div>
-		<input type="checkbox" id="ch_gamma" bind:="post_effect.ch_gamma">ガンマ
-		<input class="slider" bind:="post_effect.gamma" id="gamma" max="4" value="2.2"/><br>
-		露光<input class="slider" bind:="post_effect.ev" id="ev" min="-10" max="10" value="0"/><br>
-		<label><input type="checkbox" bind:="post_effect.ch_bloom" id="ch_bloom">拡散</label><br>
-		拡散率<input class="slider" bind:="post_effect.bloom_power" id="bloom_power" max="1" value="0.1"/><br>
-		拡散範囲<input class="slider" bind:="post_effect.bloom_size" id="bloom_size" max="100" value="10"/><br>
+		<input type="checkbox" id="ch_gamma" bind:="post_effect.ch_gamma" feedback
+	   		bindfunc="changeGamma();return arg[0];">ガンマ
+		<input class="slider" bind:="post_effect.gamma" id="gamma" max="4" value="2.2"
+			bindfunc="changeGamma();return arg[0];" feedback
+		/><br>
+		露光<input class="slider" bind:="post_effect.ev" id="ev" min="-10" max="10" value="0"
+			bindfunc="changeGamma();return arg[0];" feedback
+		
+		/><br>
+		<label><input type="checkbox" bind:="post_effect.ch_bloom" 
+			bindfunc="Redraw.refreshPreview(0);return arg[0];" id="ch_bloom"
+			feedback
+			>拡散</label><br>
+		拡散率<input class="slider" bind:="post_effect.bloom_power"
+	   		bindfunc="Redraw.refreshPreview(1);return arg[0];"
+			feedback
+	   		id="bloom_power" max="1" value="0.1"/><br>
+		拡散範囲<input class="slider" bind:="post_effect.bloom_size"
+	   		bindfunc="Redraw.refreshPreview(0);return arg[0];" id="bloom_size" max="100" value="10"
+			feedback
+			
+			/><br>
 	</div>
 </div>
 

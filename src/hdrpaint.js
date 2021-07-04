@@ -9,6 +9,7 @@ import {Vec2,Vec3,Vec4} from "./lib/vector.js";
 class Hdrpaint{
 	constructor(){
 		this.root_layer=null;
+		this.selected_tool="pen";
 		this.color=new Vec4();
 		this.cursor_color=new Vec4();
 		this.Command = {};
@@ -31,8 +32,8 @@ class Hdrpaint{
 
 		this.post_effect={
 			ch_bloom:false
-			,bloom_power:0
-			,bloom_size:0
+			,bloom_power:0.2
+			,bloom_size:8
 			,ev:0
 			,ch_gamma:false
 			,gamma:2.2
