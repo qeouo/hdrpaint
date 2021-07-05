@@ -167,7 +167,9 @@
 		</div>
 
 		<div style="display:inline;position:absolute;right:0px;bottom:0px;">
-			<label><input type="checkbox" id="selected_layer_only">(w)選択レイヤのみ表示</label>
+			<label><input type="checkbox" id="selected_layer_only" 
+				 bindfunc =" Redraw.refreshPreview(1);return arg[0];"
+				feedback bind:="selected_layer_only">(w)選択レイヤのみ表示</label>
 		</div>
 	</div>
 

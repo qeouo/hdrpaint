@@ -8,10 +8,13 @@ import {Vec2,Vec3,Vec4} from "./lib/vector.js";
 
 class Hdrpaint{
 	constructor(){
-		this.root_layer=null;
-		this.selected_tool="pen";
+		this.root_layer=null; //最上位レイヤ
+		this.selected_tool="pen"; //選択しているツール
+		this.selected_layer_only=false; //選択レイヤのみプレビューに表示
 		this.color=new Vec4();
-		this.cursor_color=new Vec4();
+		this.cursor_color=new Vec4(); //カーソル下のピクセル色
+		//現在選択状態にあるブラシ
+		this.selected_brush=null;
 		this.Command = {};
 		this.commandObjs={};
 		this.painted_mask=new Float32Array(1024*1024);
@@ -22,8 +25,6 @@ class Hdrpaint{
 		this.mode="";
 		this.layer_id_count=0;
 
-		//現在選択状態にあるブラシ
-		this.selected_brush=null;
 		//全ブラシ
 		this.brushes=[];
 

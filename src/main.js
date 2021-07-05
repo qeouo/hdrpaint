@@ -505,8 +505,9 @@ var onloadfunc=function(e){
 		//case 32://space
 		case 87://w
 			//flg_active_layer_only=false;
-			inputs["selected_layer_only"].checked=false;
-			Util.fireEvent(inputs["selected_layer_only"],"change");
+			Hdrpaint.selected_layer_only =false;
+		//	inputs["selected_layer_only"].checked=false;
+		//	Util.fireEvent(inputs["selected_layer_only"],"change");
 		}
 	});
 
@@ -645,25 +646,12 @@ var onloadfunc=function(e){
 			Hdrpaint.executeCommand("clear",{"layer_id":Hdrpaint.selected_layer.id,range:rectangle});
 			break;
 		case 119://w
-			//if(!flg_active_layer_only){
-			//	flg_active_layer_only=true;
-			//	event.preventDefault();
-			//	refreshPreview(1);
-			//}
-			inputs["selected_layer_only"].checked=true;
-			Util.fireEvent(inputs["selected_layer_only"],"change");
+			Hdrpaint.selected_layer_only =true;
 
 			break;
 		}
 
     });
-
-	document.querySelector("#selected_layer_only").addEventListener("change",(e)=>{
-		Redraw.refreshPreview(1);
-	});
-
-
-
 
 	window.changeGamma=function(arg){
 		Redraw.refreshPreview(2);
