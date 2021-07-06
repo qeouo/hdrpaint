@@ -1,28 +1,17 @@
 //バインド
 
 import Util from "./util.js";
+import Watcher from "./watcher.js";
+var watcher = new Watcher();
 class Bind{
 	constructor(node,variable){
 		this.node=node;
 		this.attribute_name="";
 		this.variables=[];
+		this.watches=[];
 		this.old={};
 	}
 
-	getBindValue(n,n2){
-		//バインドされた変数の値を取得
-		var bind = this;
-		var value=this.variable_root;
-		var v=bind.variables[n];
-		for(var j=0;j<v.length-n2;j++){
-			value = value[v[j]];
-			if(value == undefined){
-				value=null;
-				break;
-			}
-		}
-		return value;
-	}
 
 	feedBack(value){
 		if(value === undefined){
@@ -39,28 +28,25 @@ class Bind{
 			}
 		}
 		//バインド変数にコントロールの値をセットする
-		var val =this.getBindValue(0,1); //対象の変数の親を取得
-		val[this.variables[0][this.variables[0].length-1]]=value;
-		this.old_value=null;
+		var val =this.watches[0].setValue(value); 
 	}
 
 	refresh(){
 		//バインドされた変数の値をノード属性にセット
 		var bind = this;
 		var check=false;
-		this.variables.forEach((e,idx)=>{
-			var value = this.getBindValue(idx,0);
-			if(bind.old[idx] != value){
-				bind.old[idx]=value;
+		this.watches.forEach((w,idx)=>{
+			if(w.change_flg){
 				check=true;
 			}
 		});
 		if(!check){
 			return;
 		}
+
 		var node = bind.node;
 
-		var value = bind.old[0];
+		var value = bind.watches[0].getValue(0);
 		if(bind.func){
 			value=bind.func(bind.old);
 		}
@@ -91,7 +77,6 @@ class Bind{
 				node.textContent= value;
 			}
 		}
-		bind.old_value = value;
 	}
 }
 
@@ -150,13 +135,13 @@ export default class Binder {
 		if(!variable_root){
 			variable_root = this.variable_root;
 		}
-		bind.variable_root = variable_root;
+
 		if(!Array.isArray(variable_names)){
 			variable_names = [variable_names];
 		}
-		bind.variables=[];
-		variable_names.forEach((v)=>{
-			bind.variables.push(v.split("."));
+
+		variable_names.forEach((name)=>{
+			bind.watches.push(watcher.watch(variable_root,name));
 		});
 
 		bind.func=func;
@@ -189,6 +174,7 @@ export default class Binder {
 	}
 
 	refresh(){
+		watcher.refresh();
 		//バインドしたノードに変数の値をセット
 		for(var i=0;i<this.binds.length;i++){
 			this.binds[i].refresh();
