@@ -9,7 +9,6 @@ class Bind{
 		this.attribute_name="";
 		this.variables=[];
 		this.watches=[];
-		this.old={};
 	}
 
 
@@ -48,7 +47,8 @@ class Bind{
 
 		var value = bind.watches[0].getValue(0);
 		if(bind.func){
-			value=bind.func(bind.old);
+			var old = bind.watches.map((w)=>w.old_value);
+			value=bind.func(old);
 		}
 
 		if(bind.attribute_name !==""){
