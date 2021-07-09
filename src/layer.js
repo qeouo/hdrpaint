@@ -36,6 +36,8 @@ var drag_layer=null;
 	}
 //レイヤサムネイル作成用
 var thumbnail_img = new Img(64,64,1);
+//ジェネレータサムネイル作成用
+var gen_thumbnail_img = new Img(240,64,1);
 
 	var click = function(e){
 	//レイヤー一覧クリック時、クリックされたものをアクティブ化する
@@ -156,7 +158,7 @@ export default class Layer{
 		this.size=new Vec2();
 		this.modifier_param={};
 
-		this.type=0; //1なら階層レイヤ
+		this.type=0; //1なら階層レイヤ ,2ならモデファイア
 		this.children=null; //子供レイヤ
 
 
@@ -605,6 +607,33 @@ export default class Layer{
 	refreshThumbnail(){
 		//レイヤサムネイル更新
 		var layer=this;
+		var sum=new Vec4();
+
+		if(layer.type === 2){
+			var img = gen_thumbnail_img;
+			var newx = img.width;
+			var newy = img.height;
+			layer.beforeReflect();
+
+			for(var yi=0;yi<newy;yi++){
+				for(var xi=0;xi<newx;xi++){
+					var idx = img.getIndex(xi,yi)<<2;
+					this.getPixel(sum,xi,yi);
+					img.data[idx+0]=sum[0]*255;
+					img.data[idx+1]=sum[1]*255;
+					img.data[idx+2]=sum[2]*255;
+					img.data[idx+3]=sum[3]*255;
+				}
+			}
+
+			img.toBlob((blob)=>{
+				URL.revokeObjectURL(img.src);
+				layer.dom.style.backgroundImage = "url("  + URL.createObjectURL(blob); +")";
+			});
+			return;
+			
+		}
+
 		if(!layer.img){
 			return;
 		}
@@ -634,7 +663,6 @@ export default class Layer{
 		thumbnail_img.clear(0,0,newx,newy);
 		var data = img.data;
 		var dst_data = thumbnail_img.data;
-		var sum=new Vec4();
 		var _255 = 1/255;
 		var ev = Number(inputs["ev"].value);
 		var ev2  = Math.pow(2,-ev)*255;

@@ -19,6 +19,10 @@ class ChangeLayerAttribute extends CommandBase{
 
 		layer[name] = value;
 		layer.refreshDiv();
+		if(layer.type===2){
+			layer.registRefreshThumbnail();
+		}
+
 		layer.parent.bubbleComposite();
 	}
 	func(){
