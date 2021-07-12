@@ -144,7 +144,7 @@ class Hdrpaint{
 		layer.name =modifier_name+("0000"+layer.id).slice(-4);
 
 		layer.refreshDiv();
-
+		layer.registRefreshThumbnail();
 		return layer;
 
 	}

@@ -37,7 +37,7 @@ var drag_layer=null;
 //レイヤサムネイル作成用
 var thumbnail_img = new Img(64,64,1);
 //ジェネレータサムネイル作成用
-var gen_thumbnail_img = new Img(240,64,1);
+var gen_thumbnail_img = new Img(240,40,1);
 
 	var click = function(e){
 	//レイヤー一覧クリック時、クリックされたものをアクティブ化する
