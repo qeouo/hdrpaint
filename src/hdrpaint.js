@@ -126,7 +126,6 @@ class Hdrpaint{
 
 	}
 	createModifier(modifier_name){
-	//	var layer = new Layer();
 		var layer = new this.modifier[modifier_name]();
 
 		layer.type=2;

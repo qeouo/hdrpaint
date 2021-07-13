@@ -1,27 +1,32 @@
 "use strict" 
 import {Vec2} from "./lib/vector.js"
 import Util from "./lib/util.js";
+import Layer from "./layer.js";
 var absolute=new Vec2();
 var refresh_stack=[] ;
 
 	var refreshMain_=function(){
-		if(!Redraw.refreshoff){
+
+		if(Redraw.refreshoff){
 			//更新禁止フラグが立っている場合は処理しない
-			for(var ri=0;ri<refresh_stack.length;ri++){
-				var r= refresh_stack[ri];
-				refreshMain_sub(r.step,r.x,r.y,r.w,r.h);
-			}
-			refresh_stack=[];
+			return;
 		}
-
-
-
-		if(refresh_stack.length>0){
-
-			window.requestAnimationFrame(function(e){
-				refreshMain_();
-			});
+		if(refresh_stack.length===0){
+			return;
 		}
+		
+		for(var ri=0;ri<refresh_stack.length;ri++){
+			var r= refresh_stack[ri];
+			refreshMain_sub(r.step,r.x,r.y,r.w,r.h);
+		}
+		refresh_stack=[];
+		
+		//if(refresh_stack.length>0){
+
+		//	window.requestAnimationFrame(function(e){
+		//		refreshMain_();
+		//	});
+		//}
 	}
 
 	var refreshMain_sub=function(step,x,y,w,h){
@@ -200,11 +205,6 @@ export default class Redraw{
 			h = Hdrpaint.root_layer.img.height;
 		}
 
-		if(refresh_stack.length===0){
-			window.requestAnimationFrame(function(e){
-				refreshMain_();
-			});
-		}
 		var refresh_data={};
 		refresh_data.step=step;
 		refresh_data.x=x;
@@ -213,19 +213,25 @@ export default class Redraw{
 		refresh_data.h=h;
 		refresh_stack.push(refresh_data);
 
-
+		if(refresh_stack.length===1){
+			window.requestAnimationFrame(function(e){
+				refreshMain_();
+			});
+		}
 	}
 	static compositeAll(){
 		//全レイヤ更新
 		var f = function(layer,left,top,right,bottom){
-			if(layer.type==1){
-				var lower_layers = layer.children;
-				for(var li=0;li<lower_layers.length;li++){
-					var lower_layer = lower_layers[li];
-					f(lower_layer,left,top,right,bottom);
-				}
-				layer.composite(left,top,right,bottom);
+			if(layer.type !== Layer.COMPOSITE ){
+				return;
 			}
+			var lower_layers = layer.children;
+			for(var li=0;li<lower_layers.length;li++){
+				var lower_layer = lower_layers[li];
+				f(lower_layer,left,top,right,bottom);
+			}
+			layer.composite(left,top,right,bottom);
+			
 
 		}
 		f(Hdrpaint.root_layer);

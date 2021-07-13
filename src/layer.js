@@ -706,13 +706,16 @@ export default class Layer{
 
 
 	getAbsolutePosition(p){
+		//レイヤの絶対座標取得
 		Vec2.set(p,0,0);
 
 		Layer.bubble_func(this,function(layer){
 			Vec2.add(p,p,layer.position);
 		});
 	}
+
 	select(){
+		//レイヤを選択状態にする
 		Hdrpaint.select(this);
 
 	}
@@ -738,3 +741,9 @@ export default class Layer{
 };
 
 Layer.prototype.typename="normal_layer";
+
+Layer.prototype.type={
+	IMAGE : 0
+	,COMPOSITE : 1
+	,MODIFIER : 2
+}
