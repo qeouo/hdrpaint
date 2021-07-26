@@ -6,6 +6,7 @@ import _Img from "./lib/img.js"
 import Brush from "./brush.js"
 import Zip from "./lib/zip.js"
 import Redraw from "./redraw.js"
+import Layer from "./layer.js";
 var loadHpd_=function(buffer){
 	var files=Zip.read(buffer);
 
@@ -37,6 +38,7 @@ var loadHpd_=function(buffer){
 	Layer.layer_id_count = doc_data.layer_id_count;
 
 	
+	var brushes = Hdrpaint.brushes;
 	brushes=[];
 	for(var bi=0;bi<doc_data.brushes.length;bi++){
 		//ブラシ読み込み
@@ -127,7 +129,6 @@ var loadHpd_=function(buffer){
 	
 	CommandLog.reset();
 
-
 	if(brushes.length>0){
 		brushes[0].select();
 	}
@@ -180,6 +181,8 @@ static saveHpd(e){
 	//ドキュメントファイル保存
 	var files=[];
 	var doc_data={};
+	var brushes = Hdrpaint.brushes;
+
 
 	var layers = Layer.layerArray();
 	doc_data.layers=[];
@@ -265,7 +268,7 @@ static saveHpd(e){
 	files.push(file);
 
 	//doc.txtと画像ファイルを無圧縮zipにする
-	var buffer = Zip.create(files);
+	var buffer = Zip.create(files,0);
     var blob = new Blob([buffer], {type: "application/octet-stream"});
 
 	var a = e.target;

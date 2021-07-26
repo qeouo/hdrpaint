@@ -16,6 +16,7 @@ import Util from "./lib/util.js";
 import ColorPickerHDR from "./lib/colorpickerhdr.js";
 import ColorSelector from "./lib/colorselector.js";
 import Binder from "./lib/binder.js";
+import Watcher from "./lib/watcher.js";
 var binder =new Binder();
 window.binder=binder;
 

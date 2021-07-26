@@ -1,31 +1,33 @@
-
 import Util from "./util.js"
 import DataStream from "./datastream.js";
+import Deflate from "./deflate.js";
+import Zlib from "./zlib.js";
 
-	var calcCrc32 = function(array) {
-		var table = [];
-		var poly = 0xEDB88320;  
-		var result = 0xFFFFFFFF;
+var calcCrc32 = function(array) {
+	//CRC32を計算する
+	var table = [];
+	var poly = 0xEDB88320;  
+	var result = 0xFFFFFFFF;
 
-		//create table
-		for(var i = 0; i < 256; i++) {  
-			var u = i;  
-			for(var j = 0; j < 8; j++) {  
-				if(u & 0x1) u = (u >>> 1) ^ poly;  
-				else        u >>>= 1;  
-			}  
-			table.push(u>>>0);
-		}
-
-		//calculate
-		for(var i = 0; i < array.length; i++)
-			result = ((result >>> 8) ^ table[array[i] ^ (result & 0xFF)])>>>0;
-		return (~result)>>>0;
+	//create table
+	for(var i = 0; i < 256; i++) {  
+		var u = i;  
+		for(var j = 0; j < 8; j++) {  
+			if(u & 0x1) u = (u >>> 1) ^ poly;  
+			else        u >>>= 1;  
+		}  
+		table.push(u>>>0);
 	}
 
-	var LOCAL_HEADER_SIZE = 30;
-	var CENTRAL_SIZE = 46;
-	var END_SIZE = 22;
+	//calculate
+	for(var i = 0; i < array.length; i++)
+		result = ((result >>> 8) ^ table[array[i] ^ (result & 0xFF)])>>>0;
+	return (~result)>>>0;
+}
+
+var LOCAL_HEADER_SIZE = 30;
+var CENTRAL_SIZE = 46;
+var END_SIZE = 22;
 export default class Zip{
 
 	static read(buffer){
@@ -63,9 +65,12 @@ export default class Zip{
 		
 	}
 
-	static create(_files){
+	static create(_files,compress){
 		var files=[];
 		var total_size=0;
+		if(compress==null){
+			compress=0;
+		}
 		for(var fi=0;fi<_files.length;fi++){
 			var file = {};
 			files.push(file);
@@ -83,6 +88,7 @@ export default class Zip{
 		
 		
 		var ds = new DataStream(total_size);
+		var offset = 0;
 
 		for(var fi=0;fi<files.length;fi++){
 			var file = files[fi];
@@ -90,11 +96,16 @@ export default class Zip{
 			ds.setUint32(0x04034b50,true);//シグネチャ
 			ds.setUint16(20,true);//バージョン
 			ds.setUint16(0x0,true);//ビットフラグ
-			ds.setUint16(0x0,true);//圧縮メソッド
+			ds.setUint16(compress,true);//圧縮メソッド
+			var compress_data = file.data;
+			if(compress===8){
+				compress_data = Array.from(Deflate.compress(file.data,1));
+				file.compress_data_length=compress_data.length;
+			}
 			ds.setUint16(0x0,true);//最終変更時間
 			ds.setUint16(0x0,true);//最終変更日時
 			ds.setUint32(file.crc,true);//CRC-32
-			ds.setUint32(file.data.length,true);//圧縮サイズ
+			ds.setUint32(file.compress_data_length,true);//圧縮サイズ
 			ds.setUint32(file.data.length,true);//非圧縮サイズ
 			ds.setUint16(file.name_utf8.length,true);//ファイル名の長さ
 			ds.setUint16(0,true);//拡張フィールドの長さ
@@ -102,7 +113,7 @@ export default class Zip{
 			ds.fill(0x0,0);//拡張フィールド
 
 			var oldidx=ds.idx;
-			ds.setBytes(file.data);//ファイルデータ
+			ds.setBytes(compress_data);//ファイルデータ
 			//var filesize=ds.idx-oldidx >>> 3;
 
 			//Data descriptor
@@ -120,11 +131,11 @@ export default class Zip{
 			ds.setUint8(10,true);//バージョン
 			ds.setUint16(20,true);//最小バージョン
 			ds.setUint16(0x0,true);//ビットフラグ
-			ds.setUint16(0x0,true);//圧縮メソッド
+			ds.setUint16(compress,true);//圧縮メソッド
 			ds.setUint16(0x0,true);//最終変更時間
 			ds.setUint16(0x0,true);//最終変更日時
 			ds.setUint32(file.crc,true);//CRC-32
-			ds.setUint32(file.data.length,true);//圧縮サイズ
+			ds.setUint32(file.compress_data_length,true);//圧縮サイズ
 			ds.setUint32(file.data.length,true);//非圧縮サイズ
 			ds.setUint16(file.name_utf8.length,true);//ファイル名の長さ
 			ds.setUint16(0,true);//拡張フィールドの長さ
@@ -132,10 +143,12 @@ export default class Zip{
 			ds.setUint16(0,true);//ファイルが開始するディスク番号
 			ds.setUint16(0,true);//内部ファイル属性
 			ds.setUint32(0,true);//外部ファイル属性
-			ds.setUint32(file.offset,true);//ローカルファイルヘッダの相対オフセット
+			ds.setUint32(offset,true);//ローカルファイルヘッダの相対オフセット
 			ds.setBytes(file.name_utf8);//ファイル名
 			ds.fill(0x0,0);//拡張フィールド
 			ds.fill(0x0,0);//ファイルコメント
+
+			offset += LOCAL_HEADER_SIZE + file.compress_data_length + file.name_utf8.length;
 		}
 		var central_size = ds.getByteIndex() - central_idx ;
 
@@ -150,6 +163,7 @@ export default class Zip{
 		ds.setUint16(0,true);//コメント長さ
 		ds.setTextBuf("");//コメント
 
-		return ds.byteBuffer;
+		return ds.byteBuffer.buffer.slice(0,ds.idx>>3);
+		//return ds.byteBuffer;
 	}
 }
