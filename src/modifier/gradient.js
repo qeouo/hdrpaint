@@ -4,6 +4,8 @@ import {Vec3,Vec4,Mat33} from "../lib/vector.js";
 import Slider from "../lib/slider.js";
 import Hdrpaint from "../hdrpaint.js";
 import Layer from "../layer.js";
+
+var arr=new Vec4();
 var backimg = new Img(128,1);
 
 	var points=new Array();
@@ -32,19 +34,19 @@ class Gradient extends Layer{
 
 	showDivParam(){
 
-		var layer = this;
-		layer.beforeReflect();
-		mat33[0]=1/128;
-		mat33[1]=1;
-		width=64;
-		height=0;
-		backimg.scan(function(ret,idx,x,y){layer.getPixel(ret,idx,x,y);});
-		layer.dom.style.backgroundImage = "url(" + backimg.toDataURL() + "),url(./back.png)";
+//		var layer = this;
+//		layer.beforeReflect();
+//		mat33[0]=1/128;
+//		mat33[1]=1;
+//		width=64;
+//		height=0;
+//		backimg.scan(function(ret,idx,x,y){layer.getPixel(ret,idx,x,y);});
+//		layer.dom.style.backgroundImage = "url(" + backimg.toDataURL() + "),url(./back.png)";
 
 		return "";
 	}
 
-	beforeReflect(){
+	beforeReflect(img){
 
 		for(var i=0;i<4;i++){
 			var nam = "col"+i;
@@ -72,25 +74,40 @@ class Gradient extends Layer{
 
 		var parent= this.parent;
 		if(parent){
-			width=parent.size[0]>>1;
-			height=parent.size[1]>>1;
-
-			Mat33.rotate(mat33,this.radius*Math.PI/180,0,0,1);
-			Mat33.set(_mat33,1/parent.size[0],0,0,0,1/parent.size[1],0,0,0,1);
-			Mat33.dot(mat33,mat33,_mat33);
+			width=parent.size[0];
+			height=parent.size[1];
 		}
+		if(img){
+			width=img.width;
+			height=img.height;
+		}
+
+				Mat33.rotate(mat33,this.radius*Math.PI/180,0,0,1);
+				Mat33.set(_mat33,1/width,0,0,0,1/height,0,0,0,1);
+				Mat33.dot(mat33,mat33,_mat33);
+			
+		
+
+		width=width>>1;
+		height=height>>1;
 		
 	}
 	reflect(img,area){
 		var layer = this;
 		var offx = -this.position[0] + img.offsetx;
 		var offy = -this.position[1] + img.offsety;
-		img.scan(function(ret,idx,x,y){layer.getPixel(ret,idx,x+offx,y+offy);}
+		img.scan(function(ret,idx,x,y){
+			layer.getPixel(arr,x+offx,y+offy);
+			ret[idx+0]=arr[0];
+			ret[idx+1]=arr[1];
+			ret[idx+2]=arr[2];
+			ret[idx+3]=arr[3];
+		}
 			,area[0]-img.offsetx
 			,area[1]-img.offsety,area[2],area[3]);
 	}
 
-	getPixel(ret,idx,x,y){
+	getPixel(ret,x,y){
 		var b = mat33[0]* (x-width) + mat33[1]*(y - height)+0.5;
 		b = Math.max(0,Math.min(b,1));
 		var i=1;
@@ -107,37 +124,37 @@ class Gradient extends Layer{
 		var color1 = points[i].color;
 
 		var a = 1-b;
-		ret[idx+0] = color0[0] * a + color1[0] * b;
-		ret[idx+1] = color0[1] * a + color1[1] * b;
-		ret[idx+2] = color0[2] * a + color1[2] * b;
-		ret[idx+3] = color0[3] * a + color1[3] * b;
+		ret[0] = color0[0] * a + color1[0] * b;
+		ret[1] = color0[1] * a + color1[1] * b;
+		ret[2] = color0[2] * a + color1[2] * b;
+		ret[3] = color0[3] * a + color1[3] * b;
 	}
 
 }
 	var html = `
-		角度:<input class="slider modifier_scale" title="radius" value="0" min="0" max="360"><br>
+		角度:<input class="slider modifier_scale" name="radius" value="0" min="0" max="360"><br>
 
 		<div class="modifier_gradient ">
 		R,G,B,A pos<br>
 		<ul>
 		<li>
-		<input type="text" class="col colorpickerhdr" title="col0">
-		<input class="slider pos" title="col0pos" min="0" max="1">
+		<input type="text" class="col colorpickerhdr" name="col0">
+		<input class="slider pos" name="col0pos" min="0" max="1">
 		</li>
 
 		<li>
-		<input type="text" class="col colorpickerhdr" title="col1">
-		<input class="slider pos" title="col1pos" min="0" max="1">
+		<input type="text" class="col colorpickerhdr" name="col1">
+		<input class="slider pos" name="col1pos" min="0" max="1">
 		</li>
 
 		<li>
-		<input type="text" class="col colorpickerhdr" title="col2">
-		<input class="slider pos" title="col2pos" min="0" max="1">
+		<input type="text" class="col colorpickerhdr" name="col2">
+		<input class="slider pos" name="col2pos" min="0" max="1">
 		</li>
 
 		<li>
-		<input type="text" class="col colorpickerhdr" title="col3">
-		<input class="slider pos" title="col3pos" min="0" max="1">
+		<input type="text" class="col colorpickerhdr" name="col3">
+		<input class="slider pos" name="col3pos" min="0" max="1">
 		</li>
 		</ul>
 

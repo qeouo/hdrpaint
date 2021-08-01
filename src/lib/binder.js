@@ -1,6 +1,6 @@
 //バインド
 
-import Util from "./util.js";
+//import Util from "./util.js";
 import Watcher from "./watcher.js";
 var watcher = new Watcher();
 class Bind{
@@ -67,7 +67,7 @@ class Bind{
 			}else{
 				node.value = value;
 			}
-				Util.fireEvent(node,"input");
+				//Util.fireEvent(node,"input");
 			break;
 		default:
 			if(value && (value instanceof HTMLElement || value.nodeName)){
@@ -148,11 +148,20 @@ export default class Binder {
 
 		bind.binder=this;
 		this.binds.push(bind);
-
 		if(node.hasAttribute("feedback")){
-			node.addEventListener("change",()=>{
-				bind.feedBack();
-			});
+			var f= node.getAttribute("feedback");
+			if(f != null && f!=""){
+				var func = Function(f);
+				node.addEventListener("change",()=>{
+					bind.feedBack();
+					func();
+				});
+				
+			}else{
+				node.addEventListener("change",()=>{
+					bind.feedBack();
+				});
+			}
 		}
 		return bind;
 	}

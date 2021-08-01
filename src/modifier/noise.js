@@ -82,15 +82,15 @@ class _Noise extends Layer{
 };
 
 	var html = `
-			func:<select class="modifier_func" title="func">
+			func:<select class="modifier_func" name="func">
 				<option value="perlin">Perlin</option>
 				<option value="simplex">Simplex</option>
 				<option value="value">Value</option>
 				</select><br>
-			スケール:<input class="slider modifier_scale" title="scale" value="32" min="1" max="256"><br>
-			オクターブ数:<input class="slider modifier_octabe" title="octave" value="0" min="0" max="10" step="1"><br>
-			Z(seed):<input class="slider modifier_z" title="zoffset" max="255"><br>
-			rgb別:<input type="checkbox" class="modifier_betsu" title="betsu"><br>
+			スケール:<input class="slider modifier_scale" name="scale" value="32" min="1" max="256"><br>
+			オクターブ数:<input class="slider modifier_octabe" name="octave" value="0" min="0" max="10" step="1"><br>
+			Z(seed):<input class="slider modifier_z" name="zoffset" max="255"><br>
+			rgb別:<input type="checkbox" class="modifier_betsu" name="betsu"><br>
 		`;
 	Hdrpaint.registModifier(_Noise,"noise",html);
 Slider.init();

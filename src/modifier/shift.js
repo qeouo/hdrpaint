@@ -111,6 +111,6 @@ class Shift extends Layer{
 
 }
 	var html = `
-			影響度:<input type="text" class="slider modifier_effect" title="effect" value="0.5" min="0" max="100">
+			影響度:<input type="text" class="slider modifier_effect" name="effect" value="0.5" min="0" max="100">
 		`;
 	Hdrpaint.registModifier(Shift,"shift",html);

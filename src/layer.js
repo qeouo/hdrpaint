@@ -5,6 +5,7 @@ import Redraw from "./redraw.js";
 import Hdrpaint from "./hdrpaint.js";
 import Util from "./lib/util.js";
 
+var arr=new Vec4();
 let stackThumbnail=[];
 let composite_img = new Img(512,512);
 let composite_area = new Vec4();
@@ -37,7 +38,7 @@ var drag_layer=null;
 //レイヤサムネイル作成用
 var thumbnail_img = new Img(64,64,1);
 //ジェネレータサムネイル作成用
-var gen_thumbnail_img = new Img(240,40,1);
+var gen_thumbnail_img = new Img(240,40,0);
 
 	var click = function(e){
 	//レイヤー一覧クリック時、クリックされたものをアクティブ化する
@@ -613,23 +614,36 @@ export default class Layer{
 			var img = gen_thumbnail_img;
 			var newx = img.width;
 			var newy = img.height;
-			layer.beforeReflect();
+			layer.beforeReflect(img);
 
-			for(var yi=0;yi<newy;yi++){
-				for(var xi=0;xi<newx;xi++){
-					var idx = img.getIndex(xi,yi)<<2;
-					this.getPixel(sum,xi,yi);
-					img.data[idx+0]=sum[0]*255;
-					img.data[idx+1]=sum[1]*255;
-					img.data[idx+2]=sum[2]*255;
-					img.data[idx+3]=sum[3]*255;
-				}
-			}
+		//	for(var yi=0;yi<newy;yi++){
+		//		for(var xi=0;xi<newx;xi++){
+		//			var idx = img.getIndex(xi,yi)<<2;
+		//			this.calcPixel(img.data,idx,xi,yi);
+		//			//img.data[idx+0]=sum[0];
+		//			//img.data[idx+1]=sum[1];
+		//			//img.data[idx+2]=sum[2];
+		//			//img.data[idx+3]=sum[3];
+		//		}
+		//	}
 
-			img.toBlob((blob)=>{
-				URL.revokeObjectURL(img.src);
-				layer.dom.style.backgroundImage = "url("  + URL.createObjectURL(blob); +")";
-			});
+		img.offsetx=0;
+		img.offsety=0;
+		img.scan(function(ret,idx,x,y){
+			layer.getPixel(arr,x,y);
+			ret[idx+0]=arr[0];
+			ret[idx+1]=arr[1];
+			ret[idx+2]=arr[2];
+			ret[idx+3]=arr[3];
+		});
+		//layer.reflect(img,[0,0,img.width,img.height]);
+
+		layer.dom.style.backgroundImage = "url(" + img.toDataURL() + "),url(./css/back.png)";
+
+	//		img.toBlob((blob)=>{
+	//			URL.revokeObjectURL(img.src);
+	//			layer.dom.style.backgroundImage = "url("  + URL.createObjectURL(blob); +")";
+	//		});
 			return;
 			
 		}
