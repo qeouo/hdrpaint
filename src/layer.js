@@ -616,27 +616,16 @@ export default class Layer{
 			var newy = img.height;
 			layer.beforeReflect(img);
 
-		//	for(var yi=0;yi<newy;yi++){
-		//		for(var xi=0;xi<newx;xi++){
-		//			var idx = img.getIndex(xi,yi)<<2;
-		//			this.calcPixel(img.data,idx,xi,yi);
-		//			//img.data[idx+0]=sum[0];
-		//			//img.data[idx+1]=sum[1];
-		//			//img.data[idx+2]=sum[2];
-		//			//img.data[idx+3]=sum[3];
-		//		}
-		//	}
-
 		img.offsetx=0;
 		img.offsety=0;
-		img.scan(function(ret,idx,x,y){
-			layer.getPixel(arr,x,y);
-			ret[idx+0]=arr[0];
-			ret[idx+1]=arr[1];
-			ret[idx+2]=arr[2];
-			ret[idx+3]=arr[3];
-		});
-		//layer.reflect(img,[0,0,img.width,img.height]);
+		//img.scan(function(ret,idx,x,y){
+		//	layer.getPixel(arr,x,y);
+		//	ret[idx+0]=arr[0];
+		//	ret[idx+1]=arr[1];
+		//	ret[idx+2]=arr[2];
+		//	ret[idx+3]=arr[3];
+		//});
+		layer.reflect(img,[0,0,img.width,img.height]);
 
 		layer.dom.style.backgroundImage = "url(" + img.toDataURL() + "),url(./css/back.png)";
 

@@ -3,7 +3,10 @@ import Slider from "./slider.js";
 import Util from "./util.js";
 import Img from "./img.js";
 import ColorSelector from "./colorselector.js";
+import Binder from "./binder.js";
 
+
+var binder = new Binder();
 //カラーピッカーHDR
 var safe=0;
 var rgb = new Vec4();
@@ -107,6 +110,8 @@ export default class ColorpickerHDR{
 				updateTextArea(this);
 			});
 			updateTextArea(node);
+
+//			binder.bind(node,"",window,[],func){
 			
 		}
 	}

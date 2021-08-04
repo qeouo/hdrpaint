@@ -33,7 +33,7 @@ class Gradient extends Layer{
 	};
 
 	showDivParam(){
-
+//
 //		var layer = this;
 //		layer.beforeReflect();
 //		mat33[0]=1/128;
@@ -42,7 +42,7 @@ class Gradient extends Layer{
 //		height=0;
 //		backimg.scan(function(ret,idx,x,y){layer.getPixel(ret,idx,x,y);});
 //		layer.dom.style.backgroundImage = "url(" + backimg.toDataURL() + "),url(./back.png)";
-
+//
 		return "";
 	}
 
@@ -82,9 +82,9 @@ class Gradient extends Layer{
 			height=img.height;
 		}
 
-				Mat33.rotate(mat33,this.radius*Math.PI/180,0,0,1);
-				Mat33.set(_mat33,1/width,0,0,0,1/height,0,0,0,1);
-				Mat33.dot(mat33,mat33,_mat33);
+		Mat33.rotate(mat33,this.radius*Math.PI/180,0,0,1);
+		Mat33.set(_mat33,1/width,0,0,0,1/height,0,0,0,1);
+		Mat33.dot(mat33,mat33,_mat33);
 			
 		
 
