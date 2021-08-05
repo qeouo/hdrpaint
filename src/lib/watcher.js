@@ -31,6 +31,9 @@ class Watch{
 	refresh(){
 		//バインドされた変数の値をノード属性にセット
 		var value = this.getValue(0);
+		if(typeof value === 'object'){
+			value = JSON.stringify(value);
+		}
 		this.change_flg = (this.old_value !== value);
 		this.old_value = value;
 	}

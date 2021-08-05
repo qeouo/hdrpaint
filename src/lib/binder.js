@@ -1,6 +1,6 @@
 //バインド
 
-//import Util from "./util.js";
+import Util from "./util.js";
 import Watcher from "./watcher.js";
 var watcher = new Watcher();
 class Bind{
@@ -67,7 +67,7 @@ class Bind{
 			}else{
 				node.value = value;
 			}
-				//Util.fireEvent(node,"input");
+				Util.fireEvent(node,"input");
 			break;
 		default:
 			if(value && (value instanceof HTMLElement || value.nodeName)){
