@@ -313,7 +313,9 @@ class Hdrpaint{
 		var log = CommandLog.createLog(command,param,flg);
 		CommandLog.appendOption();
 		var commandObjs = this.commandObjs;
-		log.obj = new commandObjs[command]();
+		if(!log.obj){
+			log.obj = new commandObjs[command]();
+		}
 		log.obj.param = param;
 		log.obj.func();
 
