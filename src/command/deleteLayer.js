@@ -28,7 +28,7 @@ class DeleteLayer extends CommandBase{
 			var index = layers.indexOf(layer);
 			//レイヤ削除
 			Hdrpaint.removeLayer(layer);
-			if(layer === selected_layer){
+			if(layer === Hdrpaint.selected_layer){
 				if(layers.length===0){
 					parent_layer.select();
 				}else{

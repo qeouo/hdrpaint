@@ -609,6 +609,11 @@ export default class Layer{
 		//レイヤサムネイル更新
 		var layer=this;
 		var sum=new Vec4();
+		if(layer.children){
+
+			layer.dom.style.backgroundImage = "none";
+			return;
+		}
 
 		if(layer.type === 2){
 			var img = gen_thumbnail_img;
