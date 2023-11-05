@@ -37,7 +37,7 @@ class ResizeCanvas extends CommandBase{
 		root_layer.height=height;
 		root_layer.img=new Img(width,height);
 
-		Vec2.set(root_layer.size,width,height);
+		Vec2.setValues(root_layer.size,width,height);
 
 
 		root_layer.composite();

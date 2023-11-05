@@ -60,7 +60,7 @@ class Brush extends CommandBase{
 			var l2 = Vec2.scalar(B);
 			if(l1+l2>0){
 				Vec2.mul(q0,A,  (l2/(l1+l2)));
-				Vec2.madd(q0,q0,B, (l1/(l1+l2)));
+				Vec2.mad(q0,q0,B, (l1/(l1+l2)));
 			}
 			
 		}else{
@@ -73,22 +73,22 @@ class Brush extends CommandBase{
 			var l2 = Vec2.scalar(B);
 			if(l1+l2>0){
 				Vec2.mul(q1,A, (l2/(l1+l2)));
-				Vec2.madd(q1,q1,B, (l1/(l1+l2)));
+				Vec2.mad(q1,q1,B, (l1/(l1+l2)));
 			}
 
 		}else{
 
 			Vec2.sub(q1,p1,p0);
-			Vec2.madd(q1,q1,q0,-0.5);
+			Vec2.mad(q1,q1,q0,-0.5);
 		}
 
 		Vec2.copy(D,p0);
 
 		Vec2.copy(C,q0);
 		
-		Vec2.madd(A,q1,p1,-2);
+		Vec2.mad(A,q1,p1,-2);
 		Vec2.add(A,A,q0);
-		Vec2.madd(A,A,p0,2);
+		Vec2.mad(A,A,p0,2);
 
 		Vec2.sub(B,p1,A);
 		Vec2.sub(B,B,q0);
@@ -119,8 +119,8 @@ class Brush extends CommandBase{
 
 			var dt = i*_devide+offset;
 			Vec2.mul (p.pos,  A,dt*dt*dt);
-			Vec2.madd(p.pos,p.pos,B,dt*dt);
-			Vec2.madd(p.pos,p.pos,C,dt);
+			Vec2.mad(p.pos,p.pos,B,dt*dt);
+			Vec2.mad(p.pos,p.pos,C,dt);
 			Vec2.add (p.pos,p.pos,D);
 			Vec2.sub(p.pos,p.pos,absolute);
 
@@ -285,9 +285,9 @@ Hdrpaint.commandObjs["brush"]=Brush;
 		if(l!==0){
 			Vec2.mul(vec2,vec2,1/l);
 		}else{
-			Vec2.set(vec2,0,0);
+			Vec2.setValues(vec2,0,0);
 		}
-		Vec2.set(side,vec2[1],-vec2[0]);
+		Vec2.setValues(side,vec2[1],-vec2[0]);
 		Vec2.norm(side);
 
 

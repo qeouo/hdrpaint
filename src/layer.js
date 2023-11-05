@@ -260,7 +260,7 @@ export default class Layer{
 		var height = bottom-top+1;
 
 
-		Vec4.set(composite_area,left,top,width,height);
+		Vec4.setValues(composite_area,left,top,width,height);
 		for(var li=layers.length;li--;){
 			var layer = layers[li];
 			if(!layer.display ){
@@ -311,7 +311,7 @@ export default class Layer{
 		y0=Math.max(0,y0);
 		x1=Math.min(this.img.width,x1);
 		y1=Math.min(this.img.height,y1);
-		Vec4.set(composite_area,x0,y0,x1-x0,y1-y0);
+		Vec4.setValues(composite_area,x0,y0,x1-x0,y1-y0);
 		Img.copy(this.img
 			,composite_area[0] 
 			, composite_area[1]
@@ -674,7 +674,7 @@ export default class Layer{
 
 		for(var yi=0;yi<newy;yi++){
 			for(var xi=0;xi<newx;xi++){
-				Vec4.set(sum,0,0,0,0);
+				Vec4.setValues(sum,0,0,0,0);
 				for(var yii=0;yii<r;yii++){
 					for(var xii=0;xii<r;xii++){
 						var idx = img.getIndex(xi*r+xii|0,yi*r+yii|0)<<2;
@@ -710,7 +710,7 @@ export default class Layer{
 
 	getAbsolutePosition(p){
 		//レイヤの絶対座標取得
-		Vec2.set(p,0,0);
+		Vec2.setValues(p,0,0);
 
 		Layer.bubble_func(this,function(layer){
 			Vec2.add(p,p,layer.position);

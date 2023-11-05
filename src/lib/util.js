@@ -1,55 +1,52 @@
 "use strict"
+
+import Fpsman from "./fpsman.js"
+
 window.globalParam = {};
 var myIE = document.all; //IEflg
 var ua = window.navigator.userAgent.toLowerCase();
 if(ua.indexOf("windows" !== -1)){
 	globalParam.windows=1;
 }
-
-
-	var loadingCount =0
-		,imagedatacanvas
-		,imagedatacontext
-		
-		,fps=30
-		,spf=0
-		,nextsleep=0
-		,fpserror=0
-		,fpserrordelta=0
-		,mainfunc
-		
-		,SCREEN_W
-		,SCREEN_H
-	;
 	
+
 var i=0
 	,keymap=new Array(256)
 ;
-	keymap[37]=i++;
-	keymap[38]=i++;
-	keymap[39]=i++;
-	keymap[40]=i++;
-	keymap[' '.charCodeAt(0)]=i++;
-	keymap['X'.charCodeAt(0)]=i++;
-	keymap['C'.charCodeAt(0)]=i++;
-	keymap['V'.charCodeAt(0)]=i++;
-	
-	keymap['A'.charCodeAt(0)]=i++;
-	keymap['W'.charCodeAt(0)]=i++;
-	keymap['D'.charCodeAt(0)]=i++;
-	keymap['S'.charCodeAt(0)]=i++;
-	keymap['F'.charCodeAt(0)]=i++;
-	keymap['G'.charCodeAt(0)]=i++;
-	keymap['H'.charCodeAt(0)]=i++;
-	keymap['J'.charCodeAt(0)]=i++;
+
+[
+	37
+	,38
+	,39
+	,40
+	,' '.charCodeAt(0)
+	,'X'.charCodeAt(0)
+	,'C'.charCodeAt(0)
+	,'V'.charCodeAt(0)
+	,'A'.charCodeAt(0) //8
+	,'W'.charCodeAt(0)
+	,'D'.charCodeAt(0)
+	,'S'.charCodeAt(0)
+	,'F'.charCodeAt(0)
+	,'G'.charCodeAt(0)
+	,'H'.charCodeAt(0)
+	,'J'.charCodeAt(0)
+].forEach((e,idx)=>{
+	keymap[e]=idx;
+});
 
 	var virtualPad = null;
 	var virtualPadP = null;
 	var virtualBtn = null;
 	
 export default class Util{
+	static SCREEN_W;
+	static SCREEN_H;
+	static imagedatacanvas;
+	static imagedatacontext;
+	static loadingCount=0;
 	static getLoadingCount(){
-		return loadingCount;
+		return Util.loadingCount;
 	}
 	static ctx=null;
 	static canvas=null;
@@ -111,9 +108,9 @@ export default class Util{
 			Util.pressCountRight =0
 		}
 
-		if(loadingCount ==0){
-			mainfunc()
-		}
+		//if(loadingCount ==0){
+			Util.mainfunc()
+		//}
 		Util.oldcursorX = Util.cursorX
 		Util.oldcursorY = Util.cursorY
 		
@@ -148,10 +145,10 @@ export default class Util{
 		}
 
 		//ロードカウンタを増やす
-		loadingCount++;
+		Util.loadingCount++;
 		image.onerror=function(){
 			//エラーの場合減らす
-			loadingCount--
+			Util.loadingCount--
 		}
 		console.log("load start",url);
 		
@@ -161,17 +158,17 @@ export default class Util{
 				console.log("load end",image);
 				//ロード処理(1回のみ)
 				//ロードカウンタを減らす
-				loadingCount--;
+				Util.loadingCount--;
 				if(norepeat){
 					image.pat =Util.ctx.createPattern(image,"no-repeat")
 				}else{
 					image.pat =Util.ctx.createPattern(image,"repeat")
 				}
-				imagedatacontext.clearRect(0,0,imagedatacanvas.width,imagedatacanvas.height);
-				imagedatacontext.drawImage(image,0,0)
+				Util.imagedatacontext.clearRect(0,0,Util.imagedatacanvas.width,Util.imagedatacanvas.height);
+				Util.imagedatacontext.drawImage(image,0,0)
 
-				if(imagedatacontext.getImageData){
-					image.imagedata = imagedatacontext.getImageData(0,0,image.width,image.height)
+				if(Util.imagedatacontext.getImageData){
+					image.imagedata = Util.imagedatacontext.getImageData(0,0,image.width,image.height)
 				}
 			}
 
@@ -182,6 +179,10 @@ export default class Util{
 		});
 		
 		return image
+	}
+	static getDir(url){
+		var res =  /.*\//.exec(url)
+		return (res)?res[0]:"";
 	}
 	static loadText(url,callback){
 		var flg=true
@@ -202,25 +203,38 @@ export default class Util{
 				}
 			}
 		}
-		if(flg){
-
-			var request = Util.createXMLHttpRequest()
-			request.open("GET", url, true)
-			request.onload = function(e){
-				if(request.status == 200 || request.status ==304){
-					var buf =request.responseText;
-					if(callback){
-						callback(buf);
-					}
-				}
-				loadingCount--;
-				console.log("loadtext end",loadingCount);
-			}
-			console.log("loadtext start",url);
-			loadingCount++;
-			request.send("")
+		if(!flg){
+			return null;
 		}
-		return null;
+
+		var request = Util.createXMLHttpRequest()
+		request.open("GET", url, true)
+		request.onload = function(e){
+			if(request.status == 200 || request.status ==304){
+				var buf =request.responseText;
+				if(callback){
+					callback(buf);
+				}
+			}else{
+				if(callback){
+					callback(null);
+				}
+			}
+			Util.loadingCount--;
+			console.log("loadtext end",Util.loadingCount);
+		}
+		request.onerror=function(e){
+			if(callback){
+				callback(null);
+			}
+			Util.loadingCount--;
+			console.log("loadtext failed",Util.loadingCount);
+		}
+		console.log("loadtext start",url);
+		Util.loadingCount++;
+		request.send("")
+		
+		return request;
 	}
 
 	static loadFile(file,callback){
@@ -245,12 +259,12 @@ export default class Util{
 			if(callback){
 				callback(buf);
 			}
-			loadingCount--;
-			console.log("loadbinary end",loadingCount);
+			Util.loadingCount--;
+			console.log("loadbinary end",Util.loadingCount);
 		}
 
-		console.log("loadbinary start");
-		loadingCount++;
+		console.log("loadbinary start",url);
+		Util.loadingCount++;
 
 		var request = Util.createXMLHttpRequest()
 		request.open("GET", url, true)
@@ -269,13 +283,16 @@ export default class Util{
 		b = (0x100|b*255).toString(16)
 		return "#" + r.slice(-2) + g.slice(-2) + b.slice(-2)
 	}
-static hex2rgb(rgb,hex){
-	hex=hex+"000000";
-	rgb[0] = parseInt(hex.slice(0,2),16)/255;
-	rgb[1] = parseInt(hex.slice(2,4),16)/255;
-	rgb[2] = parseInt(hex.slice(4,6),16)/255;
-	return rgb;
-}
+	static hex2rgb=function(rgb,hex){
+		//16進数の文字列をrgbに変換
+		rgb[0] = parseInt(hex.slice(0,2),16)/255;
+		rgb[1] = parseInt(hex.slice(2,4),16)/255;
+		rgb[2] = parseInt(hex.slice(4,6),16)/255;
+		if(isNaN(rgb[0])){rgb[0]=0};
+		if(isNaN(rgb[1])){rgb[1]=0};
+		if(isNaN(rgb[2])){rgb[2]=0};
+		return rgb;
+	}
 static str2rgba(rgba,str){
 	var sp = str.split(",");
 	rgba[0]=Number(sp[0]);
@@ -331,6 +348,13 @@ static str2rgba(rgba,str){
 		return rgb;
 	}
 
+	static rgb2hex(rgb){
+		//rgbを16進数の文字列に変換
+		var r = (0x100|rgb[0]*255).toString(16)
+		var g = (0x100|rgb[1]*255).toString(16)
+		var b = (0x100|rgb[2]*255).toString(16)
+		return r.slice(-2) + g.slice(-2) + b.slice(-2)
+	}
 	static rgb2hsv(hsv,rgb){
 		//rgbをhsvに変換
 		var max = Math.max(rgb[0], Math.max(rgb[1], rgb[2]));
@@ -363,14 +387,14 @@ static str2rgba(rgba,str){
 			return false
 		}
 			
-		SCREEN_W = Util.canvas.getAttribute('width')
-		SCREEN_H = Util.canvas.getAttribute('height')
+		Util.SCREEN_W = Util.canvas.getAttribute('width')
+		Util.SCREEN_H = Util.canvas.getAttribute('height')
 
 		Util.ctx = Util.canvas.getContext('2d')
-		Util.ctx.clearRect(0,0,SCREEN_W,SCREEN_H)
+		Util.ctx.clearRect(0,0,Util.SCREEN_W,Util.SCREEN_H)
 
-		imagedatacanvas =Util.createCanvas(1024,1024)
-		imagedatacontext = imagedatacanvas.getContext('2d')
+		Util.imagedatacanvas =Util.createCanvas(1024,1024)
+		Util.imagedatacontext = Util.imagedatacanvas.getContext('2d')
 		
 		var inputarea =_inputarea;
 
@@ -381,10 +405,17 @@ static str2rgba(rgba,str){
 	
 	var setCursor = function(x,y){
 		var target = Util.canvasgl;
-		var scalex=target.width/target.clientWidth;
-		var scaley=target.height/target.clientHeight;
-		Util.cursorX = (x-target.offsetLeft)*scalex;
-		Util.cursorY = (y-target.offsetTop)*scaley;
+		var scalex=0;
+		var scaley=0;
+		if(target.clientWidth>0){
+			scalex=target.width/target.clientWidth;
+			scaley=target.height/target.clientHeight;
+		}
+		var rect = target.getBoundingClientRect();
+		//if(e.currentTarget.getBoundingClientRect){
+		//}
+		Util.cursorX = (x-rect.left)*scalex;
+		Util.cursorY = (y-rect.top)*scaley;
 
 	}
 	var tap = function(){
@@ -396,97 +427,49 @@ static str2rgba(rgba,str){
 	}
 
 
-	var rela = function(e){
-		if(e.currentTarget.getBoundingClientRect){
-			var rect = e.currentTarget.getBoundingClientRect();
-			e.relativeX = e.clientX - rect.left;
-			e.relativeY = e.clientY - rect.top;
-		}
-	}
-	var relo = function(e,t){
-		e.pageX = t.pageX;
-		e.pageY = t.pageY;
-		e.layerX= t.layerX;
-		e.layerY= t.layerY;
-		e.clientX = t.clientX;
-		e.clientY = t.clientY;
-	}
 		Util.mouseMove = function(elem,func){
 			if(!elem)return;
-			if (navigator.userAgent.match(/iPhone/i)
-			||navigator.userAgent.match(/iPod/i) 
-			||navigator.userAgent.match(/Android/i) ){
-				elem.addEventListener("touchmove",function(e) {
-					relo(e,e.touches[0]);
-					rela(e);
-					func(e);
+			elem.addEventListener("pointermove",function(e) {
+				e = e || window.event;
+				func(e);
+				e.preventDefault();
 
-				});
-			}else{
-				elem.addEventListener("mousemove",function(e) {
-					e = e || window.event;
-					rela(e);
-					func(e);
-
-				},false);
-			}
+			},false);
+			
 		}
 		Util.mouseDown = function(elem,func){
 			if(!elem)return;
 
-			if (navigator.userAgent.match(/iPhone/i)
-			||navigator.userAgent.match(/iPod/i) 
-			||navigator.userAgent.match(/Android/i) ){
-				elem.addEventListener("touchstart",function(e) {
-					relo(e,e.touches[0]);
-					rela(e);
-					e.button=0;
-					func(e);
-
-				});
-			}else{
-				elem.addEventListener("mousedown",function(e) {
-					e = e || window.event;
-					rela(e);
-					func(e);
-				});
-			}
+			elem.addEventListener("pointerdown",function(e) {
+				e = e || window.event;
+				func(e);
+				e.preventDefault();
+			});
+			
 		}
 
 		Util.mouseUp = function(elem,func){
-			if (navigator.userAgent.match(/iPhone/i)
-			||navigator.userAgent.match(/iPod/i) 
-			||navigator.userAgent.match(/Android/i) ){
-				elem.addEventListener("touchend",function(e) {
-					relo(e,e.changedTouches[0]);
-					rela(e);
-					e.button=0;
-					func(e);
-
-				});
-			}else{
-				elem.addEventListener("mouseup",function(e) {
-					e = e || window.event;
-					rela(e);
-					func(e);
-				});
-			}
+			elem.addEventListener("pointerup",function(e) {
+				e = e || window.event;
+				func(e);
+			});
+			
 		}
 		Util.mouseMove(inputarea, function(e){
 			setCursor(e.pageX,e.pageY);
 
 			if(virtualPad.style.display === "block"){
 			var target = e.currentTarget;
-				Util.padX= (e.relativeX - virtualPad.offsetLeft)/virtualPad.offsetWidth *2-1;
-				Util.padY= (e.relativeY - virtualPad.offsetTop)/virtualPad.offsetHeight *2-1;
+				Util.padX= (e.cursorX- virtualPad.offsetLeft)/virtualPad.offsetWidth *2-1;
+				Util.padY= (e.cursorY- virtualPad.offsetTop)/virtualPad.offsetHeight *2-1;
 				var l = Util.padX * Util.padX + Util.padY * Util.padY ;
 				if(l > 1.0){
 					l = Math.sqrt(l);
 					Util.padX = Util.padX/l;
 					Util.padY = Util.padY/l;
 					
-					virtualPad.style.left = e.relativeX - Util.padX * virtualPad.offsetWidth*0.5 + "px";
-					virtualPad.style.top= e.relativeY - Util.padY * virtualPad.offsetHeight*0.5 + "px";
+//					virtualPad.style.left = e.relativeX - Util.padX * virtualPad.offsetWidth*0.5 + "px";
+//					virtualPad.style.top= e.relativeY - Util.padY * virtualPad.offsetHeight*0.5 + "px";
 
 				}
 
@@ -532,8 +515,8 @@ static str2rgba(rgba,str){
 				virtualPad.style.display="block";
 				Util.padX=0;
 				Util.padY=0;
-				virtualPad.style.left = e.relativeX+"px";
-				virtualPad.style.top= e.relativeY+ "px";
+//				virtualPad.style.left = e.relativeX+"px";
+//				virtualPad.style.top= e.relativeY+ "px";
 				setPad();
 				e.stopPropagation();
 				break
@@ -668,44 +651,18 @@ static str2rgba(rgba,str){
 		}
 	}
 	static setFps(argfps,mf){
-		fps=argfps|0;
-		spf=(1000/fps)|0;
-		fpserror = 0;
-		fpserrordelta= 1000%fps;
-		nextsleep=performance.now();//Date.now();
-		mainfunc=mf;
+		Util.mainfunc=mf;
+		Util.fpsman = new Fpsman(argfps,
+			()=>{
+				Util.mainloop();
+			}
+			
+		);
 	
 		Util.pressCount = 0
 
 	}
 	
-	 static fpsman= function(){
-		var nowTime = performance.now();//Date.now();
-		var dt = nextsleep - nowTime;
-
-//		if(0<dt>>1){
-//			setTimeout(fpsman,dt>>1);
-//			return;
-//		}
-		
-		//端数処理
-		fpserror +=fpserrordelta;
-		if(dt>spf)dt=spf
-		if(dt<-spf)dt=-spf
-		if(fpserror>=fps){
-			//時間誤差が1msを超えたら次回1ms増やす
-			fpserror-=fps
-			dt+=1
-		}
-		
-		nextsleep = nowTime + spf + dt;
-		Util.mainloop()
-		nowTime = performance.now();//Date.now();
-		dt=nextsleep-nowTime;
-		if(dt<=0)dt=1;
-		setTimeout(Util.fpsman,dt);
-
-	}
 	static drawText(target,x,y,text,img,sizex,sizey){
 	
 		var dx = x
@@ -809,9 +766,6 @@ static str2rgba(rgba,str){
 	}
 	static getText(elem){
 		return (elem.textContent)?elem.textContent:elem.innerText
-	}
-	static getLoadingCount(){
-		return loadingCount;
 	}
 	static stringToUtf8(str){
 		var utf8str = unescape(encodeURIComponent(str));

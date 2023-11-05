@@ -46,7 +46,8 @@ img.toBlob((blob)=>{
 
 export default class ColorSelector{
 
-	constructor(){
+	constructor(flg){
+		this.dispflg=flg;
 
 		this.div=null;
 		this.sv_img=null;
@@ -86,10 +87,12 @@ export default class ColorSelector{
 					<li class="blue">B<input type="text" class="cphdr_B_txt" value="0.2"/></li>
 					</ul>
 				</div>
+				<div id="txtarea">
 				<div>
 					明るさ<input class="slider cphdr_Vi_txt" min="-10" max="10" value="0" step="0.01"/>
 				</div>
 				A<input class="slider cphdr_A_txt" max="1" value="1" step="0.001"/>
+				</div>
 		`;
 		this.div=document.createElement("div");
 		this.div.classList.add("colorselector");
@@ -110,23 +113,27 @@ export default class ColorSelector{
 
 		this.redrawSv(0);
 
-		Vec3.set(col,1,1,1);
+		Vec3.setValue(col,1,1,1);
 		this.setRGB(col);
 
-	this.div.querySelector(".color_status").addEventListener("change",()=>{
-		this.changeColor();
-	if(this.changeCallback){
-		this.changeCallback();
-	}
-	}
-	);
+		if(!flg){
+			var div =  this.div.querySelector("#txtarea");
+			div.style.display="none";
+		}
+		this.div.querySelector(".color_status").addEventListener("change",()=>{
+			this.changeColor();
+			if(this.changeCallback){
+				this.changeCallback();
+			}
+		});
+
 	this.A_txt.addEventListener("change",()=>{
 		this.changeColor();
-	if(this.changeCallback){
-		this.changeCallback();
-	}
+		if(this.changeCallback){
+			this.changeCallback();
 		}
-	);
+	});
+
 	this.Vi_txt.addEventListener("change",()=>{
 		var vi = Math.pow(2,Number(this.Vi_txt.value));
 		Util.hsv2rgb(col,this.hsv);
@@ -188,6 +195,7 @@ setColor(c){
 	this.B_txt.value = c[2];
 	this.A_txt.value = c[3];
 
+	Util.fireEvent(this.A_txt,"input");
 	this.changeColor();
 
 }
@@ -207,6 +215,7 @@ changeColor(){
 	this.setCursor(hsv);
 
 	this.Vi_txt.value=Math.log2(max);
+	Util.fireEvent(this.Vi_txt,"input");
 }
 
 

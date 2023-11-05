@@ -14,6 +14,14 @@ var Delaunay=(function(){
 	Triangle.prototype.calcSupport=function(axis){
 		var m= Vec3.dot(this.p[0],axis);
 		for(var j=1;j<4;j++){
+			m = Math.max(m,Vec3.dot(this.p[j],axis));
+		}
+		return m;
+		
+	}
+	Triangle.prototype.calcSupportReverse=function(axis){
+		var m= Vec3.dot(this.p[0],axis);
+		for(var j=1;j<4;j++){
 			m = Math.min(m,Vec3.dot(this.p[j],axis));
 		}
 		return m;
@@ -22,6 +30,10 @@ var Delaunay=(function(){
 
 	ret.create=function(points){
 		var triangles=[];
+
+		if(points.length===0){
+			return triangles;
+		}
 
 		//内包矩形算出
 		var min = new Vec3();
@@ -43,13 +55,13 @@ var Delaunay=(function(){
 		var r = Vec3.scalar(ans)*10;
 		Vec3.madd(ans,min,ans,0.5);
 		points.push(new Vec3());
-		Vec3.set(points[points.length-1],ans[0]+r,ans[1]-r,ans[2]+r);
+		Vec3.setValue(points[points.length-1],ans[0]+r,ans[1]-r,ans[2]+r);
 		points.push(new Vec3());
-		Vec3.set(points[points.length-1],ans[0]-r,ans[1]-r,ans[2]+r);
+		Vec3.setValue(points[points.length-1],ans[0]-r,ans[1]-r,ans[2]+r);
 		points.push(new Vec3());
-		Vec3.set(points[points.length-1],ans[0],ans[1]+r,ans[2]+r);
+		Vec3.setValue(points[points.length-1],ans[0],ans[1]+r,ans[2]+r);
 		points.push(new Vec3());
-		Vec3.set(points[points.length-1],ans[0],ans[1],ans[2]-r);
+		Vec3.setValue(points[points.length-1],ans[0],ans[1],ans[2]-r);
 
 		var t= new Triangle();
 		var l=points.length;

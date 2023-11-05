@@ -15,7 +15,7 @@ uniform highp float uPow;
 uniform float uRough ;
 uniform highp float uSeed;
 highp float rndcount=uSeed*0.1234;
-[common]
+#include(common)
 highp float random(){
 	rndcount = (rndcount+0.123);
 	return fract(sin(dot(vUv*rndcount,vec2(12.9898,78.233))) * 43758.5453);

@@ -9,7 +9,7 @@ void main(void){
 }
 [fragmentshader]
 precision lowp float;
-[common]
+#include(common)
 varying lowp vec2 vUv;
 uniform sampler2D uSampler;
 uniform sampler2D uSampler2;

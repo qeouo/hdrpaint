@@ -41,6 +41,7 @@ class Hdrpaint{
 		};
 	}
 
+	// レイヤの範囲を表す点線 
 	refreshLayerRectangle(){
 		if(!this.selected_layer)return;
 
@@ -112,7 +113,7 @@ class Hdrpaint{
 
 		layer.img=img;
 		if(img){
-			Vec2.set(layer.size,img.width,img.height);
+			Vec2.setValues(layer.size,img.width,img.height);
 		}
 
 		layer.id=this.layer_id_count;
@@ -243,7 +244,7 @@ class Hdrpaint{
 
 	loadImageFile_(file){
 		var data = this.getPosition();
-		var fu =function(img){
+		var fu =(img)=>{
 			var log =this.executeCommand("loadImage",{"img":img,"file":file.name
 				,"parent_layer_id":data.parent_layer_id,"position":data.position});
 		}

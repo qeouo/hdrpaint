@@ -12,9 +12,12 @@ path:  __dirname + "/docs"
   // ローカル開発用環境を立ち上げる
   // 実行時にブラウザが自動的に localhost を開く
   devServer: {
-    contentBase: "docs",
     open: true,
-	port:8081
+	port:8081,
+	host: '0.0.0.0'
+	,static: {
+directory: "docs",
+	}
   },
   module: {
     rules: [
@@ -27,10 +30,18 @@ path:  __dirname + "/docs"
             loader: "babel-loader",
             // Babel のオプションを指定する
             options: {
-              presets: [
-                // プリセットを指定することで、ES2020 を ES5 に変換
-                "@babel/preset-env",
-              ]
+				 "presets": [
+					[
+					  "@babel/preset-env", {
+						"targets": {
+						  "node": "current"
+						}
+					  }
+					]
+				  ]
+				  ,"plugins": [
+					"@babel/plugin-proposal-class-properties"
+				  ]
             },
           },
         ],

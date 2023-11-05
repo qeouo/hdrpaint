@@ -1,37 +1,38 @@
 "use strict" 
 
 import Util from "./util.js"
-import {Vec4} from "./vector.js"
+import {Vec3,Vec4} from "./vector.js"
 import OpenEXR from "./openexr.js";
-	let ctx,canvas,ctx_imagedata;
-	canvas =  document.createElement('canvas');
-	canvas.width=1;
-	canvas.height=1;
-	ctx =  canvas.getContext('2d');
-	ctx_imagedata=ctx.createImageData(canvas.width,canvas.height);
-	let  FORMAT_FLOAT32 = 0;
-	let  FORMAT_UINT8 = 1;
-	let  ret_data= new Vec4();
+
+let ctx,canvas,ctx_imagedata;
+canvas =  document.createElement('canvas');
+canvas.width=1;
+canvas.height=1;
+ctx =  canvas.getContext('2d');
+ctx_imagedata=ctx.createImageData(canvas.width,canvas.height);
+let  FORMAT_FLOAT32 = 0;
+let  FORMAT_UINT8 = 1;
+let  ret_data= new Vec4();
 
 
-	let add = (dst,src,idx,idx2,idx3,r) => {
-		//var a2 = src[idx2+3];
-		//var a3 = src[idx3+3];
-		dst[idx+0]+=(src[idx2+0] +src[idx3+0])*r;
-		dst[idx+1]+=(src[idx2+1] +src[idx3+1])*r;
-		dst[idx+2]+=(src[idx2+2] +src[idx3+2])*r;
-		dst[idx+3]+=(src[idx2+3] +src[idx3+3])*r;
+let add = (dst,src,idx,idx2,idx3,r) => {
+	//var a2 = src[idx2+3];
+	//var a3 = src[idx3+3];
+	dst[idx+0]+=(src[idx2+0] +src[idx3+0])*r;
+	dst[idx+1]+=(src[idx2+1] +src[idx3+1])*r;
+	dst[idx+2]+=(src[idx2+2] +src[idx3+2])*r;
+	dst[idx+3]+=(src[idx2+3] +src[idx3+3])*r;
+}
+let mul = (dst,idx) => {
+	var a = dst[idx+3];
+	if(a===0 || a===1){
+		return;
 	}
-	let mul = (dst,idx) => {
-		var a = dst[idx+3];
-		if(a===0 || a===1){
-			return;
-		}
-		a=1/a;
-		dst[idx+0]*=a;
-		dst[idx+1]*=a;
-		dst[idx+2]*=a;
-	};
+	a=1/a;
+	dst[idx+0]*=a;
+	dst[idx+1]*=a;
+	dst[idx+2]*=a;
+};
 export default class Img{
 	//イメージ
 	constructor(x,y,format){
@@ -60,6 +61,28 @@ export default class Img{
 	static FORMAT_FLOAT32 = 0;
 	static FORMAT_UINT8 = 1;
 
+	static packR11G11B10(result,raw){
+		//浮動小数をR11G11B10にパック
+		var idx = Vec3.alloc();
+		var num = Vec3.alloc();
+		idx[0]= Math.floor(Math.log2(Math.max(raw[0],0.00001)));
+		idx[1]= Math.floor(Math.log2(Math.max(raw[1],0.00001)));
+		idx[2]= Math.floor(Math.log2(Math.max(raw[2],0.00001)));
+		idx[0] = Math.max(Math.min(idx[0],16.0),-15.0); 
+		idx[1] = Math.max(Math.min(idx[1],16.0),-15.0); 
+		idx[2] = Math.max(Math.min(idx[2],16.0),-15.0); 
+		num[0] = Math.max((raw[0]*Math.pow(2,-idx[0]) -1.0),0.0) ;
+		num[1] = Math.max((raw[1]*Math.pow(2,-idx[1]) -1.0),0.0) ;
+		num[2] = Math.max((raw[2]*Math.pow(2,-idx[2]) -1.0),0.0) ;
+
+		var geta = 15.0;
+		result[0] = ((idx[0]+geta)<<3) + Math.floor(num[0]*8);
+		result[1] = ((idx[1]+geta)<<3) + Math.floor(num[1]*8);
+		result[2] = ((idx[2]+geta)<<3) + Math.floor(fract(num[0]*8)*8);
+		result[3] = ((num[2]*32)<<3) + Math.floor(fract(num[1]*8)*8);
+		//Vec4.mul(result,result,1/255);
+		Vec3.free(2);
+	}
 
 	scan(f,x,y,w,h){
 		var data = this.data;
@@ -221,11 +244,17 @@ export default class Img{
 			});
 			return null;
 		}
+		if(url.indexOf(".exr")>=0){
+			//exrファイルの場合
+			return Img.loadExr(url,format,func);
+		}
+
 		var image = new Image();
 		image.src=url;
-		var img=new Img();
+		var img=new this();
 		img.name=url;
 		img.format=format;
+		Util.loadingCount++;
 		image.onload = function(e){
 			img.width=image.width;
 			img.height=image.height;
@@ -240,8 +269,6 @@ export default class Img{
 				}
 				ctx_imagedata=ctx.createImageData(canvas.width,canvas.height);
 			}
-
-
 
 			//ピクセルデータ取得
 			ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -267,12 +294,19 @@ export default class Img{
 			if(func){
 				func(img);
 			}
+			Util.loadingCount--;
+		}
+		image.onerror=function(){
+			//エラーの場合減らす
+			Util.loadingCount--;
 		}
 		return img;
 	}
 
 	static loadExr(url,format,func){
 		var img = new Img();
+		img.name=url;
+		img.format=format;
 		var f=function(buffer){
 			var obj={};
 			OpenEXR.fromArrayBuffer(obj,buffer);
@@ -280,6 +314,7 @@ export default class Img{
 			img.width =obj.width;
 			img.height=obj.height;
 			img.data=new Float32Array(img.width*img.height*4);
+			img.type="float";
 			
 			//RGBAチャンネルの情報をdataにセットする
 			var channels=obj.attributes.channels;
@@ -310,6 +345,21 @@ export default class Img{
 				for(var i=0;i<size;i+=4){
 					data[i+3]=1;
 				}
+			}
+			if(img.format===1){
+				var a = new Vec3();
+				var b = new Vec4();
+				var uint8 = new Uint8Array(size);
+				for(var i=0;i<size;i+=4){
+					Vec3.setValue(a,data[i],data[i+1],data[i+2]);
+					Img.packR11G11B10(b,a);
+					uint8[i]=b[0];
+					uint8[i+1]=b[1];
+					uint8[i+2]=b[2];
+					uint8[i+3]=b[3];
+
+				}
+				img.data =uint8;
 			}
 			if(func){
 				func(img);
@@ -697,4 +747,7 @@ export default class Img{
 		}
 	}
 }
+	function fract(a){
+		return a - Math.floor(a);
+	}
 let buffer_img= new Img(1024,1024);

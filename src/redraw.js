@@ -35,8 +35,8 @@ var refresh_stack=[] ;
 		if( typeof step === 'undefined'){
 			step=0;
 		}
-		var bloom_size = parseFloat(Hdrpaint.post_effect.bloom_size);
-		var joined_img = Hdrpaint.root_layer.img;
+		var bloom_size = parseFloat(hdrpaint.post_effect.bloom_size);
+		var joined_img = hdrpaint.root_layer.img;
 
 		
 
@@ -80,7 +80,7 @@ var refresh_stack=[] ;
 			var img = bloom_img;
 			var img_data = img.data;
 			var img_width = img.width;
-			var layer = Hdrpaint.selected_layer;
+			var layer = hdrpaint.selected_layer;
 			
 			bloom_img.clear(left,top,width,height);
 			layer.getAbsolutePosition(absolute);
@@ -98,11 +98,11 @@ var refresh_stack=[] ;
 
 			if(step<=0){
 
-				if(Hdrpaint.post_effect.ch_bloom ){
+				if(hdrpaint.post_effect.ch_bloom ){
 					//ブルーム処理ありの場合は前処理を行う
 
 					bloom_img.copy(left-bloom_size,top-bloom_size
-						,Hdrpaint.root_layer.img
+						,hdrpaint.root_layer.img
 						,left-bloom_size,top-bloom_size,right-left+bloom_size*2,bottom-top+bloom_size*2);
 					bloom_img.gauss(bloom_size>>1,bloom_size,left,top,right-left,bottom-top);
 					bloomed_img.copy(left,top,bloom_img
@@ -113,12 +113,12 @@ var refresh_stack=[] ;
 			//ブルーム処理
 			//ブルーム前の絵はjoined_imgに残し、結果はbloomed_imgに出力
 			if(step<=1){
-				var bloom = parseFloat(Hdrpaint.post_effect.bloom_power);
+				var bloom = parseFloat(hdrpaint.post_effect.bloom_power);
 				var _bloom = 1- bloom;
 
 				var bloom_img_data = bloom_img.data;
 				var bloomed_img_data = bloomed_img.data;
-				if(Hdrpaint.post_effect.ch_bloom && bloom>0){
+				if(hdrpaint.post_effect.ch_bloom && bloom>0){
 					for(var yi=top;yi<bottom;yi++){
 						var idx = yi * joined_img_width + left << 2;
 						var max = yi * joined_img_width + right<< 2;
@@ -138,12 +138,12 @@ var refresh_stack=[] ;
 		if(step<=2){
 			//ガンマ補正とトーンマッピング
 			var ctx_imagedata_data = preview_ctx_imagedata.data;
-			var ev = parseFloat(Hdrpaint.post_effect.ev);
-			var gamma = 1.0/parseFloat(Hdrpaint.post_effect.gamma);
+			var ev = parseFloat(hdrpaint.post_effect.ev);
+			var gamma = 1.0/parseFloat(hdrpaint.post_effect.gamma);
 
 			joined_img_data = bloom_img.data;
 
-			if(Hdrpaint.post_effect.ch_gamma){
+			if(hdrpaint.post_effect.ch_gamma){
 				var r = Math.pow(2,-ev);
 				for(var yi=top;yi<bottom;yi++){
 					var idx = yi * joined_img_width + left << 2;
@@ -201,8 +201,8 @@ export default class Redraw{
 			refresh_stack=[];
 			x = 0;
 			y = 0;
-			w = Hdrpaint.root_layer.img.width;
-			h = Hdrpaint.root_layer.img.height;
+			w = hdrpaint.root_layer.img.width;
+			h = hdrpaint.root_layer.img.height;
 		}
 
 		var refresh_data={};
@@ -234,18 +234,18 @@ export default class Redraw{
 			
 
 		}
-		f(Hdrpaint.root_layer);
+		f(hdrpaint.root_layer);
 	}
 
 
 	static refreshPreviewStatus(e){
 		//カーソル下情報表示
-		var img = Hdrpaint.root_layer.img;
+		var img = hdrpaint.root_layer.img;
 		var data = img.data;
-		var doc = Hdrpaint.doc;
+		var doc = hdrpaint.doc;
 
-		var x = Hdrpaint.cursor_pos[0];
-		var y = Hdrpaint.cursor_pos[1];
+		var x = hdrpaint.cursor_pos[0];
+		var y = hdrpaint.cursor_pos[1];
 		var width=img.width;
 		var height=img.height;
 		var status2= document.getElementById("status2");
@@ -255,17 +255,17 @@ export default class Redraw{
 		var b= 0;
 		var a= 0;
 		if(x<0 || y<0 || x>=width || y>=height){
-			Hdrpaint.cursor_color[0]=NaN;
-			Hdrpaint.cursor_color[1]=NaN;
-			Hdrpaint.cursor_color[2]=NaN;
-			Hdrpaint.cursor_color[3]=NaN;
+			hdrpaint.cursor_color[0]=NaN;
+			hdrpaint.cursor_color[1]=NaN;
+			hdrpaint.cursor_color[2]=NaN;
+			hdrpaint.cursor_color[3]=NaN;
 
 		}else{
 			var idx=img.getIndex(x|0,y|0)<<2;
-			Hdrpaint.cursor_color[0]= data[idx];
-			Hdrpaint.cursor_color[1]= data[idx+1];
-			Hdrpaint.cursor_color[2]= data[idx+2];
-			Hdrpaint.cursor_color[3]= data[idx+3];
+			hdrpaint.cursor_color[0]= data[idx];
+			hdrpaint.cursor_color[1]= data[idx+1];
+			hdrpaint.cursor_color[2]= data[idx+2];
+			hdrpaint.cursor_color[3]= data[idx+3];
 			g= data[idx+1];
 			b= data[idx+2];
 			a= data[idx+3];

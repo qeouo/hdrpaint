@@ -267,8 +267,8 @@ var Collider = (function(){
 	ret.prototype.convexCastAll = function(col,v){
 		var AABBSort = this.aabbSorts[0];
 		this.hitListIndex = 0;
-		var ans1 = Vec3.poolAlloc();
-		var ans2 = Vec3.poolAlloc();
+		var ans1 = Vec3.alloc();
+		var ans2 = Vec3.alloc();
 		for(var j=0;j<AABBSort.length;j++){
 			if(!(col.groups & AABBSort[j].groups)
 			  || (col.notgroups & AABBSort[j].notgroups)){
@@ -290,15 +290,15 @@ var Collider = (function(){
 				this.hitListIndex++;
 			}
 		}
-		Vec3.poolFree(2);
+		Vec3.free(2);
 		return this.hitList;
 	}
 	//コリジョンリストのレイキャスト
 	ret.prototype.rayCastAll = function(p,v){
 		var AABBSort = this.aabbSorts[0];
 		this.hitListIndex = 0;
-		var ans1 = Vec3.poolAlloc();
-		var p2= Vec3.poolAlloc();
+		var ans1 = Vec3.alloc();
+		var p2= Vec3.alloc();
 
 		Vec3.add(p2,p,v);
 		for(var j=0;j<AABBSort.length;j++){
@@ -312,7 +312,7 @@ var Collider = (function(){
 				this.hitListIndex++;
 			}
 		}
-		Vec3.poolFree(2);
+		Vec3.free(2);
 		return this.hitList;
 	}
 
@@ -320,8 +320,8 @@ var Collider = (function(){
 	ret.prototype.checkClosestAll= function(col){
 		var AABBSort = this.aabbSorts[0];
 		this.hitListIndex = 0;
-		var ans1 = Vec3.poolAlloc();
-		var ans2 = Vec3.poolAlloc();
+		var ans1 = Vec3.alloc();
+		var ans2 = Vec3.alloc();
 		for(var j=0;j<AABBSort.length;j++){
 
 			if(col.aabb.max[0]<AABBSort[j].aabb.min[0])break;
@@ -343,7 +343,7 @@ var Collider = (function(){
 				this.hitListIndex++;
 			}
 		}
-		Vec3.poolFree(2);
+		Vec3.free(2);
 		return this.hitList;
 	}
 
@@ -394,7 +394,7 @@ var Collider = (function(){
 			return l;
 		}
 
-		var n = Vec3.poolAlloc();
+		var n = Vec3.alloc();
 		Vec3.sub(n,ans2,ans1);
 		if(!flg){
 			//接触していない場合はベクトルを逆にする
@@ -405,7 +405,7 @@ var Collider = (function(){
 		Vec3.madd(ans1,ans1,n,col1.bold);
 		Vec3.madd(ans2,ans2,n,-col2.bold);
 
-		Vec3.poolFree(1);
+		Vec3.free(1);
 		return l;
 	}
 
@@ -424,10 +424,10 @@ var Collider = (function(){
 				if(func){
 					//専用の関数のある組み合わせの場合
 					if(!ans1 || !ans2){
-						ans1 = Vec3.poolAlloc();
-						ans2 = Vec3.poolAlloc();
+						ans1 = Vec3.alloc();
+						ans2 = Vec3.alloc();
 						l=func(ans1,ans2,col1,col2);
-						Vec3.poolFree(2);
+						Vec3.free(2);
 					}else{
 						l=func(ans1,ans2,col1,col2);
 					}
@@ -445,8 +445,8 @@ var Collider = (function(){
 
 		var checkLINE_LINE_=function(a1,a2,b1,b2,axis){
 			//線分交差点を求める。
-			var cross= Vec3.poolAlloc();
-			var cross2= Vec3.poolAlloc();
+			var cross= Vec3.alloc();
+			var cross2= Vec3.alloc();
 			var ret=-1;
 			
 			Vec3.sub(cross2,b2,b1);
@@ -458,13 +458,13 @@ var Collider = (function(){
 
 			ret = l/(l-l2);
 				
-			Vec3.poolFree(2);
+			Vec3.free(2);
 			return ret;
 		}
 		var checkLINE_LINE=function(a1,a2,b1,b2,axis){
 			//線分交差点を求める。交差しない場合-1を返す
-			var cross= Vec3.poolAlloc();
-			var cross2= Vec3.poolAlloc();
+			var cross= Vec3.alloc();
+			var cross2= Vec3.alloc();
 			var ret=-1;
 			Vec3.sub(cross2,a2,a1);
 			Vec3.cross(cross,cross2,axis);
@@ -486,7 +486,7 @@ var Collider = (function(){
 			}
 			
 				
-			Vec3.poolFree(2);
+			Vec3.free(2);
 			return ret;
 		}
 		var TRIANGLE_TRIANGLE__=function(ans1,ans2,axis,A1,A2,A3,B1,B2,B3){
@@ -528,15 +528,15 @@ var Collider = (function(){
 				idxb=1;
 			}
 
-			var cross = Vec3.poolAlloc();
-			var cross2 = Vec3.poolAlloc();
+			var cross = Vec3.alloc();
+			var cross2 = Vec3.alloc();
 
 			if(idxa===1 && idxb===1){
 				//どっちも線分の場合
 				Vec3.sub(cross2,A2,A1);
 				Vec3.madd(ans1,A1,cross2,checkLINE_LINE_(A1,A2,B1,B2,axis));
 				Vec3.sub(ans2,ans1,axis);
-				Vec3.poolFree(2);
+				Vec3.free(2);
 				return;
 			}
 
@@ -561,7 +561,7 @@ var Collider = (function(){
 					if(i===3){
 						Vec3.copy(ans1,p);
 						Vec3.sub(ans2,ans1,axis);
-						Vec3.poolFree(2);
+						Vec3.free(2);
 						return;
 					}
 				}
@@ -588,7 +588,7 @@ var Collider = (function(){
 					if(i===3){
 						Vec3.copy(ans2,p);
 						Vec3.add(ans1,ans2,axis);
-						Vec3.poolFree(2);
+						Vec3.free(2);
 						return;
 					}
 				}
@@ -609,7 +609,7 @@ var Collider = (function(){
 						Vec3.sub(cross2,a2,a1);
 						Vec3.madd(ans1,a1,cross2,l);
 						Vec3.sub(ans2,ans1,axis);
-						Vec3.poolFree(2);
+						Vec3.free(2);
 						return;
 					}
 					
@@ -623,7 +623,7 @@ var Collider = (function(){
 			Vec3.mul(ans1,ans1,0.333333);
 			Vec3.sub(ans2,ans1,axis);
 
-			Vec3.poolFree(2);
+			Vec3.free(2);
 			return 0;
 
 		}
@@ -650,7 +650,7 @@ var Collider = (function(){
 
 		var line_zero = function(ans,l1,l2){
 			var ret;
-			var dir =Vec3.poolAlloc();
+			var dir =Vec3.alloc();
 			Vec3.sub(dir,l2,l1); //線分の向き
 			var r = -Vec3.dot(dir,l1);
 			if(r <= 0){
@@ -668,14 +668,14 @@ var Collider = (function(){
 					ret=0;
 				}
 			}
-			Vec3.poolFree(1);
+			Vec3.free(1);
 			return ret;
 		}
 		var triangleCheck=function(t1,t2,t3){
 			//三角形上に原点があるか
 			//ある…0   ない…2,4,6
-			var cross = Vec3.poolAlloc();
-			var cross2 = Vec3.poolAlloc();
+			var cross = Vec3.alloc();
+			var cross2 = Vec3.alloc();
 
 			Vec3.cross2(cross,t1,t2,t3);
 
@@ -692,14 +692,14 @@ var Collider = (function(){
 					break;
 				}
 			}
-			Vec3.poolFree(2);
+			Vec3.free(2);
 			return ret;
 
 		}
 
 		var triangle_zero=function(ans,t1,t2,t3){
-			var dir = Vec3.poolAlloc(); 
-			var cross = Vec3.poolAlloc();
+			var dir = Vec3.alloc(); 
+			var cross = Vec3.alloc();
 			Vec3.cross2(cross,t1,t2,t3);
 
 			var ts=[t1,t2,t3,t1,t2];
@@ -731,7 +731,7 @@ var Collider = (function(){
 				}
 				
 			}
-			Vec3.poolFree(2);
+			Vec3.free(2);
 			return res;
 
 		}
@@ -793,10 +793,10 @@ var Collider = (function(){
 			edge[1]=v2;
 		}
 	return function(ans1,ans2,obj1,obj2){
-		var s= Vec3.poolAlloc();
-		var s1= Vec3.poolAlloc();
-		var vbuf= Vec3.poolAlloc();
-		var axis= Vec3.poolAlloc();
+		var s= Vec3.alloc();
+		var s1= Vec3.alloc();
+		var vbuf= Vec3.alloc();
+		var axis= Vec3.alloc();
 		var v=vertices;
 		var v1=vertices1;
 		var distance=-1;
@@ -1073,7 +1073,7 @@ var Collider = (function(){
 				}
 				if(counter>33){
 					console.log("loooop!!");
-					Vec3.poolFree(4);
+					Vec3.free(4);
 					return 0;
 				}
 			}
@@ -1121,7 +1121,7 @@ var Collider = (function(){
 			
 			distance=-Vec3.len(ans1,ans2);
 		}
-		Vec3.poolFree(4);
+		Vec3.free(4);
 		return distance;
 	};
 	})();
@@ -1134,8 +1134,8 @@ var Collider = (function(){
 		if(node.element){
 			return calcClosestWithoutBold(ans1,ans2,node.element,col2);
 		}else{
-			var ans3 = Vec3.poolAlloc();
-			var ans4 = Vec3.poolAlloc();
+			var ans3 = Vec3.alloc();
+			var ans4 = Vec3.alloc();
 			var l = AABBNode_ANY(ans1,ans2,node.child1,col2);
 			var l2 = AABBNode_ANY(ans3,ans4,node.child2,col2);
 
@@ -1144,7 +1144,7 @@ var Collider = (function(){
 				Vec3.copy(ans2,ans4);
 				l =l2;
 			}
-			Vec3.poolFree(2);
+			Vec3.free(2);
 			return l;
 		}
 	}
@@ -1174,13 +1174,13 @@ var Collider = (function(){
 
 	setHantei(CAPSULE, SPHERE, function(ans1,ans2,col1,col2){
 		var m = col1.matrix;
-		var bV0 = Vec3.poolAlloc();
-		var bV1 = Vec3.poolAlloc();
+		var bV0 = Vec3.alloc();
+		var bV1 = Vec3.alloc();
 		Vec3.set(bV0,m[9]+m[3],m[10]+m[4],m[11]+m[5]);
 		Vec3.set(bV1,m[9]-m[3],m[10]-m[4],m[11]-m[5]);
 		Vec3.set(ans2,col2.matrix[9],col2.matrix[10],col2.matrix[11]);
 		Geono.LINE_POINT(ans1,bV0,bV1,ans2);
-		Vec3.poolFree(2);
+		Vec3.free(2);
 		return Vec3.len(ans1,ans2);
 	});
 	setHantei(TRIANGLE, SPHERE, function(ans1,ans2,col1,col2){
@@ -1190,9 +1190,9 @@ var Collider = (function(){
 	});
 
 	setHantei(CUBOID,SPHERE,function(ans1,ans2,cuboid,sphere){
-		var axis= Vec3.poolAlloc();
-		var dVec = Vec3.poolAlloc();
-		var len = Vec3.poolAlloc();
+		var axis= Vec3.alloc();
+		var dVec = Vec3.alloc();
+		var len = Vec3.alloc();
 
 		//中心差分
 		dVec[0]=sphere.matrix[9] - cuboid.matrix[9];
@@ -1232,19 +1232,19 @@ var Collider = (function(){
 			Vec3.set(axis,cuboid.matrix[min*3+0],cuboid.matrix[min*3+1],cuboid.matrix[min*3+2]); //軸
 			Vec3.madd(ans1,ans2,axis,len[min]/Vec3.scalar(axis));
 
-			Vec3.poolFree(3);
+			Vec3.free(3);
 			return -Vec3.len(ans1,ans2);
 		}else{ //外側の場合
-			Vec3.poolFree(3);
+			Vec3.free(3);
 			return Vec3.len(ans1,ans2);
 		}
 	});
 
 	ret.prototype.All = function(disableList,disableListSize){
 		//総当り
-		var ans1 = Vec3.poolAlloc();
-		var ans2 = Vec3.poolAlloc();
-		var n = Vec3.poolAlloc();
+		var ans1 = Vec3.alloc();
+		var ans2 = Vec3.alloc();
+		var n = Vec3.alloc();
 
 		var collisions = this.aabbSorts[0];
 
@@ -1303,14 +1303,14 @@ var Collider = (function(){
 		this.collisionCount=i;
 		performance.mark("collisionEnd");
 
-		Vec3.poolFree(3);
+		Vec3.free(3);
 	}
 
 	
 
 	var TRIANGLE_LINE=function(p1,t0,t1,t2){
-		var cross=Vec3.poolAlloc();
-		var dt=Vec3.poolAlloc();
+		var cross=Vec3.alloc();
+		var dt=Vec3.alloc();
 		var ret=0;
 		Vec3.sub(dt,t1,t0);
 
@@ -1324,25 +1324,25 @@ var Collider = (function(){
 				break;
 			}
 		}
-		Vec3.poolFree(2);
+		Vec3.free(2);
 		return ret;
 	}
 
 
 	ret.convexCast= function(_t,o1,o2,ans1,ans2){
-		var axis=Vec3.poolAlloc();
-		var _axis=Vec3.poolAlloc();
+		var axis=Vec3.alloc();
+		var _axis=Vec3.alloc();
 		var v=[];
 		var v1=[];
 		var v2=[];
-		var t=Vec3.poolAlloc();
+		var t=Vec3.alloc();
 		Vec3.mul(t,_t,-1);
 		for(var i=0;i<DIMENSION+1;i++){
-			v.push(Vec3.poolAlloc());
-			v1.push(Vec3.poolAlloc());
-			v2.push(Vec3.poolAlloc());
+			v.push(Vec3.alloc());
+			v1.push(Vec3.alloc());
+			v2.push(Vec3.alloc());
 		}
-		var vbuf=Vec3.poolAlloc();
+		var vbuf=Vec3.alloc();
 		
 
 		Vec3.copy(axis,t);
@@ -1466,7 +1466,7 @@ var Collider = (function(){
 		}else{
 			min=INVALID;
 		}
-		Vec3.poolFree(16);
+		Vec3.free(16);
 		return min;
 	};
 

@@ -10,7 +10,7 @@ void main(void){
 precision lowp float;
 varying vec2 vUv;
 uniform sampler2D uSampler;
-[common]
+#include(common)
 void main(void){
 	highp vec3 col;
     col = texture2D(uSampler,vUv).rgb;

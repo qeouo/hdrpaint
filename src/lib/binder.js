@@ -52,9 +52,17 @@ class Bind{
 		}
 
 		if(bind.attribute_name !==""){
+			if(bind.attribute_name=="disabled"){
+				if(!value){
+					node.removeAttribute(bind.attribute_name);
+					return;
+				}
+				
+			}
 			node.setAttribute(bind.attribute_name,value);
 			return;
 		}
+			node.setAttribute("content",value);
 		switch(node.tagName){
 			case "INPUT":
 			case "SELECT":
@@ -99,7 +107,8 @@ export default class Binder {
 				var attribute_name = node.attributes[i].name;
 				if(attribute_name.indexOf("bind:")!==0)continue;
 
-				var variable_name = node.getAttribute(attribute_name);
+				var variable_names = node.getAttribute(attribute_name);
+				variable_names = variable_names.split(",");
 
 				attribute_name = attribute_name.replace("bind:","");
 
@@ -108,7 +117,7 @@ export default class Binder {
 					func = node.getAttribute("bindfunc");
 					func = new Function('arg', func);
 				}
-				this.bind(node,attribute_name,null,variable_name,func);
+				this.bind(node,attribute_name,null,variable_names,func);
 			
 			};
 		});
@@ -148,20 +157,18 @@ export default class Binder {
 
 		bind.binder=this;
 		this.binds.push(bind);
-		if(node.hasAttribute("feedback")){
+		if(node.hasAttribute("feedback") && bind.attribute_name==""){
 			var f= node.getAttribute("feedback");
 			if(f != null && f!=""){
-				var func = Function(f);
-				node.addEventListener("change",()=>{
-					bind.feedBack();
-					func();
-				});
-				
-			}else{
-				node.addEventListener("change",()=>{
-					bind.feedBack();
-				});
+				bind.feedBack2 = Function(f);
 			}
+			node.addEventListener("change",()=>{
+				bind.feedBack();
+				if(bind.feedBack2){
+					bind.feedBack2();
+					}
+			});
+			
 		}
 		return bind;
 	}

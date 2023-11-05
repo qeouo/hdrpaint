@@ -13,7 +13,7 @@ import Brush from "./brush.js";
 import PenPoint from "./penpoint.js"
 import Layer from "./layer.js";
 import Util from "./lib/util.js";
-import ColorPickerHDR from "./lib/colorpickerhdr.js";
+import ColorpickerHDR from "./lib/colorpickerhdr.js";
 import ColorSelector from "./lib/colorselector.js";
 import Binder from "./lib/binder.js";
 import Watcher from "./lib/watcher.js";
@@ -32,8 +32,6 @@ window.bloom_img=null;
 window.preview=null;
 window.preview_ctx=null;
 window.preview_ctx_imagedata=null;
-
-
 
 
 //コマンド
@@ -72,7 +70,7 @@ import "./modifier/gradient.js";
 import "./modifier/colormap.js";
 import "./modifier/noise.js";
 
-window.Hdrpaint = Hdrpaint;
+window.hdrpaint = Hdrpaint;
 window.Brush= Brush;
 
 Hdrpaint.inputs=inputs;
@@ -80,7 +78,7 @@ Hdrpaint.inputs=inputs;
 Hdrpaint.doc={};
 Hdrpaint.doc.draw_col=new Vec4();
 Hdrpaint.doc.background_color=new Vec4();
-Vec4.set(Hdrpaint.doc.background_color,1,1,1,1);
+Vec4.setValues(Hdrpaint.doc.background_color,1,1,1,1);
 Hdrpaint.doc.scale=100;
 Hdrpaint.doc.canvas_pos=new Vec2();
 Hdrpaint.cursor_pos=new Vec2();
@@ -121,6 +119,7 @@ var canvas_field;
 		
 	}
 var onloadfunc=function(e){
+
 
 	if(Util.getLoadingCount()>0){
 		window.setTimeout(onloadfunc,1000);
@@ -231,10 +230,10 @@ var onloadfunc=function(e){
 
 			var rect =document.querySelector(".select_rectangle");
 			var doc = Hdrpaint.doc;
-			rect.style.left=(rectangle.x +  doc.canvas_pos[0])+"px";
-			rect.style.top=(rectangle.y + doc.canvas_pos[1]) +"px";
-			rect.style.width=rectangle.w + "px";
-			rect.style.height=rectangle.h+ "px";
+			rect.style.left=(rectangle.x * doc.scale/100 +  doc.canvas_pos[0])+"px";
+			rect.style.top=(rectangle.y  * doc.scale/100 + doc.canvas_pos[1]) +"px";
+			rect.style.width=(rectangle.w * doc.scale/100) + "px";
+			rect.style.height=(rectangle.h * doc.scale/100)+ "px";
 			rect.style.display="inline-block"
 
 
@@ -974,7 +973,7 @@ function dataURIConverter(dataURI) {
 	var url=location.search.substring(1,location.search.length)
 	var args=url.split("&")
 
-	Vec4.set(Hdrpaint.doc.draw_col,0.8,0.2,0.2,1);
+	Vec4.setValues(Hdrpaint.doc.draw_col,0.8,0.2,0.2,1);
 
 	for(i=args.length;i--;){
 		var arg=args[i].split("=")
@@ -1092,6 +1091,9 @@ function dataURIConverter(dataURI) {
 	brush1.select();
 
 
+	var colorpickerhdr = new ColorpickerHDR();
+	colorpickerhdr.init(document.getElementsByClassName("colorpickerhdr"));
+
 	binder.init(Hdrpaint);
 
 
@@ -1107,7 +1109,7 @@ function dataURIConverter(dataURI) {
 
 }
 
-	var selectorhdr = new ColorSelector();
+	var selectorhdr = new ColorSelector(true);
 	document.querySelector("#color_selector").appendChild(selectorhdr.div);
 	selectorhdr.changeCallback= function(){
 
@@ -1119,7 +1121,7 @@ function dataURIConverter(dataURI) {
 		Brush.refreshPreview();
 	}
 
-	Vec4.set(Hdrpaint.color,1,0.5,0.5,1);
+	Vec4.setValues(Hdrpaint.color,1,0.5,0.5,1);
 
 	selectorhdr.setColor(Hdrpaint.color);
 

@@ -66,8 +66,8 @@ export default class Geono{
 
 	static LINE_POINT(ans,l1,l2,p1){
 		//線分と点の最近点
-		var dir =Vec3.poolAlloc();
-		var dpos = Vec3.poolAlloc();
+		var dir =Vec3.alloc();
+		var dpos = Vec3.alloc();
 		Vec3.sub(dir,l2,l1); //線分の向き
 		Vec3.sub(dpos,p1,l1); //線分と点の差
 		var r = Vec3.dot(dir,dpos);
@@ -83,17 +83,17 @@ export default class Geono{
 			}
 		}
 
-		Vec3.poolFree(2);
+		Vec3.free(2);
 
 		return Vec3.len2(ans,p1);
 	}
 
 	static LINE_LINE=function(a1,a2,p1,p2,p3,p4){
 		//線分と線分の最近点
-		var dir1 = Vec3.poolAlloc();
-		var dir2 = Vec3.poolAlloc();
-		var cross = Vec3.poolAlloc();
-		var dpos = Vec3.poolAlloc();
+		var dir1 = Vec3.alloc();
+		var dir2 = Vec3.alloc();
+		var cross = Vec3.alloc();
+		var dpos = Vec3.alloc();
 
 		var l;
 		Vec3.sub(dir1,p2,p1); //線分1の向き
@@ -101,7 +101,7 @@ export default class Geono{
 			Vec3.copy(a1,p1);
 			this.LINE_POINT(a2,p3,p4,a1);
 
-			Vec3.poolFree(4);
+			Vec3.free(4);
 			return;
 		}
 		Vec3.sub(dir2,p4,p3);// 線分2の向き
@@ -109,7 +109,7 @@ export default class Geono{
 			Vec3.copy(a2,p3);
 			this.LINE_POINT(a1,p1,p2,a2);
 
-			Vec3.poolFree(4);
+			Vec3.free(4);
 			return;
 		}
 
@@ -130,7 +130,7 @@ export default class Geono{
 				if(r2*l2>=0 && r2*r2<=l2*l2){
 					Vec3.madd(a1,p1,dir1,r1/l1);
 					Vec3.madd(a2,p3,dir2,r2/l2);
-					Vec3.poolFree(4);
+					Vec3.free(4);
 					return;
 				}
 			}
@@ -159,16 +159,16 @@ export default class Geono{
 			Vec3.copy(a2,dpos);
 		}
 
-		Vec3.poolFree(4);
+		Vec3.free(4);
 
 	}
 
 	static TRIANGLE_POINT=function(ans,t1,t2,t3,p1){
 		//三角と点の最近点
-		var dir = Vec3.poolAlloc(); 
-		var cross = Vec3.poolAlloc();
-		var cross2 = Vec3.poolAlloc();
-		var dpos = Vec3.poolAlloc();
+		var dir = Vec3.alloc(); 
+		var cross = Vec3.alloc();
+		var cross2 = Vec3.alloc();
+		var dpos = Vec3.alloc();
 
 		cross[0]=t2[1]*t3[2] - t2[2]*t3[1] + t1[2]*(-t2[1]+t3[1]) + t1[1]*(t2[2]-t3[2]);
 		cross[1]=t2[2]*t3[0] - t2[0]*t3[2] + t1[0]*(-t2[2]+t3[2]) + t1[2]*(t2[0]-t3[0]);
@@ -194,28 +194,97 @@ export default class Geono{
 				}else{
 					Vec3.madd(ans,v1,dir,l/_l);
 				}
-				Vec3.poolFree(4);
+				Vec3.free(4);
 				return;
 			}
 		}
 
 		Vec3.madd(ans,p1,cross
 			,-Vec3.dot(cross,dpos)/(cross[0]*cross[0]+cross[1]*cross[1]+cross[2]*cross[2]));
-		Vec3.poolFree(4);
+		Vec3.free(4);
 	}
+static triangleCheck(t1,t2,t3){
+	//三角形上に原点があるか
+	//ある/0   ない/2,4,6
+	var cross = Vec3.alloc();
+	var cross2 = Vec3.alloc();
+
+	Vec3.cross2(cross,t1,t2,t3);
+
+	var ts=[t1,t2,t3,t1];
+	var ret=0;
+
+	for(var i=0;i<3;i++){
+		var v1 = ts[i];
+		var v2 = ts[i+1];
+		Vec3.sub(cross2,v2,v1);
+		Vec3.cross(cross2,cross,cross2);
+		if(Vec3.dot(cross2,v1)>0){
+			ret=(i+1)<<1;
+			break;
+		}
+	}
+	Vec3.free(2);
+	return ret;
+
+}
+static triangle_zero(ans,t1,t2,t3){
+	//三角と原点の最近点を求める
+	var dir = Vec3.alloc(); 
+	var cross = Vec3.alloc();
+	Vec3.cross2(cross,t1,t2,t3);
+
+	var ts=[t1,t2,t3,t1,t2];
+
+	var res =this.triangleCheck(t1,t2,t3);
+	if(res===0){
+		//面の上にいる場合
+		Vec3.mul(ans,cross,Vec3.dot(cross,t1)/Vec3.scalar2(cross));
+	}else{
+		//辺の外側にいる場合
+		var r = (res>>1) -1;
+
+		var v1 = ts[r];
+		var v2 = ts[r+1];
+		var v3 = ts[r+2];
+		Vec3.sub(dir,v2,v1); //線分の向き
+
+		var l=-Vec3.dot(v1,dir);
+		var _l=Vec3.dot(dir,dir);
+		if(l<0){
+			//辺の始点より外の場合
+			res+=line_zero(ans,v1,v3);
+
+		}else  if(l>_l){
+			//辺の終点より外の場合
+			res+=line_zero(ans,v3,v2);
+		}else{
+			Vec3.madd(ans,v1,dir,l/_l);
+		}
+		
+	}
+	Vec3.free(2);
+	return res;
+
+}
 
 	static TRIANGLE_LINE=function(t1,t2,t3,l1,l2){
 		//三角と線分の最近点
-		var dpos = Vec3.poolAlloc();
-		var cross=Vec3.poolAlloc();
-		var pos2= Vec3.poolAlloc();
-		var cross2= Vec3.poolAlloc();
+		var dpos = Vec3.alloc();
+		var cross=Vec3.alloc();
+		var pos2= Vec3.alloc();
+		var cross2= Vec3.alloc();
 
 		Vec3.cross2(cross,t1,t2,t3);
 		Vec3.sub(dpos,t1,l1); //線開始点とポリゴンの距離
 		Vec3.sub(pos2,l2,l1); //線開始点とポリゴンの距離
 
-		var l = Vec3.dot(cross,dpos)/Vec3.dot(cross,pos2);
+		var l2 = Vec3.dot(cross,pos2);
+		if(l2===0){
+			Vec3.free(4);
+			return 99999;
+		}
+		var l = Vec3.dot(cross,dpos)/l2;
 		Vec3.madd(pos2,l1,pos2,l); //面と線の交点
 
 		var ts=[t1,t2,t3,t1];
@@ -228,23 +297,23 @@ export default class Geono{
 			
 			if(Vec3.dot(cross2,dpos)<=0){
 				//辺の外の場合はずれ
-				Vec3.poolFree(4);
+				Vec3.free(4);
 				return 99999;
 			}
 		}
 
-		Vec3.poolFree(4);
+		Vec3.free(4);
 		return l;
 
 	}
 
 	static calcSquarePos(ans,A,B,C,D,P){
 		//四角ABCD内の点Pを(0~1,0~1)座標に変換
-		var BA =Vec3.poolAlloc();
-		var CD =Vec3.poolAlloc();
-		var AP = Vec3.poolAlloc();
-		var DP= Vec3.poolAlloc();
-		var n = Vec3.poolAlloc();
+		var BA =Vec3.alloc();
+		var CD =Vec3.alloc();
+		var AP = Vec3.alloc();
+		var DP= Vec3.alloc();
+		var n = Vec3.alloc();
 		Vec3.cross3(n,A,C,B,D); //四角の法線
 		Vec3.sub(BA,B,A);
 		Vec3.sub(CD,C,D);
@@ -270,24 +339,24 @@ export default class Geono{
 			}else{
 				t =(-b + Math.sqrt(b*b-4*a*c)) / (2*a);
 			}
-			var AD = Vec3.poolAlloc();
+			var AD = Vec3.alloc();
 			Vec3.sub(AD,A,D);
 			Vec3.cross(AD,AD,n);
-			var BC= Vec3.poolAlloc();
+			var BC= Vec3.alloc();
 			Vec3.sub(BC,B,C);
 			Vec3.cross(BC,n,BC);
-			var BP = Vec3.poolAlloc();
+			var BP = Vec3.alloc();
 			Vec3.sub(BP,B,P);
 			if((t<0 && Vec3.dot(AD,AP)>0)
 			|| (t>1 && Vec3.dot(BC,BP)>0)){
 				t =(-b - Math.sqrt(b*b-4*a*c)) / (2*a);
 			}
-			Vec3.poolFree(3);
+			Vec3.free(3);
 		}
 
 		ans[0]=t;
-		var FE = Vec3.poolAlloc();
-		var PE = Vec3.poolAlloc();
+		var FE = Vec3.alloc();
+		var PE = Vec3.alloc();
 		Vec3.madd(FE,D,CD,t);
 		Vec3.madd(FE,FE,BA,-t);
 		Vec3.sub(FE,FE,A);
@@ -297,12 +366,12 @@ export default class Geono{
 
 		ans[1]= Vec3.dot(PE,FE)/Vec3.dot(FE,FE);
 
-		Vec3.poolFree(7);
+		Vec3.free(7);
 		return t;
 	}
 
 	static TETRA_POINT(ans,p,v){
-		var vbuf = Vec3.poolAlloc();
+		var vbuf = Vec3.alloc();
 		var flg = true;
 		for(var i=0;i<4;i++){
 			//4つの面それぞれから対象までの距離を求める
@@ -326,7 +395,77 @@ export default class Geono{
 				ans[i]=l1/l2;
 			}
 		}
-		Vec3.poolFree(1);
+		Vec3.free(1);
 		return flg;
 	}
+	static lineWeight=function(ans,p0,t0,t1){
+		//p0がt1t2各頂点にどれくらい近いか
+
+		var axis= new Vec3();
+		Vec3.sub(axis,t0,t1);
+
+		if(axis[0] ===0 && axis[1] === 0){
+			ans[0]=1;
+			ans[1]=0;
+			return;
+		}
+
+		var a  = Vec3.dot(axis,t0);
+		var b  = Vec3.dot(axis,p0);
+		var c  = Vec3.dot(axis,t1);
+
+		ans[0]= (b-a)/(c-a);
+		ans[1]= 1-ans[0];
+		
+	}
+	static triangleWeight=function(ans,p0,t0,t1,t2){
+		//p0がt1t2t3各頂点にどれくらい近いか
+		var t=[t0,t1,t2,t0,t1];
+		var axis= new Vec3();
+		var axis2= new Vec3();
+		Vec3.setValue(ans,1,0,0);
+		for(var i=0;i<3;i++){
+			Vec3.sub(axis,t[i+1],t[i+2]);
+			if(axis[0] === 0 && axis[1] ===0 && axis[2]===0){
+				//ゼロベクトルの場合
+				Vec3.sub(axis,t[i],t[i+1]);
+			}else{
+				Vec3.cross2(axis2,t[i],t[i+1],t[i+2]);
+				Vec3.cross(axis,axis,axis2);
+			}
+
+			var a  = Vec3.dot(axis,t[i+1]);
+			var b  = Vec3.dot(axis,p0);
+			var c  = Vec3.dot(axis,t[i]);
+
+			if(c-a!==0){
+				ans[i]= (b-a)/(c-a);
+			}
+		}
+
+	}
 };
+var line_zero_vec3 =new Vec3();
+var line_zero = function(ans,l1,l2){
+	//線分と原点との最近点を求める
+	var ret;
+	var dir =line_zero_vec3;
+	Vec3.sub(dir,l2,l1); //線分の向き
+	var r = -Vec3.dot(dir,l1);
+	if(r <= 0){
+		//始点未満
+		Vec3.copy(ans,l1);
+		ret=-1;
+	}else{
+		var r2 = Vec3.scalar2(dir);
+		if( r > r2){
+			//終点超え
+			Vec3.copy(ans,l2);
+			ret=1;
+		}else{
+			Vec3.madd(ans,l1,dir, r/r2);
+			ret=0;
+		}
+	}
+	return ret;
+}

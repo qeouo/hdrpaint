@@ -5,7 +5,7 @@ void main(void){
 }
 [fragmentshader]
 precision lowp float;
-[common]
+#include(common)
 uniform vec4 uColor;
 void main(void){
 	gl_FragColor= uColor;

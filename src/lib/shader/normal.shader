@@ -17,7 +17,7 @@ void main(void){
 	highp vec4 ym= texture2D(uSampler ,vUv + unit * vec2(0.0,-1.0));
 	highp vec4 xp= texture2D(uSampler ,vUv + unit * vec2(1.0,0.0));
 	highp vec4 yp= texture2D(uSampler ,vUv + unit * vec2(0.0,1.0));
-	highp vec3 aa=vec3(-(xp.r-xm.r),-(yp.r-ym.r),unit.x*2.0); //Œù”z‚©‚ç–@üZo
+	highp vec3 aa=vec3(-(xp.r-xm.r),-(yp.r-ym.r),unit.x*2.0); //å‹¾é…ã‹ã‚‰æ³•ç·šç®—å‡º
 	aa = normalize(aa);
-	gl_FragColor = vec4(aa.xyz*0.5+0.5,def.r); //rgbc–@ü,ac‚‚³
+	gl_FragColor = vec4(aa.xyz*0.5+0.5,pow(def.r,1.0/2.2)); //rgb=æ³•ç·š,a=é«˜ã•
 }

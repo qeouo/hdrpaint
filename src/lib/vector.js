@@ -1,9 +1,19 @@
 "use strict"
 
+import pooling from "./pool.js"
+import _Mat43 from "./mat43.js"
+import _Mat22 from "./mat22.js"
+import _Vec3 from "./vec3.js"
+var Mat43 = _Mat43;
+var Vec3 = _Vec3;
+var Mat22= _Mat22 ;
+
 var Vec2=(function(){
 	var Vec2=function(){
-		this[0]=0.0
-		this[1]=0.0
+		var vec2 = new Float32Array(2);
+		vec2[0]=0.0
+		vec2[1]=0.0
+		return vec2;
 	}
 	var ret=Vec2;
 
@@ -18,7 +28,7 @@ var Vec2=(function(){
 	ret.scalar2=function(a){
 		return a[0]*a[0] + a[1]*a[1];
 	}
-	ret.set=function(a,x,y){
+	ret.setValues=function(a,x,y){
 		a[0]=x
 		a[1]=y
 	}
@@ -34,7 +44,7 @@ var Vec2=(function(){
 		a[0]=b[0]*c
 		a[1]=b[1]*c
 	}
-	ret.madd=function(a,b,c,d){
+	ret.mad=function(a,b,c,d){
 		a[0]=b[0]+c[0]*d;
 		a[1]=b[1]+c[1]*d;
 	}
@@ -44,7 +54,7 @@ var Vec2=(function(){
 	ret.len2 = function(a,b){
 		return (a[0]-b[0])*(a[0]-b[0]) + (a[1]-b[1])*(a[1]-b[1]);
 	}
-	ret.nrm=function(a,b){
+	ret.normalize=function(a,b){
 		var l = Math.sqrt(b[0]*b[0] + b[1]*b[1])
 		
 		l= 1/l
@@ -71,135 +81,6 @@ var Vec2=(function(){
 	return ret
 })()
 
-var Vec3=(function(){
-	var Vec3 =function(){
-		//var o=new Array(3);
-		var o = new Float32Array(3);
-		o[0]=0;
-		o[1]=0;
-		o[2]=0;
-		return o;
-	}
-	
-	var ret = Vec3;
-
-
-	
-	ret.ZERO=new Vec3();
-	ret.set=function(a,x,y,z){
-		a[0]=x;
-		a[1]=y;
-		a[2]=z;
-	}
-	ret.copy=function(a,b){
-		a[0]=b[0];
-		a[1]=b[1];
-		a[2]=b[2];
-	}
-
-	ret.add=function(a,b,c){
-		a[0] = b[0] + c[0];
-		a[1] = b[1] + c[1];
-		a[2] = b[2] + c[2];
-	}
-
-	ret.sub=function(a,b,c){
-		a[0] = b[0] - c[0];
-		a[1] = b[1] - c[1];
-		a[2] = b[2] - c[2];
-	}
-	ret.copy=function(a,b){
-		a[0] = b[0];
-		a[1] = b[1];
-		a[2] = b[2];
-	}
-	ret.mult=function(a,b,c){
-		a[0]=b[0]*c;
-		a[1]=b[1]*c;
-		a[2]=b[2]*c;
-	}
-	ret.mul=function(a,b,c){
-		a[0]=b[0]*c;
-		a[1]=b[1]*c;
-		a[2]=b[2]*c;
-	}
-	ret.madd=function(a,b,c,d){
-		a[0]=b[0]+c[0]*d;
-		a[1]=b[1]+c[1]*d;
-		a[2]=b[2]+c[2]*d;
-	}
-	ret.len=function(b,c){
-		var buf0 = b[0]-c[0];
-		var buf1 = b[1]-c[1];
-		var buf2 = b[2]-c[2];
-		return Math.sqrt( buf0*buf0 + buf1*buf1 + buf2*buf2);
-	}
-	ret.len2=function(b,c){
-		var buf0 = b[0]-c[0];
-		var buf1 = b[1]-c[1];
-		var buf2 = b[2]-c[2];
-		return buf0*buf0 + buf1*buf1 + buf2*buf2
-	}
-	ret.scalar=function(a){
-		return Math.sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2])
-	}
-	ret.scalar2=function(a){
-		return a[0]*a[0] + a[1]*a[1] + a[2]*a[2];
-	}
-	ret.nrm=function(a,b){
-		var l = Math.sqrt(b[0]*b[0] + b[1]*b[1] + b[2]*b[2])
-		if(l==0){
-			return;
-		}
-		
-		l= 1/l;
-		
-		a[0] =b[0]*l;
-		a[1] =b[1]*l;
-		a[2] =b[2]*l;
-	}
-	ret.norm=function(a){
-		var l = Math.sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2])
-		if(l==0){
-			return;
-		}
-		l= 1/l;
-		
-		a[0] *=l;
-		a[1] *=l;
-		a[2] *=l;
-	}
-	ret.dot=function(a,b){
-		return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]
-	}
-	ret.vecmul=function(a,b,c){
-		a[0]=b[0]*c[0];
-		a[1]=b[1]*c[1];
-		a[2]=b[2]*c[2];
-	}
-	ret.cross=function(a,b,c){
-		var buf0 = b[1]*c[2] - b[2]*c[1];
-		var buf1 = b[2]*c[0] - b[0]*c[2];
-		var buf2 = b[0]*c[1] - b[1]*c[0];
-		a[0] = buf0
-		a[1] = buf1
-		a[2] = buf2
-	}
-
-	var buf1=new Vec3();
-	var buf2=new Vec3();
-	ret.cross3=function(a,b,c,d,e){
-		Vec3.sub(buf1,c,b);
-		Vec3.sub(buf2,e,d);
-		Vec3.cross(a,buf1,buf2);
-	}
-	ret.cross2=function(a,b,c,d){
-		ret.cross3(a,b,c,b,d);
-	}
-
-	return ret
-
-})();
 
 var Vec4=(function(){
 	var buf0,buf1,buf2,buf3
@@ -219,7 +100,7 @@ var Vec4=(function(){
 	}
 	var ret=Vec4;
 
-	ret.set=function(a,x,y,z,w){
+	ret.setValues=function(a,x,y,z,w){
 		a[0]=x;
 		a[1]=y;
 		a[2]=z;
@@ -250,12 +131,6 @@ var Vec4=(function(){
 		a[2]*=c
 		a[3]*=c
 		}
-	ret.set=function(a,x,y,z,w){
-		a[0] = x;
-		a[1] = y;
-		a[2] = z;
-		a[3] = w;
-	}
 	ret.qdot=function(a,b,c){
 		buf0 = b[0]*c[0] - b[1]*c[1] - b[2]*c[2] - b[3]*c[3];
 		buf1 = b[0]*c[1] + c[0]*b[1] + b[2]*c[3] - b[3]*c[2];
@@ -317,9 +192,9 @@ var Vec4=(function(){
 		buf2 = b[0]*c[1] + b[3]*c[0] - b[1]*c[2];
 		buf3 = b[0]*c[2] + b[1]*c[1] - b[2]*c[0];
 
-		a[0]= -buf0*b[1] + b[0]*buf1 - buf2*b[3] + buf3*b[2];
-		a[1]= -buf0*b[2] + b[0]*buf2 - buf3*b[1] + buf1*b[3];
-		a[2]= -buf0*b[3] + b[0]*buf3 - buf1*b[2] + buf2*b[1];
+		a[0]= buf0*-b[1] + b[0]*buf1 + buf2*-b[3] - buf3*-b[2];
+		a[1]= buf0*-b[2] + b[0]*buf2 + buf3*-b[1] - buf1*-b[3];
+		a[2]= buf0*-b[3] + b[0]*buf3 + buf1*-b[2] - buf2*-b[1];
 	}
 	ret.toMat33=function(a,b){
 		x2 = b[1] * b[1] * 2.0
@@ -394,7 +269,7 @@ var Vec4=(function(){
 		}
 	}
 	ret.fromMat44 = function(v,m){
-		var m33=Mat33.poolAlloc();
+		var m33=Mat33.alloc();
 		m33[0]=m[0];
 		m33[1]=m[1];
 		m33[2]=m[2];
@@ -406,7 +281,7 @@ var Vec4=(function(){
 		m33[8]=m[10];
 		//this.fromMat33(v,m33);
 		Mat33.rotToQuat(v,m33);
-		Mat33.poolFree(1);
+		Mat33.free(1);
 
 	}
 	ret.fromMat33 = function(v,m){
@@ -414,7 +289,7 @@ var Vec4=(function(){
 		var invy = 1/Math.sqrt(m[3]*m[3]+m[4]*m[4]+m[5]*m[5]);
 		var invz = 1/Math.sqrt(m[6]*m[6]+m[7]*m[7]+m[8]*m[8]);
 
-		var m33= Mat33.poolAlloc();
+		var m33= Mat33.alloc();
 		m33[0]=m[0]*invx;
 		m33[1]=m[1]*invx;
 		m33[2]=m[2]*invx;
@@ -430,24 +305,23 @@ var Vec4=(function(){
 			Vec3.mul(v,v,1/r);
 			Vec4.fromRotVector(v,r,v[0],v[1],v[2]);
 		}else{
-			Vec4.set(v,0,0,0,1);
+			Vec4.setValue(v,0,0,0,1);
 		}
 
-		Mat33.poolFree(1);
+		Mat33.free(1);
 
 	}
 	return ret
 })()
-var Mat33=(function(){
-	var Mat33 = function(){
+export class Mat33{
+	constructor(){
 		var o = new Float32Array(9);
 		Mat33.setInit(o);
 		return o;
 	}
-	var ret = Mat33;
 	
 	
-	ret.setInit = function(m){
+	static setInit(m){
 		m[0]=1;
 		m[1]=0;
 		m[2]=0;
@@ -459,15 +333,16 @@ var Mat33=(function(){
 		m[8]=1;
 	}
 
-	ret.ZERO=new Mat33();
-	//ret.ZERO.fill(0);
-	ret.ZERO[0]=0;
-	ret.ZERO[4]=0;
-	ret.ZERO[8]=0;
-	var buffer=new Mat33();
-	var bufferVec3=new Vec3();
+	static #ZERO=new Mat33();
+	static #buffer=new Mat33();
+	static #bufferVec3=new Vec3();
+	static init(){
+		Mat33.#ZERO[0]=0;
+		Mat33.#ZERO[4]=0;
+		Mat33.#ZERO[8]=0;
+	}
 
-	ret.set=function(obj,a0,a1,a2,a3,a4,a5,a6,a7,a8){
+	static setValue(obj,a0,a1,a2,a3,a4,a5,a6,a7,a8){
 		obj[0] = a0;
 		obj[1] = a1;
 		obj[2] = a2;
@@ -478,7 +353,7 @@ var Mat33=(function(){
 		obj[7] = a7;
 		obj[8] = a8;
 	};
-	ret.copy= function(m,a){
+	static copy(m,a){
 		m[0]=a[0];
 		m[1]=a[1];
 		m[2]=a[2];
@@ -489,7 +364,7 @@ var Mat33=(function(){
 		m[7]=a[7];
 		m[8]=a[8];
 	}
-	ret.add=function(a,b,c){
+	static add(a,b,c){
 		a[0] = b[0] + c[0];
 		a[1] = b[1] + c[1];
 		a[2] = b[2] + c[2];
@@ -500,7 +375,7 @@ var Mat33=(function(){
 		a[7] = b[7] + c[7];
 		a[8] = b[8] + c[8];
 	}
-	ret.madd=function(a,b,c,d){
+	static madd(a,b,c,d){
 		a[0] = b[0] + c[0]*d;
 		a[1] = b[1] + c[1]*d;
 		a[2] = b[2] + c[2]*d;
@@ -511,7 +386,7 @@ var Mat33=(function(){
 		a[7] = b[7] + c[7]*d;
 		a[8] = b[8] + c[8]*d;
 	}
-	ret.sub=function(a,b,c){
+	static sub(a,b,c){
 		a[0] = b[0] - c[0];
 		a[1] = b[1] - c[1];
 		a[2] = b[2] - c[2];
@@ -522,7 +397,7 @@ var Mat33=(function(){
 		a[7] = b[7] - c[7];
 		a[8] = b[8] - c[8];
 	}
-	ret.mul=function(a,b,c){
+	static mul(a,b,c){
 		a[0] = b[0] * c;
 		a[1] = b[1] * c;
 		a[2] = b[2] * c;
@@ -533,7 +408,7 @@ var Mat33=(function(){
 		a[7] = b[7] * c;
 		a[8] = b[8] * c;
 	}
-	ret.dotVec3 = function(ret,m,v){
+	static dotVec3(ret,m,v){
 		var v0=v[0];
 		var v1=v[1];
 		var v2=v[2];
@@ -542,7 +417,8 @@ var Mat33=(function(){
 		ret[2] = m[2]*v0 + m[5]*v1 + m[8]*v2;
 		//ret.set(bufferVec3);
 	}
-	ret.dot = function(ret,ma,mb){
+	static dot(ret,ma,mb){
+		var buffer = Mat33.#buffer;
 		buffer[0] = ma[0]*mb[0] + ma[3]*mb[1] + ma[6]*mb[2];
 		buffer[1] = ma[1]*mb[0] + ma[4]*mb[1] + ma[7]*mb[2];
 		buffer[2] = ma[2]*mb[0] + ma[5]*mb[1] + ma[8]*mb[2];
@@ -554,17 +430,41 @@ var Mat33=(function(){
 		buffer[8] = ma[2]*mb[6] + ma[5]*mb[7] + ma[8]*mb[8];
 		ret.set(buffer);
 	}
-	ret.fromRotVector= function(ret,r,x,y,z){
+	static fromRotVector(ret,r,x,y,z){
 		var SIN=Math.sin(r)
 		var COS=Math.cos(r)
 		ret[0]=x*x*(1-COS)+COS;ret[3]=x*y*(1-COS)-z*SIN;ret[6]=z*x*(1-COS)+y*SIN;
 		ret[1]=x*y*(1-COS)+z*SIN;ret[4]=y*y*(1-COS)+COS;ret[7]=y*z*(1-COS)-x*SIN;
 		ret[2]=z*x*(1-COS)-y*SIN;ret[5]=y*z*(1-COS)+x*SIN;ret[8]=z*z*(1-COS)+COS;
 	}
-	ret.getRotVec = function(ret,m){
+
+	static fromQuat(a,b){
+		var x2 = b[1] * b[1] * 2.0;
+		var y2 = b[2] * b[2] * 2.0;
+		var z2 = b[3] * b[3] * 2.0;
+		var xy = b[1] * b[2] * 2.0;
+		var yz = b[2] * b[3] * 2.0;
+		var zx = b[3] * b[1] * 2.0;
+		var xw = b[1] * b[0] * 2.0;
+		var yw = b[2] * b[0] * 2.0;
+		var zw = b[3] * b[0] * 2.0;
+
+		a[0] = 1.0 - y2 - z2;
+		a[1] = xy + zw;
+		a[2] = zx - yw;
+		a[3] = xy - zw;
+		a[4] = 1.0 - z2 - x2;
+		a[5] = yz + xw;
+		a[6] = zx + yw;
+		a[7] = yz - xw;
+		a[8] = 1.0 - x2 - y2;
+	}
+
+	static getRotVec(ret,m){
+		//回転行列から回転ベクトル作成
 		var COS = (m[0] + m[4] + m[8]-1)*0.5;
 		if(COS*COS>=1){
-			Vec3.set(ret,0,0,0);
+			Vec3.setValue(ret,0,0,0);
 			return ;
 		}
 		var r = Math.acos(COS);
@@ -575,7 +475,8 @@ var Mat33=(function(){
 
 		Vec3.mul(ret,ret,r/(SIN*2.0));
 	}
-	ret.rotToQuat=function(r,m){
+	static rotToQuat(r,m){
+		//回転行列からクォータニオンに変換
 		r[1]=m[0]-m[4]-m[8]+1;
 		r[2]=-m[0]+m[4]-m[8]+1;
 		r[3]=-m[0]-m[4]+m[8]+1;
@@ -618,19 +519,20 @@ var Mat33=(function(){
 		return;
 
 	}
-	ret.getRotQuat= function(ret,m){
+	static getRotQuat(ret,m){
 		return Mat33.rotToQuat(ret,m);
 		Mat33.getRotVec(ret,m);
 		var r = Vec3.scalar(ret);
 		if(!r){
-			Vec4.set(ret,1,0,0,0);
+			Vec4.setValue(ret,1,0,0,0);
 			return;
 		}
 		Vec3.mul(ret,ret,1/r);
 
 		Vec4.fromRotVector(ret,r,ret[0],ret[1],ret[2]);
 	}
-	ret.getEulerXYZ=function(vec,m){
+	static getEulerXYZ(vec,m){
+		//回転行列をオイラー角に変換
 		vec[1]=Math.asin(m[2]);
 		if(m[2]==1 || m[2]==-1){
 			vec[0]=0;
@@ -640,7 +542,8 @@ var Mat33=(function(){
 			vec[2]=Math.atan2(m[1],m[0]);
 		}
 	}
-	ret.getEuler=function(vec,m){
+	static getEuler(vec,m){
+		//回転行列をオイラー角に変換 たぶんxzy
 		vec[2]=Math.asin(m[1]);
 		if(m[1]==1 || m[1]==-1){
 			vec[0]=0;
@@ -650,7 +553,7 @@ var Mat33=(function(){
 			vec[1]=Math.atan2(-m[2],m[0]);
 		}
 	}
-	ret.getInv = function(ret,m){
+	static getInv(ret,m){
 		var d =( m[0]*m[4]*m[8] + m[3]*m[7]*m[2] + m[6]*m[1]*m[5]
 			 - m[6]*m[4]*m[2] - m[3]*m[1]*m[8] - m[0]*m[7]*m[5]);
 		if(!d){
@@ -677,7 +580,8 @@ var Mat33=(function(){
 		ret[7]=m7;
 		ret[8]=m8;
 	}
-	ret.calcTranspose = function(ret,m){
+	static calcTranspose(ret,m){
+		//転置
 		var buf;
 		buf=m[1];
 		ret[1]=m[3];
@@ -692,422 +596,34 @@ var Mat33=(function(){
 		ret[7]=buf;
 	}
 
-
-	ret.rotate = function(mat33,r,x,y,z){
+	static scale(mat33,x,y,z){
+		mat33[0]=x;
+		mat33[1]=0;
+		mat33[2]=0;
+		mat33[3]=0;
+		mat33[4]=y;
+		mat33[5]=0;
+		mat33[6]=0;
+		mat33[7]=0;
+		mat33[8]=z;
+	}
+	static rotate(mat33,r,x,y,z){
+		//xyz軸にr回転する行列作成
 		var SIN=Math.sin(r)
 		var COS=Math.cos(r)
 		mat33[0]=x*x*(1-COS)+COS;mat33[3]=x*y*(1-COS)-z*SIN;mat33[6]=z*x*(1-COS)+y*SIN;
 		mat33[1]=x*y*(1-COS)+z*SIN;mat33[4]=y*y*(1-COS)+COS;mat33[7]=y*z*(1-COS)-x*SIN;
 		mat33[2]=z*x*(1-COS)-y*SIN;mat33[5]=y*z*(1-COS)+x*SIN;mat33[8]=z*z*(1-COS)+COS;
 	}
-	return ret;
-})();
-
-var Mat43=(function(){
-	//|0 3 6 9 |
-	//|1 4 7 10|
-	//|2 5 8 11|
-	var Mat43 =function(){
-		var o = new Float32Array(12);
-		Mat43.setInit(o);
-		return o;
-	}
-	var ret = Mat43;
-	var buf = new Float32Array(12);
+};
+Mat33.init();
 
 
-	ret.setInit=function(mat){
-		mat[0]=1.0;
-		mat[1]=0.0;
-		mat[2]=0.0;
-		mat[3]=0.0;
-		mat[4]=1.0;
-		mat[5]=0.0;
-		mat[6]=0.0;
-		mat[7]=0.0;
-		mat[8]=1.0;
-		mat[9]=0.0;
-		mat[10]=0.0;
-		mat[11]=0.0;
-	}
-
-	ret.set=function(obj,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11){
-		obj[0]=a0;
-		obj[1]=a1;
-		obj[2]=a2;
-		obj[3]=a3;
-		obj[4]=a4;
-		obj[5]=a5;
-		obj[6]=a6;
-		obj[7]=a7;
-		obj[8]=a8;
-		obj[9]=a9;
-		obj[10]=a10;
-		obj[11]=a11;
-	}
-	ret.copy=function(a,b){
-		a[0]=b[0];
-		a[1]=b[1];
-		a[2]=b[2];
-		a[3]=b[3];
-		a[4]=b[4];
-		a[5]=b[5];
-		a[6]=b[6];
-		a[7]=b[7];
-		a[8]=b[8];
-		a[9]=b[9];
-		a[10]=b[10];
-		a[11]=b[11];
-	}
-	ret.copyMat44=function(a,b){
-		a[0]=b[0];
-		a[1]=b[1];
-		a[2]=b[2];
-		a[3]=b[4];
-		a[4]=b[5];
-		a[5]=b[6];
-		a[6]=b[8];
-		a[7]=b[9];
-		a[8]=b[10];
-		a[9]=b[12];
-		a[10]=b[13];
-		a[11]=b[14];
-	}
-	ret.mul=function(a,b,c){
-		a[0]=b[0]*c;
-		a[1]=b[1]*c;
-		a[2]=b[2]*c;
-		a[3]=b[3]*c;
-		a[4]=b[4]*c;
-		a[5]=b[5]*c;
-		a[6]=b[6]*c;
-		a[7]=b[7]*c;
-		a[8]=b[8]*c;
-		a[9]=b[9]*c;
-		a[10]=b[10]*c;
-		a[11]=b[11]*c;
-	}
-
-	ret.dotVec3 = function(a,b,c){
-		var buf0 = c[0];
-		var buf1 = c[1];
-		var buf2 = c[2];
-		a[0] = b[0]*buf0 + b[3]*buf1 + b[6]*buf2 +b[9];
-		a[1] = b[1]*buf0 + b[4]*buf1 + b[7]*buf2 +b[10];
-		a[2] = b[2]*buf0 + b[5]*buf1 + b[8]*buf2 +b[11];
-	}
-	ret.dotMat33Vec3 = function(a,b,c){
-		var buf0 = c[0];
-		var buf1 = c[1];
-		var buf2 = c[2];
-		a[0] = b[0]*buf0 + b[3]*buf1 + b[6]*buf2;
-		a[1] = b[1]*buf0 + b[4]*buf1 + b[7]*buf2;
-		a[2] = b[2]*buf0 + b[5]*buf1 + b[8]*buf2;
-	}
-	ret.dotVec4=function(a,b,c){
-		var buf0 = c[0];
-		var buf1 = c[1];
-		var buf2 = c[2];
-		var buf3 = c[3];
-		a[0] = b[0]*buf0 + b[3]*buf1 + b[6]*buf2 +b[9]*buf3;
-		a[1] = b[1]*buf0 + b[4]*buf1 + b[7]*buf2 +b[10]*buf3;
-		a[2] = b[2]*buf0 + b[5]*buf1 + b[8]*buf2 +b[11]*buf3;
-		a[3] = buf3;
-	}
-	ret.dot=function(a,b,c){
-
-		buf[0]=b[0]*c[0] + b[3]*c[1] + b[6]*c[2];
-		buf[1]=b[1]*c[0] + b[4]*c[1] + b[7]*c[2];
-		buf[2]=b[2]*c[0] + b[5]*c[1] + b[8]*c[2];
-
-		buf[3]=b[0]*c[3] + b[3]*c[4] + b[6]*c[5];
-		buf[4]=b[1]*c[3] + b[4]*c[4] + b[7]*c[5];
-		buf[5]=b[2]*c[3] + b[5]*c[4] + b[8]*c[5];
-
-		buf[6]=b[0]*c[6] + b[3]*c[7] + b[6]*c[8];
-		buf[7]=b[1]*c[6] + b[4]*c[7] + b[7]*c[8];
-		buf[8]=b[2]*c[6] + b[5]*c[7] + b[8]*c[8];
-
-		buf[9]=b[0]*c[9] + b[3]*c[10] + b[6]*c[11] + b[9];
-		buf[10]=b[1]*c[9] + b[4]*c[10] + b[7]*c[11] + b[10];
-		buf[11]=b[2]*c[9] + b[5]*c[10] + b[8]*c[11] + b[11];
-		a.set(buf);
-		//if(a == b){
-		//	var buf0 = b[0];
-		//	var buf1 = b[1];
-		//	var buf2 = b[2];
-		//	var buf3 = b[3];
-		//	var buf4 = b[4];
-		//	var buf5 = b[5];
-		//	var buf6 = b[6];
-		//	var buf7 = b[7];
-		//	var buf8 = b[8];
-		//	var buf9 = b[9];
-		//	var buf10 = b[10];
-		//	var buf11 = b[11];
-
-		//	a[0]=buf0*c[0] + buf3*c[1] + buf6*c[2];
-		//	a[1]=buf1*c[0] + buf4*c[1] + buf7*c[2];
-		//	a[2]=buf2*c[0] + buf5*c[1] + buf8*c[2];
-
-		//	a[3]=buf0*c[3] + buf3*c[4] + buf6*c[5];
-		//	a[4]=buf1*c[3] + buf4*c[4] + buf7*c[5];
-		//	a[5]=buf2*c[3] + buf5*c[4] + buf8*c[5];
-
-		//	a[6]=buf0*c[6] + buf3*c[7] + buf6*c[8];
-		//	a[7]=buf1*c[6] + buf4*c[7] + buf7*c[8];
-		//	a[8]=buf2*c[6] + buf5*c[7] + buf8*c[8];
-
-		//	a[9]=buf0*c[9] + buf3*c[10] + buf6*c[11] + buf9;
-		//	a[10]=buf1*c[9] + buf4*c[10] + buf7*c[11] + buf10;
-		//	a[11]=buf2*c[9] + buf5*c[10] + buf8*c[11] + buf11;
-		//}else{
-		//	var buf0 = c[0];
-		//	var buf1 = c[1];
-		//	var buf2 = c[2];
-		//	var buf3 = c[3];
-		//	var buf4 = c[4];
-		//	var buf5 = c[5];
-		//	var buf6 = c[6];
-		//	var buf7 = c[7];
-		//	var buf8 = c[8];
-		//	var buf9 = c[9];
-		//	var buf10 = c[10];
-		//	var buf11 = c[11];
-
-		//	a[0]=b[0]*buf0 + b[3]*buf1 + b[6]*buf2;
-		//	a[1]=b[1]*buf0 + b[4]*buf1 + b[7]*buf2;
-		//	a[2]=b[2]*buf0 + b[5]*buf1 + b[8]*buf2;
-
-		//	a[3]=b[0]*buf3 + b[3]*buf4 + b[6]*buf5;
-		//	a[4]=b[1]*buf3 + b[4]*buf4 + b[7]*buf5;
-		//	a[5]=b[2]*buf3 + b[5]*buf4 + b[8]*buf5;
-
-		//	a[6]=b[0]*buf6 + b[3]*buf7 + b[6]*buf8;
-		//	a[7]=b[1]*buf6 + b[4]*buf7 + b[7]*buf8;
-		//	a[8]=b[2]*buf6 + b[5]*buf7 + b[8]*buf8;
-
-		//	a[9]=b[0]*buf9 + b[3]*buf10 + b[6]*buf11 + b[9];
-		//	a[10]=b[1]*buf9 + b[4]*buf10 + b[7]*buf11 + b[10];
-		//	a[11]=b[2]*buf9 + b[5]*buf10 + b[8]*buf11 + b[11];
-		//}
-	}
-
-	ret.dotMat44Mat43=function(a,b,c){
-		var buf0=b[0]*c[0]+ b[4]*c[1]+ b[8]*c[2];
-		var buf1=b[1]*c[0]+ b[5]*c[1]+ b[9]*c[2];
-		var buf2=b[2]*c[0]+ b[6]*c[1]+ b[10]*c[2];
-
-		var buf3=b[0]*c[3]+ b[4]*c[4]+ b[8]*c[5];
-		var buf4=b[1]*c[3]+ b[5]*c[4]+ b[9]*c[5];
-		var buf5=b[2]*c[3]+ b[6]*c[4]+ b[10]*c[5];
-
-		var buf6=b[0]*c[6]+ b[4]*c[7]+ b[8]*c[8];
-		var buf7=b[1]*c[6]+ b[5]*c[7]+ b[9]*c[8];
-		var buf8=b[2]*c[6]+ b[6]*c[7]+ b[10]*c[8];
-
-		var buf9=b[0]*c[9]+ b[4]*c[10]+ b[8]*c[11]+ b[12];
-		var buf10=b[1]*c[9]+ b[5]*c[10]+ b[9]*c[11]+ b[13];
-		var buf11=b[2]*c[9]+ b[6]*c[10]+ b[10]*c[11]+ b[14];
-		
-		a[0]=buf0;
-		a[1]=buf1;
-		a[2]=buf2;
-		a[3]=buf3;
-		a[4]=buf4;
-		a[5]=buf5;
-		a[6]=buf6;
-		a[7]=buf7;
-		a[8]=buf8;
-		a[9]=buf9;
-		a[10]=buf10;
-		a[11]=buf11;
-	}
-	ret.fromRotVector = function(ret,r,x,y,z){
-		var SIN=Math.sin(r)
-		var COS=Math.cos(r)
-		ret[0]=x*x*(1-COS)+COS;ret[3]=x*y*(1-COS)-z*SIN;ret[6]=z*x*(1-COS)+y*SIN;
-		ret[1]=x*y*(1-COS)+z*SIN;ret[4]=y*y*(1-COS)+COS;ret[7]=y*z*(1-COS)-x*SIN;
-		ret[2]=z*x*(1-COS)-y*SIN;ret[5]=y*z*(1-COS)+x*SIN;ret[8]=z*z*(1-COS)+COS;
-		ret[9]=ret[10]=ret[11]=0.0;
-	}
-	ret.getRotVector=function(target,angle){
-		var bM = this.poolAlloc();
-		var dx=angle[0];
-		var dy=angle[1];
-		var dz=angle[2];
-		var ax=Math.atan2(dy,dz)+Math.PI;
-		var ay=Math.atan2(dx,dz);
-		var az=0;
-		this.fromRotVector(target,-az,0,0,1);
-		this.fromRotVector(bM,-ax,1,0,0);
-		this.dot(target,target,bM);
-		this.fromRotVector(bM,-ay,0,1,0);
-		this.dot(target,target,bM);
-
-		this.poolFree(1);
-	}
-	ret.getInv=function(a,b){
-		var det =
-			 b[0]*b[4]*b[8]
-			+b[3]*b[7]*b[2]
-			+b[6]*b[1]*b[5]
-			-b[0]*b[7]*b[5]
-			-b[3]*b[1]*b[8]
-			-b[6]*b[4]*b[2];
-
-		if(Math.abs(det) < 0.0001){
-			return
-		}
-		det = 1/det;
-
-		var buf0=b[0];
-		var buf1=b[1];
-		var buf2=b[2];
-		var buf3=b[3];
-		var buf4=b[4];
-		var buf5=b[5];
-		var buf6=b[6];
-		var buf7=b[7];
-		var buf8=b[8];
-		var buf9=b[9];
-		var buf10=b[10];
-		var buf11=b[11];
-
-		a[0]= (buf4*buf8 - buf7*buf5) * det;
-		a[1]= (buf2*buf7 - buf1*buf8) * det;
-		a[2]= (buf1*buf5 - buf4*buf2) * det;
-		a[3]= (buf6*buf5 - buf3*buf8) * det;
-		a[4]= (buf0*buf8 - buf6*buf2) * det;
-		a[5]= (buf3*buf2 - buf0*buf5) * det;
-		a[6]= (buf3*buf7 - buf4*buf6) * det;
-		a[7]= (buf6*buf1 - buf0*buf7) * det;
-		a[8]= (buf0*buf4 - buf3*buf1) * det;
-		a[9]= (buf3*buf10*buf8 + buf6*buf4*buf11 + buf9*buf7*buf5 - buf3*buf7*buf11 - buf6*buf10*buf5 - buf9*buf4*buf8) * det;
-		a[10]= (buf0*buf7*buf11 + buf6*buf10*buf2 + buf9*buf1*buf8 - buf0*buf10*buf8 - buf6*buf1*buf11 - buf9*buf7*buf2) * det;
-		a[11]= (buf0*buf10*buf5 + buf3*buf1*buf11 + buf9*buf4*buf2 - buf0*buf4*buf11 - buf3*buf10*buf2 - buf9*buf1*buf5) * det;
-
-	} 
-	ret.fromQuat = function(a,b){
-		var x2 = b[1] * b[1] * 2.0;
-		var y2 = b[2] * b[2] * 2.0;
-		var z2 = b[3] * b[3] * 2.0;
-		var xy = b[1] * b[2] * 2.0;
-		var yz = b[2] * b[3] * 2.0;
-		var zx = b[3] * b[1] * 2.0;
-		var xw = b[1] * b[0] * 2.0;
-		var yw = b[2] * b[0] * 2.0;
-		var zw = b[3] * b[0] * 2.0;
-
-		a[0] = 1.0 - y2 - z2;
-		a[1] = xy + zw;
-		a[2] = zx - yw;
-		a[3] = xy - zw;
-		a[4] = 1.0 - z2 - x2;
-		a[5] = yz + xw;
-		a[6] = zx + yw;
-		a[7] = yz - xw;
-		a[8] = 1.0 - x2 - y2;
-		a[9] = a[10] = a[11] = 0.0;
-	}
-
-	//eulerAngleから行列を作る (XZY)
-	ret.fromEuler=function(m,e){
-		var buf = Mat43.poolAlloc();
-		ret.fromRotVector(m,e[0],1,0,0);
-		ret.fromRotVector(buf,e[2],0,0,1);
-		Mat43.dot(m,buf,m);
-		ret.fromRotVector(buf,e[1],0,1,0);
-		Mat43.dot(m,buf,m);
-
-		Mat43.poolFree(1);
-
-	}
-
-	//location,scale,eulerAnlge から行列を作る
-	ret.fromLSE=function(m,l,s,e){
-		Mat43.fromEuler(m,e);
-		m[0]*=s[0];
-		m[1]*=s[0];
-		m[2]*=s[0];
-		m[3]*=s[1];
-		m[4]*=s[1];
-		m[5]*=s[1];
-		m[6]*=s[2];
-		m[7]*=s[2];
-		m[8]*=s[2];
-		m[9] =l[0];
-		m[10]=l[1];
-		m[11]=l[2];
-	}
-
-	//location,scale,quartanionから行列を作る
-	ret.fromLSR=function(m,l,s,r){
-		Mat43.fromQuat(m,r);
-		m[0]*=s[0];
-		m[1]*=s[0];
-		m[2]*=s[0];
-		m[3]*=s[1];
-		m[4]*=s[1];
-		m[5]*=s[1];
-		m[6]*=s[2];
-		m[7]*=s[2];
-		m[8]*=s[2];
-		m[9]=l[0];
-		m[10]=l[1];
-		m[11]=l[2];
-	}
-	//行列をlocation,scale,quartanionに分ける
-	ret.toLSR=function(l,s,r,m){
-		Vec3.set(l,m[9],m[10],m[11]);
-		Vec3.set(s
-				,Math.sqrt(m[0]*m[0]+m[1]*m[1]+m[2]*m[2])
-				,Math.sqrt(m[3]*m[3]+m[4]*m[4]+m[5]*m[5])
-				,Math.sqrt(m[6]*m[6]+m[7]*m[7]+m[8]*m[8]))
-		var invx=1/s[0];
-		var invy=1/s[1];
-		var invz=1/s[2];
-
-		var m33= new Mat33();
-		m33[0]=m[0]*invx;
-		m33[1]=m[1]*invx;
-		m33[2]=m[2]*invx;
-		m33[3]=m[3]*invy;
-		m33[4]=m[4]*invy;
-		m33[5]=m[5]*invy;
-		m33[6]=m[6]*invz;
-		m33[7]=m[7]*invz;
-		m33[8]=m[8]*invz;
-		Mat33.getRotQuat(r,m33);
-	}
-	ret.toLSE=function(l,s,e,m){
-		Vec3.set(l,m[9],m[10],m[11]);
-		Vec3.set(s
-				,Math.sqrt(m[0]*m[0]+m[1]*m[1]+m[2]*m[2])
-				,Math.sqrt(m[3]*m[3]+m[4]*m[4]+m[5]*m[5])
-				,Math.sqrt(m[6]*m[6]+m[7]*m[7]+m[8]*m[8]))
-		var invx=1/s[0];
-		var invy=1/s[1];
-		var invz=1/s[2];
-
-		var m33= new Mat33();
-		m33[0]=m[0]*invx;
-		m33[1]=m[1]*invx;
-		m33[2]=m[2]*invx;
-		m33[3]=m[3]*invy;
-		m33[4]=m[4]*invy;
-		m33[5]=m[5]*invy;
-		m33[6]=m[6]*invz;
-		m33[7]=m[7]*invz;
-		m33[8]=m[8]*invz;
-		Mat33.getEuler(e,m33);
-	}
-	return ret;
-})();
 var buf0,buf1,buf2,buf3,buf4,buf5,buf6,buf7,buf8
 	,buf9,buf10,buf11,buf12,buf13,buf14,buf15;
 var bM = new Float32Array(16);
 
+var mat43 = new Mat43();
 export class Mat44{
 	constructor(){
 		var m = new Float32Array(16);
@@ -1149,7 +665,7 @@ export class Mat44{
 		mat[15]=1.0
 	}
 
-	static set(obj,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15){
+	static setValue(obj,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15){
 		obj[0]=a0
 		obj[1]=a1
 		obj[2]=a2
@@ -1363,6 +879,24 @@ export class Mat44{
 		a[14]=buf14;
 		a[15]=buf15;
 	}
+	//location,scale,eulerAnlge から行列を作る
+	static fromLSE(m,l,s,e){
+		Mat43.fromLSE(mat43,l,s,e);
+		Mat44.setValue(m,mat43[0],mat43[1],mat43[2],0
+			,mat43[3],mat43[4],mat43[5],0
+			,mat43[6],mat43[7],mat43[8],0
+			,mat43[9],mat43[10],mat43[11],1
+			);
+	}
+
+	static fromLSR(m,l,s,r){
+		Mat43.fromLSR(mat43,l,s,r);
+		Mat44.setValue(m,mat43[0],mat43[1],mat43[2],0
+			,mat43[3],mat43[4],mat43[5],0
+			,mat43[6],mat43[7],mat43[8],0
+			,mat43[9],mat43[10],mat43[11],1
+			);
+	}
 	static fromRotVector = function(ret,r,x,y,z){
 		var SIN=Math.sin(r)
 		var COS=Math.cos(r)
@@ -1374,6 +908,17 @@ export class Mat44{
 	}
 	static getRotVector(target,angle){
 		Mat43.getRotVector.call(this,target,angle);
+	}
+
+	static determinant = function(a){
+		return b[0]*b[5]*b[10]*b[15]+b[0]*b[9]*b[14]*b[7]+b[0]*b[13]*b[6]*b[11]
+			+b[4]*b[1]*b[14]*b[11]+b[4]*b[9]*b[2]*b[15]+b[4]*b[13]*b[10]*b[3]
+			+b[8]*b[1]*b[6]*b[15]+b[8]*b[5]*b[14]*b[3]+b[8]*b[13]*b[2]*b[7]
+			+b[12]*b[1]*b[10]*b[7]+b[12]*b[5]*b[2]*b[11]+b[12]*b[9]*b[6]*b[3]
+			-b[0]*b[5]*b[14]*b[11]-b[0]*b[9]*b[6]*b[15]-b[0]*b[13]*b[10]*b[7]
+			-b[4]*b[1]*b[10]*b[15]-b[4]*b[9]*b[14]*b[3]-b[4]*b[13]*b[2]*b[11]
+			-b[8]*b[1]*b[14]*b[7]-b[8]*b[5]*b[2]*b[15]-b[8]*b[13]*b[6]*b[3]
+			-b[12]*b[1]*b[6]*b[11]-b[12]*b[5]*b[10]*b[3]-b[12]*b[9]*b[2]*b[7];
 	}
 	static getInv(a,b){
 		var det =
@@ -1435,32 +980,8 @@ export class Mat44{
 
 	for(var i=0;i<classes.length;i++){
 		var ret = classes[i];
-		//プール
-		ret.poolIndex=0;
-		ret.pool = [];
-
-		for(var j=0;j<256;j++){
-			ret.pool.push(new ret());
-		}
-		ret.poolAlloc=function(){
-			this.poolIndex++;
-			//if(this.poolIndex>128){
-			//	alert(this+ "poolIndex leak!?");
-			//}
-			//if(this.poolIndex>this.pool.length){
-			//	for(var i=0;i<16;i++){
-			//		this.pool.push(new this());
-			//	}
-			//}
-			return this.pool[this.poolIndex-1];
-		}
-		ret.poolFree=function(num){
-			this.poolIndex-=num;
-			//if(this.poolIndex<0){
-			//	alert(this+"poolIndex okashii!");
-			//}
-		}
+		pooling(ret);
 	}
 })();
 
-export var Vec2,Vec3,Vec4,Mat33,Mat43;
+export var Vec2,Vec3,Vec4,Mat43,Mat22;

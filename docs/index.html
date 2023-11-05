@@ -128,8 +128,8 @@
 			</select>
 		</div>
 		<ul class="yoko">
-			<li><input type="button" id="button_undo" value="[ctrl+z]アンドゥ" onclick="undo();"></li>
-			<li><input type="button" id="button_redo" value="[ctrl+shift+z]リドゥ" onclick="redo()"></li>
+			<li><input type="button" id="button_undo" value="[ctrl+z]アンドゥ" onclick="hdrpaint.undo();"></li>
+			<li><input type="button" id="button_redo" value="[ctrl+shift+z]リドゥ" onclick="hdrpaint.redo()"></li>
 		</ul>
 	</div>
 
@@ -216,14 +216,14 @@
 
 
 		<div  style="">
-			<input type="button" id="new" onclick="Hdrpaint.createNewLayer(event);" value="新規">
-			<input type="button" id="copylayer" onclick="Hdrpaint.copylayer(event);" value="複製">
-			<input type="button" id="new_composite_layer" onclick="Hdrpaint.createNewCompositeLayer(event);" value="新規グループレイヤ"><br>
+			<input type="button" id="new" onclick="hdrpaint.createNewLayer(event);" value="新規">
+			<input type="button" id="copylayer" onclick="hdrpaint.copylayer(event);" value="複製">
+			<input type="button" id="new_composite_layer" onclick="hdrpaint.createNewCompositeLayer(event);" value="新規グループレイヤ"><br>
 			<ul>
 			<li><a id="" href="#" onclick="inputs['open_layer'].click();return false;">画像ファイルを新規レイヤで開く</a></li>
 			</ul>
 			<input style="display:none;"type="file" id="open_layer" accept="image/*,.hdr,.exr" >
-			<div id="modifier_area" onclick="Hdrpaint.createNewModifier(event)">
+			<div id="modifier_area" onclick="hdrpaint.createNewModifier(event)">
 			モディファイア<br>
 			</div>
 		</div>

@@ -83,7 +83,7 @@ class Gradient extends Layer{
 		}
 
 		Mat33.rotate(mat33,this.radius*Math.PI/180,0,0,1);
-		Mat33.set(_mat33,1/width,0,0,0,1/height,0,0,0,1);
+		Mat33.setValue(_mat33,1/width,0,0,0,1/height,0,0,0,1);
 		Mat33.dot(mat33,mat33,_mat33);
 			
 		

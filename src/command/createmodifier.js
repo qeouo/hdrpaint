@@ -24,7 +24,7 @@ class CreateModifier extends CommandBase{
 		var layer;
 		if(!this.undo_data){
 			layer = Hdrpaint.createModifier(param.modifier);
-			Vec2.set(layer.size,param.width,param.height);
+			Vec2.setValues(layer.size,param.width,param.height);
 
 			this.undo_data={"layer":layer};
 		}else{

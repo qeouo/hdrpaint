@@ -78,6 +78,8 @@ export default class Zip{
 			file.data = _files[fi].data;
 			file.offset = total_size;
 
+			file.compress_data_length = file.data.length;
+
 			file.crc = calcCrc32(file.data);
 			total_size += LOCAL_HEADER_SIZE + file.data.length+ file.name_utf8.length;
 		}
@@ -143,7 +145,7 @@ export default class Zip{
 			ds.setUint16(0,true);//ファイルが開始するディスク番号
 			ds.setUint16(0,true);//内部ファイル属性
 			ds.setUint32(0,true);//外部ファイル属性
-			ds.setUint32(offset,true);//ローカルファイルヘッダの相対オフセット
+			ds.setUint32(file.offset,true);//ローカルファイルヘッダの相対オフセット
 			ds.setBytes(file.name_utf8);//ファイル名
 			ds.fill(0x0,0);//拡張フィールド
 			ds.fill(0x0,0);//ファイルコメント

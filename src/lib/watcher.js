@@ -1,4 +1,4 @@
-//•Ï”ŠÄ‹
+//å¤‰æ•°ç›£è¦–
 
 import Util from "./util.js";
 class Watch{
@@ -10,7 +10,11 @@ class Watch{
 	}
 
 	getValue(n){
-		//ŠÄ‹‘ÎÛ‚Ì•Ï”‚Ì’l‚ğæ“¾
+		//ç›£è¦–å¯¾è±¡ã®å¤‰æ•°ã®å€¤ã‚’å–å¾—
+		// n=1ãªã‚‰è¦ªã‚’å–å¾—
+		if(!n){
+			n=0;
+		}
 		var value=this.variable_root;
 		var v=this.variable_direction;
 		for(var j=0;j<v.length-n;j++){
@@ -23,16 +27,19 @@ class Watch{
 		return value;
 	}
 	setValue(value){
-		//ŠÄ‹•Ï”‚É’l‚ğƒZƒbƒg‚·‚é
-		var val =this.getValue(1); //‘ÎÛ‚Ì•Ï”‚Ìe‚ğæ“¾
+		//ç›£è¦–å¤‰æ•°ã«å€¤ã‚’ã‚»ãƒƒãƒˆã™ã‚‹
+		var val =this.getValue(1); //å¯¾è±¡ã®å¤‰æ•°ã®è¦ªã‚’å–å¾—
 		val[this.variable_direction[this.variable_direction.length-1]]=value;
 	}
 
 	refresh(){
-		//ƒoƒCƒ“ƒh‚³‚ê‚½•Ï”‚Ì’l‚ğƒm[ƒh‘®«‚ÉƒZƒbƒg
+		//ãƒã‚¤ãƒ³ãƒ‰ã•ã‚ŒãŸå¤‰æ•°ã®å€¤ã‚’ãƒãƒ¼ãƒ‰å±æ€§ã«ã‚»ãƒƒãƒˆ
 		var value = this.getValue(0);
-		if(typeof value === 'object'){
-			value = JSON.stringify(value);
+		if(value && (value instanceof HTMLElement || value.nodeName)){
+		}else{
+			if(typeof value === 'object'){
+				value = JSON.stringify(value);
+			}
 		}
 		this.change_flg = (this.old_value !== value);
 		this.old_value = value;
@@ -45,7 +52,7 @@ export default class Watcher {
 	}
 
 	init(){
-		//‰Šú‰»&ƒoƒCƒ“ƒh
+		//åˆæœŸåŒ–&ãƒã‚¤ãƒ³ãƒ‰
 //		var func =()=>{
 //			this.refresh();
 //			window.requestAnimationFrame(func);
@@ -54,13 +61,13 @@ export default class Watcher {
 	}
 
 	watch(variable_root,variable_name,func){
-		//ŠÄ‹•Ï”‚ğ’Ç‰Á
+		//ç›£è¦–å¤‰æ•°ã‚’è¿½åŠ 
 		var watch = new Watch(variable_root,variable_name,func);
 		this.watches.push(watch);
 		return watch;
 	}
 	refresh(){
-		//ŠÄ‹‘ÎÛ‚ğƒ`ƒFƒbƒN
+		//ç›£è¦–å¯¾è±¡ã‚’ãƒã‚§ãƒƒã‚¯
 		this.watches.forEach((w)=>{
 			w.refresh();
 		});

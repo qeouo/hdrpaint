@@ -13,7 +13,7 @@ uniform sampler2D uSampler;
 uniform lowp float weight[5];
 uniform highp vec2 uAxis;
 varying lowp vec2 vUv;
-[common]
+#include(common)
 void main(void){
 	highp vec3 col = decode(texture2D(uSampler,vUv))*weight[0];
 	for(int i=1;i<5;i++){

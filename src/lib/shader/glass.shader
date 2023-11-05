@@ -48,7 +48,7 @@ uniform float lightThreshold2;
 uniform sampler2D uEnvMap; 
 uniform vec3 uReflectionColor;
 const highp float _PI =1.0/3.14159265359;
-[common]
+#include(common)
 void main(void){
 	vec3 eye = normalize(vEye);
 	/*視差*/

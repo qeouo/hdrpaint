@@ -7,10 +7,11 @@ void main(void){
 	gl_Position = projectionMatrix * vec4(aPos,1.0);
 
 	aZ=gl_Position.z;
+	aW=gl_Position.w;
 }
 [fragmentshader]
 precision lowp float; 
-[common]
+#include(common)
 varying highp float aZ; 
 varying highp float aW; 
 void main(void){

@@ -2,7 +2,7 @@ bl_info = {
     "name": "Export Ono3dObject (.o3o)",
     "author": "ono",
     "version": (0,0,1),
-    "blender": (2, 80, 0),
+    "blender": (2, 90, 0),
     "location": "File > Export > Ono3dObject (.o3o)",
     "description": "Export Ono3dObject (.o3o)",
     "warning": "",
@@ -10,23 +10,27 @@ bl_info = {
     "tracker_url": "",
     "category": "Import-Export"}
 
-#g_magicCode = "Ono3dObject"
-#g_version = "0.13"
+import bpy
+from bpy.props import (
+        BoolProperty,
+        FloatProperty,
+        StringProperty,
+        EnumProperty,
+        )
+from bpy_extras.io_utils import (
+        ExportHelper,
+        )
 
 import math 
-import json
 import collections
+import re
 
-import os
-from math import radians
-import bpy
-#from mathutils import *
+import json
 
 import mathutils
 
-import re
 
-config = ""
+
 class Ono3dObjectExporterSettings:
     def __init__(self,
                  context,
@@ -57,6 +61,12 @@ def fileoutMd():
     config.Whitespace-=1
     fileout('}\n')
 
+def getName(obj):
+    if(obj.library):
+        return '{}-{}'.format(obj.library.filepath,obj.name)
+    else:
+        return obj.name
+        
 def ExportOno3dObject():
     config.File = open(config.FilePath, "w")
 
@@ -82,9 +92,16 @@ def ExportOno3dObject():
     a = [Object for Object in bpy.data.meshes if Object.name.find("@") != 0 ]
     fileout(',"meshes":')
     fileoutLu()
+    first=True
     for mesh in a:
+#        if(mesh.library):
+            #リンクの場合は無視
+#    continue
         fileout('')
-        if(mesh!= a[0]):fileout2(',')
+        if(first):
+            first=False
+        else:
+            fileout2(',')
         WriteMesh(mesh)
     fileoutLd()
 
@@ -94,6 +111,29 @@ def ExportOno3dObject():
         fileout('')
         if(light!= bpy.data.lights[0]):fileout2(',')
         WriteLight(light)
+        fileout2('\n');
+    fileout('')
+    fileoutLd()
+
+    fileout(',"cameras":')
+    fileoutLu()
+    for idx,camera in enumerate(bpy.data.cameras):
+        fileout('')
+        if(idx):fileout2(',')
+
+        dict = collections.OrderedDict()
+        dict["name"] = camera.name
+        dict["type"] = camera.type
+        dict["clip_start"] = camera.clip_start
+        dict["clip_end"] = camera.clip_end
+        dict["lens"] = camera.lens
+        dict["lens_unit"] = camera.lens_unit
+        dict["sensor_fit"] = camera.sensor_fit
+        dict["sensor_height"] = camera.sensor_height
+        dict["sensor_width"] = camera.sensor_width
+
+        fileout(json.dumps(dict,ensure_ascii=False))
+
         fileout2('\n');
     fileout('')
     fileoutLd()
@@ -112,9 +152,17 @@ def ExportOno3dObject():
     a = bpy.data.armatures
     fileout(',"armatures":')
     fileoutLu()
-    for Object in a:
-        if(a[0] != Object):fileout2(',')
-        WriteArmatureBones(Object)
+    first=True
+    for obj in a:
+#if(obj.library):
+            #リンクの場合は無視
+#            continue
+        fileout('')
+        if(first):
+            first=False
+        else:
+            fileout2(',')
+        WriteArmatureBones(obj)
     fileoutLd()
 
     fileout(',"framerate":{}\n'.format(int(bpy.context.scene.render.fps / bpy.context.scene.render.fps_base)))
@@ -127,23 +175,74 @@ def ExportOno3dObject():
 
     fileoutLd()
 
+    fileout(',"collections":')
+    fileoutMu()
+    for index,(key,obj) in enumerate(bpy.data.collections.items()):
+        fileout('')
+        if(index != 0):fileout2(',')
+        fileout2( '"{}":'.format(key))
+        fileoutMu()
+        fileout('"children":[')
+        for idx2,key2 in enumerate(obj.children.keys()):
+            if(idx2 != 0):fileout2(',')
+            fileout2( '"{}"'.format(key2))
+        fileout2( ']\n')
+
+        fileout(',"objects":[')
+        for idx2,key2 in enumerate(obj.objects):
+            if(idx2 != 0):fileout2(',')
+            fileout2( '"{}"'.format(key2.name_full))
+        fileout2( ']\n')
+        fileoutMd()
+    fileoutMd()
+
+    first=True
     fileout(',"objects":')
     fileoutLu()
     for obj in bpy.data.objects:
+#        if(obj.library):
+#            continue
+#        if(obj.data):
+#            if(obj.data.library):
+#                continue
         fileout('')
-        if(obj!= bpy.data.objects[0]):fileout2(',')
+        if(first):
+            first=False
+        else:
+            fileout2(',')
         fileoutMu()
 
         fileout('"name":"{}"\n'.format(obj.name))
+        fileout(',"name_full":"{}"\n'.format(obj.name_full))
+        fileout(',"type":"{}"\n'.format(obj.type))
+        fileout(',"display_type":"{}"\n'.format(obj.display_type))
+
+        if(obj.instance_collection):
+            fileout(',"instance_collection":"{}"\n'.format(obj.instance_collection.name_full))
+     
+#        fileout(',"display_type":"{}"\n'.format(obj.display_type))
+        if(obj.show_bounds):
+            fileout(',"show_bounds":{}\n'.format("true" if obj.show_bounds else "false"))
+            fileout(',"bound_type":"{}"\n'.format(obj.display_bounds_type))
+
         if("static" in bpy.data.collections):
             if(bpy.data.collections["static"].objects.find(obj.name)>=0):
                 fileout(',"static":1\n')
         if(obj.hide_render == True): fileout(',"hide_render": 1\n')
-        fileout(',"groups":[')
-        for group in obj.vertex_groups:
-            if(group != obj.vertex_groups[0]):fileout2(',')
-            fileout2('"{}"'.format(group.name))
-        fileout2(']\n')
+
+        if(obj.vertex_groups):
+            fileout(',"groups":[')
+            for group in obj.vertex_groups:
+                if(group != obj.vertex_groups[0]):fileout2(',')
+                fileout2('"{}"'.format(group.name))
+            fileout2(']\n')
+
+        if(obj.material_slots):
+          fileout(',"material_slots":[')
+          for slot in obj.material_slots:
+              if(slot != obj.material_slots[0]):fileout2(',')
+              if(slot.material):fileout2('"{}"'.format(slot.material.name_full))
+          fileout2(']\n')
 
         pose = obj.pose
         if(pose):
@@ -188,9 +287,11 @@ def ExportOno3dObject():
             if(obj.parent_bone):
                 fileout(',"parent_bone":"{}"\n'.format(obj.parent_bone))
             fileout(',"iparentmatrix":{}\n'.format(stringMatrix43(obj.matrix_parent_inverse)))
-        fileout(',"type":"{}"\n'.format(obj.type))
         if(obj.data):
-            fileout(',"data":"{}"\n'.format(obj.data.name))
+            if(obj.type=="MESH"):
+                fileout(',"data":"{}"\n'.format(obj.data.name_full))
+            else:
+                fileout(',"data":"{}"\n'.format(obj.data.name))
         if(obj.animation_data):
             if(obj.animation_data.action):
                fileout(',"action":"{}"\n'.format(obj.animation_data.action.name))
@@ -202,6 +303,8 @@ def ExportOno3dObject():
             fileout(',"collision_shape":"{}"\n'.format(obj.rigid_body.collision_shape))
             fileout(',"friction":{:9f}\n'.format(obj.rigid_body.friction))
             fileout(',"restitution":{:9f}\n'.format(obj.rigid_body.restitution))
+            if obj.rigid_body.use_margin:
+                fileout(',"bold":{:9f}\n'.format(obj.rigid_body.collision_margin))
             collision_groups=0
             for num in range(20):
                 collision_groups|= (obj.rigid_body.collision_collections[num] << num)
@@ -239,50 +342,64 @@ def ExportOno3dObject():
             fileout(',"use_spring_ang":{}\n'.format(stringVector3i((rbc.use_spring_ang_x,rbc.use_spring_ang_y,rbc.use_spring_ang_z))))
             fileout(',"type":"{}"\n'.format(rbc.type))
             fileoutMd()
-        b = obj.bound_box
-        fileout(',"bound_box":[{:9f},{:9f},{:9f},{:9f},{:9f},{:9f}]\n'.format(b[0][0],b[0][2],b[0][1],b[6][0],b[6][2],b[6][1]))
-        fileout(',"bound_type":"{}"\n'.format(obj.display_bounds_type))
-        fileout(',"modifiers":')
-        fileoutLu()
-        for modifier in obj.modifiers:
-            fileout('')
-            if(modifier != obj.modifiers[0]):fileout2(',')
-            fileout2('{')
-            fileout2('"name":"{}"'.format(modifier.name))
-            fileout2(',"type":"{}"'.format(modifier.type))
-            if(modifier.type=="ARMATURE" ):
-                if(modifier.object!=None ):
-                    fileout2(',"object":"{}"'.format(modifier.object.name))
-                    fileout2(',"vertex_group":"{}"'.format(modifier.vertex_group))
-            elif(modifier.type=="MESH_DEFORM" ):
-                fileout2(',"object":"{}"'.format(modifier.object.name))
-            elif(modifier.type=="CLOTH" ):
-                fileout2(',"pin":"{}"'.format(modifier.settings.vertex_group_mass))
-                fileout2(',"mass":{}'.format(modifier.settings.mass))
-                fileout2(',"structual_stiffness":{}'.format(modifier.settings.tension_stiffness))
-                fileout2(',"bending_stiffness":{}'.format(modifier.settings.bending_stiffness))
-                fileout2(',"spring_damping":{}'.format(modifier.settings.tension_damping))
-                fileout2(',"air_damping":{}'.format(modifier.settings.air_damping))
-            elif(modifier.type=="SOFT_BODY" ):
-                fileout2(',"friction":{:9f}'.format(modifier.settings.friction))
-                fileout2(',"mass":{:9f}'.format(modifier.settings.mass))
-                fileout2(',"speed":{:9f}'.format(modifier.settings.speed))
-                fileout2(',"goalDefault":{:9f}'.format(modifier.settings.goal_default))
-                fileout2(',"goalMin":{:9f}'.format(modifier.settings.goal_min))
-                fileout2(',"goalMax":{:9f}'.format(modifier.settings.goal_max))
-                fileout2(',"goalSpring":{:9f}'.format(modifier.settings.goal_spring))
-                fileout2(',"goalFriction":{:9f}'.format(modifier.settings.goal_friction))
-                fileout2(',"pin":"{}"'.format(modifier.settings.vertex_group_goal))
-                fileout2(',"pull":{:9f}'.format(modifier.settings.pull))
-                fileout2(',"push":{:9f}'.format(modifier.settings.push))
-                fileout2(',"damping":{:9f}'.format(modifier.settings.damping))
-                fileout2(',"bend":{:9f}'.format(modifier.settings.bend))
-            elif(modifier.type=="MIRROR" ):
-                fileout2(',"use_x":{}'.format(int(modifier.use_axis[0])))
-                fileout2(',"use_y":{}'.format(int(modifier.use_axis[2])))
-                fileout2(',"use_z":{}'.format(int(modifier.use_axis[1])))
-            fileout2('}\n')
-        fileoutLd()
+#        b = obj.bound_box
+#        fileout(',"bound_box":[{:9f},{:9f},{:9f},{:9f},{:9f},{:9f}]\n'.format(b[0][0],b[0][2],b[0][1],b[6][0],b[6][2],b[6][1]))
+        if(obj.modifiers):
+          fileout(',"modifiers":')
+          fileoutLu()
+          for modifier in obj.modifiers:
+              fileout('')
+              if(modifier != obj.modifiers[0]):fileout2(',')
+              fileout2('{')
+              fileout2('"name":"{}"'.format(modifier.name))
+              fileout2(',"type":"{}"'.format(modifier.type))
+              if(modifier.type=="ARMATURE" ):
+                  if(modifier.object!=None ):
+                      fileout2(',"object":"{}"'.format(modifier.object.name))
+                      fileout2(',"vertex_group":"{}"'.format(modifier.vertex_group))
+              elif(modifier.type=="MESH_DEFORM" ):
+                  fileout2(',"object":"{}"'.format(modifier.object.name))
+              elif(modifier.type=="CLOTH" ):
+                  fileout2(',"pin":"{}"'.format(modifier.settings.vertex_group_mass))
+                  fileout2(',"mass":{}'.format(modifier.settings.mass))
+                  fileout2(',"tension_stiffness":{}'.format(modifier.settings.tension_stiffness))
+                  fileout2(',"tension_damping":{}'.format(modifier.settings.tension_damping))
+                  fileout2(',"bending_stiffness":{}'.format(modifier.settings.bending_stiffness))
+                  fileout2(',"bending_damping":{}'.format(modifier.settings.bending_damping))
+                  fileout2(',"air_damping":{}'.format(modifier.settings.air_damping))
+                  fileout2(',"use_collision":{}'.format("true" if modifier.collision_settings.use_collision else "false"))
+              elif(modifier.type=="SOFT_BODY" ):
+                  fileout2(',"friction":{:9f}'.format(modifier.settings.friction))
+                  fileout2(',"mass":{:9f}'.format(modifier.settings.mass))
+                  fileout2(',"speed":{:9f}'.format(modifier.settings.speed))
+                  fileout2(',"goalDefault":{:9f}'.format(modifier.settings.goal_default))
+                  fileout2(',"goalMin":{:9f}'.format(modifier.settings.goal_min))
+                  fileout2(',"goalMax":{:9f}'.format(modifier.settings.goal_max))
+                  fileout2(',"goalSpring":{:9f}'.format(modifier.settings.goal_spring))
+                  fileout2(',"goalFriction":{:9f}'.format(modifier.settings.goal_friction))
+                  fileout2(',"pin":"{}"'.format(modifier.settings.vertex_group_goal))
+                  fileout2(',"pull":{:9f}'.format(modifier.settings.pull))
+                  fileout2(',"push":{:9f}'.format(modifier.settings.push))
+                  fileout2(',"damping":{:9f}'.format(modifier.settings.damping))
+                  fileout2(',"bend":{:9f}'.format(modifier.settings.bend))
+              elif(modifier.type=="MIRROR" ):
+                  fileout2(',"use_x":{}'.format(int(modifier.use_axis[0])))
+                  fileout2(',"use_y":{}'.format(int(modifier.use_axis[2])))
+                  fileout2(',"use_z":{}'.format(int(modifier.use_axis[1])))
+              elif(modifier.type=="FLUID" ):
+                  fileout2(',"fluid_type":"{}"'.format(modifier.fluid_type))
+                  if(modifier.fluid_type == "DOMAIN"):
+                      settings = modifier.domain_settings
+                      fileout2(',"domain_type":"{}"'.format(settings.domain_type))
+                  elif(modifier.fluid_type == "FLOW"):
+                      settings = modifier.flow_settings
+                      fileout2(',"flow_type":"{}"'.format(settings.flow_type))
+                      fileout2(',"flow_behavior":"{}"'.format(settings.flow_behavior))
+                      fileout2(',"use_inflow":{}'.format("true" if settings.use_inflow else "false"))
+                      fileout2(',"use_plane_init":{}'.format("true" if settings.use_plane_init else "false"))
+                  
+              fileout2('}\n')
+          fileoutLd()
 
         dict = collections.OrderedDict()
         for key in obj.keys():
@@ -396,6 +513,8 @@ def WriteMaterial( Material=None):
     dict = collections.OrderedDict()
     
     dict["name"] = Material.name
+    dict["name_full"] = Material.name_full
+    dict["blend_method"] = Material.blend_method
 
     if(Material.use_nodes):
         nodes = Material.node_tree.nodes
@@ -405,12 +524,20 @@ def WriteMaterial( Material=None):
             inputs= node.inputs
 
             dict["baseColor"] = inputs[0].default_value[0:3]
-            dict["opacity"] = 1.0 -inputs[15].default_value
-            dict["metallic"] = inputs[4].default_value
-            dict["specular"] = inputs[5].default_value*0.05
+            dict["opacity"] = 1.0 -inputs[15].default_value;
+            dict["metallic"] = inputs[4].default_value;
+            dict["specular"] = inputs[5].default_value*0.3;
             dict["roughness"] = inputs[7].default_value
             dict["ior"] = inputs[14].default_value
             dict["subRoughness"] = inputs[16].default_value
+
+        if('uvOffset' in nodes):
+            node = nodes['uvOffset']
+            dict["uvOffset"] =[ node.inputs[1].default_value[0],node.inputs[1].default_value[1]]
+
+        if('opacity' in nodes):
+            node = nodes['opacity']
+            dict["opacity"] = node.outputs[0].default_value
 
         if('baseColor' in nodes):
             inputs = nodes['baseColor'].inputs
@@ -420,7 +547,7 @@ def WriteMaterial( Material=None):
         if('pbrColor' in nodes):
             inputs = nodes['pbrColor'].inputs
 
-            dict["specular"] = inputs[1].default_value[0]*0.05
+            dict["specular"] = inputs[1].default_value[0]
             dict["roughness"] = inputs[1].default_value[1]
             dict["subRoughness"] = inputs[1].default_value[2]
 
@@ -431,19 +558,22 @@ def WriteMaterial( Material=None):
         if('baseColorTexture' in nodes):
             node = nodes['baseColorTexture']
             dict["baseColorMap"] = node.image.filepath
+            dict["interpolation"] = node.interpolation
+            dict["extension"] = node.extension
+            dict["colorspace"] = node.image.colorspace_settings.name
 
         if('pbrTexture' in nodes):
             node = nodes['pbrTexture']
             dict["pbrMap"] = node.image.filepath
 
-        if('hightTexture' in nodes):
-            node = nodes['hightTexture']
-            dict["hightMap"] = node.image.filepath
+        if('heightTexture' in nodes):
+            node = nodes['heightTexture']
+            dict["heightMap"] = node.image.filepath
 
         if('Bump' in nodes):
             inputs = nodes['Bump'].inputs
-            dict["hightMapPower"] = inputs[0].default_value
-            dict["hightBase"] = inputs[1].default_value
+            dict["heightMapPower"] = inputs[2].default_value
+            dict["heightBase"] = inputs[1].default_value
 
         if('LightMap' in nodes):
             node = nodes['LightMap']
@@ -506,14 +636,13 @@ def WriteReflectionProbe(obj):
     fileout(json.dumps(dict,ensure_ascii=False))
 	
 
+#メッシュ情報を出力
 def WriteMesh(mesh):
-    import mathutils
-    Index = 0
 
     fileoutMu()
     sp = mesh.name.split("|");
     fileout('"name":"{}"\n'.format(mesh.name))
-    fileout(',"use_auto_smooth":{:d}\n'.format(mesh.use_auto_smooth))
+    fileout(',"name_full":"{}"\n'.format(mesh.name_full))
     fileout(',"auto_smooth_angle":{:f}\n'.format(mesh.auto_smooth_angle))
     if mesh.shape_keys:
         fileout(',"shapeKeys":')
@@ -573,7 +702,7 @@ def WriteMesh(mesh):
 #    for i,edge in enumerate(mesh.edges):
 #        fileout2('{},{}'.format( edge.vertices[0],edge.vertices[1]))
 #        if(i<len(mesh.edges)-1):
-#            fileout2(',");
+#            fileout2(',');
 #        else:
 #            fileout2('\n');
 #    fileoutLd()
@@ -581,13 +710,14 @@ def WriteMesh(mesh):
     fileout(',"faces":')
     fileoutLu()
     faceIndex = 0
-    faceIndex = 0
+    smooth_flg = False;
     for Face in mesh.polygons:
         fileout('')
         if(Face!= mesh.polygons[0]):fileout2(',')
         fileout2('{')
         fileout2('"idx":[')
         Index = 0
+        if(Face.use_smooth):smooth_flg = True;
         poly = Face
         for j,loop_index in enumerate(range(poly.loop_start, poly.loop_start + poly.loop_total)):
 # for Vertex in Face.vertices:
@@ -602,11 +732,12 @@ def WriteMesh(mesh):
 #        Normal = Face.normal
 #        fileout2('normal:{:9f},{:9f},{:9f},'.format(Normal[0], Normal[1], Normal[2]))
         if Face.material_index < len(mesh.materials):
-            if mesh.materials[Face.material_index] != None:
-                fileout2(',"mat":{}'.format(bpy.data.materials.keys().index(mesh.materials[Face.material_index].name)))
+#if mesh.materials[Face.material_index] != None:
+                fileout2(',"mat":{}'.format(Face.material_index))
         fileout2('}\n')
         faceIndex += 1
     fileoutLd()
+    fileout(',"use_auto_smooth":{:d}\n'.format(smooth_flg))
     fileout(',"uv_layers":')
     fileoutLu()
     mesh.uv_layers.active
@@ -742,21 +873,19 @@ def WriteScene(scene):
     fileoutMd()
 
 
-from bpy.props import *
-class Ono3dObjectExporter(bpy.types.Operator):
-    """Export to the Ono3dObject format (.o3o)"""
+class ExportO3O(bpy.types.Operator, ExportHelper):
+    """Export Ono3d (.o3o)"""
+    bl_idname = "export_scene.o3o"
+    bl_label = 'Export o3o'
 
-    bl_idname = "export.ono3o"
-    bl_label = "Export Ono3dObject"
-    filter_glob : StringProperty(default="*.o3o",options={'HIDDEN'})
-    filepath : StringProperty(subtype='FILE_PATH')
+    filename_ext = ".o3o"
+    filter_glob: StringProperty(default="*.o3o", options={'HIDDEN'})
 
     EnableDoubleSided : BoolProperty(name="Enable Double Sided", description="enable double sided", default=False)
 
+
     def execute(self, context):
-        FilePath = self.filepath
-        if not FilePath.lower().endswith(".o3o"):
-            FilePath += ".o3o"
+        FilePath = bpy.path.ensure_ext(self.filepath, ".o3o")
         global config
         config = Ono3dObjectExporterSettings(context,
                                          FilePath)
@@ -764,32 +893,33 @@ class Ono3dObjectExporter(bpy.types.Operator):
         ExportOno3dObject()
         return {"FINISHED"}
 
-    def invoke(self, context, event):
-        WindowManager = context.window_manager
-        WindowManager.fileselect_add(self)
-        return {"RUNNING_MODAL"}
 
 
-def menu_func(self, context):
-    default_path = os.path.splitext(bpy.data.filepath)[0] + ".o3o"
-    self.layout.operator(Ono3dObjectExporter.bl_idname, text="Ono3dObject (.o3o)").filepath = default_path
+
+
+def menu_func_export(self, context):
+    self.layout.operator(ExportO3O.bl_idname,
+                         text="onoExtensible 3D (.o3o)")
 
 
 classes = (
-	Ono3dObjectExporter,
+    ExportO3O,
 )
+
+
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
-    bpy.types.TOPBAR_MT_file_export.append(menu_func)
+
+    bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
 
 
 def unregister():
-    bpy.types.TOPBAR_MT_file_export.remove(menu_func)
+    bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
+
     for cls in classes:
         bpy.utils.unregister_class(cls)
 
 
 if __name__ == "__main__":
     register()
-

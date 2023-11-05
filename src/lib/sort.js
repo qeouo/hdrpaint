@@ -2,17 +2,17 @@
 var Sort = (function(){
 	var ret=function(){};
 
-	//ƒoƒPƒbƒgƒ\[ƒg—pƒoƒbƒtƒ@
+	//ãƒã‚±ãƒƒãƒˆã‚½ãƒ¼ãƒˆç”¨ãƒãƒƒãƒ•ã‚¡
 	var backet= new Array(16);//2^4
 	var backetIndex=new Array(16);
 	for(var i=0;i<backet.length;i++){
-		backet[i]=new Array(1024);//‘å‚«‚³‚Í“K“–(—Ç‚­‚È‚¢)
+		backet[i]=new Array(1024);//å¤§ãã•ã¯é©å½“(è‰¯ããªã„)
 	}
 	ret.backetSort=function(arr,n,func,first,last){
-		//Šî”ƒ\[ƒg‚Ì‚½‚ß‚ÌƒoƒPƒbƒgƒ\[ƒg
+		//åŸºæ•°ã‚½ãƒ¼ãƒˆã®ãŸã‚ã®ãƒã‚±ãƒƒãƒˆã‚½ãƒ¼ãƒˆ
 		//
 		for(var i=0;i<backet.length;i++){
-			//ƒoƒPƒcƒCƒ“ƒfƒbƒNƒX‰Šú‰»
+			//ãƒã‚±ãƒ„ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹åˆæœŸåŒ–
 			backetIndex[i]=0;
 		}
 		if(!func){
@@ -20,7 +20,7 @@ var Sort = (function(){
 		}
 
 		for(var i=first;i<=last;i++){
-			//Šî”‚ğ‹‚ß‚»‚ÌƒoƒPƒc‚É“ü‚ê‚é
+			//åŸºæ•°ã‚’æ±‚ã‚ãã®ãƒã‚±ãƒ„ã«å…¥ã‚Œã‚‹
 			var a=(func(arr[i])>>n)&15;
 			backet[a][backetIndex[a]]=arr[i];
 			backetIndex[a]++;
@@ -28,7 +28,7 @@ var Sort = (function(){
 
 		var arrIndex=first;
 		for(var i=0;i<backet.length;i++){
-			//ƒoƒPƒc‚©‚çæ‚èo‚µ‚Ä•À‚×‚é
+			//ãƒã‚±ãƒ„ã‹ã‚‰å–ã‚Šå‡ºã—ã¦ä¸¦ã¹ã‚‹
 			for(var j=0;j<backetIndex[i];j++){
 				arr[arrIndex]=backet[i][j];
 				arrIndex++;
@@ -36,14 +36,14 @@ var Sort = (function(){
 		}
 	}
 	ret.kisu=function(arr,func,first,last){
-		//Šî”ƒ\[ƒg
+		//åŸºæ•°ã‚½ãƒ¼ãƒˆ
 		for(var n=0;n<32;n+=4){
-			//‰º‚©‚ç4ƒrƒbƒg‚¸‚Â‚ğŠî’ê‚ÉŒv8‰ñƒoƒPƒcƒ\[ƒg‚·‚é
+			//ä¸‹ã‹ã‚‰4ãƒ“ãƒƒãƒˆãšã¤ã‚’åŸºåº•ã«è¨ˆ8å›ãƒã‚±ãƒ„ã‚½ãƒ¼ãƒˆã™ã‚‹
 			this.backetSort(arr,n,func,first,last);
 		}
 	}
 
-	//ƒNƒCƒbƒNƒ\[ƒg
+	//ã‚¯ã‚¤ãƒƒã‚¯ã‚½ãƒ¼ãƒˆ
 	ret.qSort = function(target,first,last,func){
 		if(last<=first){
 			return;

@@ -14,7 +14,7 @@ precision lowp float;
 varying vec2 vUv;
 uniform sampler2D uBaseColMap;
 uniform sampler2D uNormalMap;
-[common]
+#include(common)
 void main(void){
 
 	vec4 tex = texture2D(uBaseColMap,vUv);

@@ -292,7 +292,7 @@ static loadHpd(file){
 
 	static saveHdr(e){
 		var a = e.target;
-		var buffer = root_layer.img.createExr(3);
+		var buffer = hdrpaint.root_layer.img.createExr(3);
 		var blob = new Blob([buffer], {type: "application/octet-stream"});
 
 		a.href =  window.URL.createObjectURL(blob);
