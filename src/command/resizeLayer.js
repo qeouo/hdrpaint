@@ -29,7 +29,7 @@ class ResizeLayer extends CommandBase{
 			var layers = Layer.layerArray();
 			for(var li=0;li<layers.length;li++){
 				var layer = layers[li];
-				if(layer === root_layer){continue;}
+				if(layer === Hdrpaint.root_layer){continue;}
 				var cmd = new ResizeLayer();
 				cmd.param={"layer_id":layer.id,"width":param.width,"height":param.height};
 				cmd.func();

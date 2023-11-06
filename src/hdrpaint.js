@@ -57,17 +57,26 @@ class Hdrpaint{
 	getSelectArea(){
 		//領域選択されていない場合はレイヤー全体を選択
 		var rectangle= {};
+		var layer = this.selected_layer;
 		if(!this.select_rectangle){
 			rectangle.x = 0;
 			rectangle.y = 0;
-			rectangle.w = this.selected_layer.size[0];
-			rectangle.h = this.selected_layer.size[1];
+			rectangle.w = layer.size[0];
+			rectangle.h = layer.size[1];
 		}else{
-			rectangle.x = this.select_rectangle.x;
-			rectangle.y = this.select_rectangle.y;
-			rectangle.w = this.select_rectangle.w;
-			rectangle.h = this.select_rectangle.h;
+			var absolute=new Vec2();
+			layer.getAbsolutePosition(absolute);
+			rectangle.x = this.select_rectangle.x - absolute[0];
+			rectangle.y = this.select_rectangle.y - absolute[1];
+			rectangle.w = this.select_rectangle.w+this.select_rectangle.x - absolute[0];
+			rectangle.h = this.select_rectangle.h+this.select_rectangle.y - absolute[1];
 		}
+		rectangle.x = Math.max(Math.min(rectangle.x,layer.size[0]),0);
+		rectangle.y = Math.max(Math.min(rectangle.y,layer.size[1]),0);
+		rectangle.w = Math.max(Math.min(rectangle.w,layer.size[0]),0);
+		rectangle.h = Math.max(Math.min(rectangle.h,layer.size[1]),0);
+		rectangle.w -= rectangle.x;
+		rectangle.h -= rectangle.y;
 		return rectangle;
 	}
 	select(target_layer){

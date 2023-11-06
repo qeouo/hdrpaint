@@ -1034,7 +1034,7 @@ function dataURIConverter(dataURI) {
 	}
 
 	binder.bind(document.querySelector("#status2")
-		,"",Hdrpaint,["cursor_pos.0","cursor_pos.1"],(v)=>{
+		,"",Hdrpaint,["doc.scale","cursor_pos.0","cursor_pos.1"],(v)=>{
 			var img = Hdrpaint.root_layer.img;
 			var data = img.data;
 			var width=img.width;
@@ -1046,7 +1046,7 @@ function dataURIConverter(dataURI) {
 				Hdrpaint.cursor_color[1]=NaN;
 				Hdrpaint.cursor_color[2]=NaN;
 				Hdrpaint.cursor_color[3]=NaN;
-				return "倍率" + "X:- Y:-";
+				return "倍率:" ; v[0] + " X:- Y:-";
 			}
 
 			var idx=img.getIndex(v[0]|0,v[1]|0)<<2;
@@ -1054,7 +1054,7 @@ function dataURIConverter(dataURI) {
 			Hdrpaint.cursor_color[1]= data[idx+1];
 			Hdrpaint.cursor_color[2]= data[idx+2];
 			Hdrpaint.cursor_color[3]= data[idx+3];
-			return "倍率" + "X:" + v[0] +" Y:" + v[1];
+			return "倍率:" + v[0] + " X:" + v[1] +" Y:" + v[2];
 	});
 
 	var f = (v)=>isNaN(v[0])?"-":v[0].toFixed(3);
