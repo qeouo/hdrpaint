@@ -228,13 +228,7 @@ var onloadfunc=function(e){
 				rectangle.h = Math.abs(drag_start[1]-y2);
 			}
 
-			var rect =document.querySelector(".select_rectangle");
-			var doc = Hdrpaint.doc;
-			rect.style.left=(rectangle.x * doc.scale/100 +  doc.canvas_pos[0])+"px";
-			rect.style.top=(rectangle.y  * doc.scale/100 + doc.canvas_pos[1]) +"px";
-			rect.style.width=(rectangle.w * doc.scale/100) + "px";
-			rect.style.height=(rectangle.h * doc.scale/100)+ "px";
-			rect.style.display="inline-block"
+			Hdrpaint.refreshSelectedRectangle();
 
 
 		}else if(Hdrpaint.selected_tool==="pen"){//inputs["pen"].checked){
@@ -954,6 +948,9 @@ function dataURIConverter(dataURI) {
 
 		//Redraw.refreshPreviewStatus(e);
 
+		hdrpaint.refreshLayerRectangle();
+		hdrpaint.refreshSelectedRectangle();
+
 	}) ;
 
     var a = document.getElementById("save_hpd");
@@ -1095,17 +1092,6 @@ function dataURIConverter(dataURI) {
 	colorpickerhdr.init(document.getElementsByClassName("colorpickerhdr"));
 
 	binder.init(Hdrpaint);
-
-
-//	var nodes = document.querySelectorAll("[bind\\:]");
-//	nodes.forEach((node)=>{
-//		const bind = binder.binds.find(function(elem){return elem.node===node});
-//		if(!bind)return;
-//		node.addEventListener("change",function(){
-//			bind.feedBackValue(this.value);
-//		});
-//	});
-	//
 
 }
 

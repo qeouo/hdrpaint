@@ -47,10 +47,23 @@ class Hdrpaint{
 
 		var rect =document.querySelector(".layer_rectangle");
 		var doc = this.doc;
+		var scale = doc.scale/100;
 		rect.style.left=(this.selected_layer.position[0]  +  doc.canvas_pos[0] - 1)+"px";
 		rect.style.top=(this.selected_layer.position[1] + doc.canvas_pos[1] -1) +"px";
-		rect.style.width=this.selected_layer.size[0] + "px";
-		rect.style.height=this.selected_layer.size[1]+ "px";
+		rect.style.width =(this.selected_layer.size[0] * scale) + "px";
+		rect.style.height=(this.selected_layer.size[1] * scale)+ "px";
+		rect.style.display="inline-block"
+	}
+	refreshSelectedRectangle(){
+		if(!this.select_rectangle)return;
+		var rect =document.querySelector(".select_rectangle");
+		var rectangle = this.select_rectangle;
+		var doc = this.doc;
+		var scale = doc.scale/100;
+		rect.style.left=(rectangle.x * scale +  doc.canvas_pos[0]-1)+"px";
+		rect.style.top=(rectangle.y  * scale + doc.canvas_pos[1]-1) +"px";
+		rect.style.width =(rectangle.w * scale) + "px";
+		rect.style.height=(rectangle.h * scale)+ "px";
 		rect.style.display="inline-block"
 	}
 
@@ -169,7 +182,7 @@ class Hdrpaint{
 	}
 
 	createNewModifier(e){
-		if(e.target.value ===""){return;}
+		if(e.target.value ==="" || !e.target.value){return;}
 		var modifier = e.target.value;
 		//新規モディファイア
 		var data = this.getPosition();
