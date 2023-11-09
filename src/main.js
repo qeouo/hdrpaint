@@ -229,7 +229,6 @@ var onloadfunc=function(e){
 				rectangle.h = Math.abs(drag_start[1]-y2);
 			}
 
-			Hdrpaint.refreshSelectedRectangle();
 
 
 		}else if(Hdrpaint.selected_tool==="pen"){//inputs["pen"].checked){
@@ -903,7 +902,6 @@ function dataURIConverter(dataURI) {
 			oldpos[1]=e.pageY;
 
 			hdrpaint.refreshLayerRectangle();
-			hdrpaint.refreshSelectedRectangle();
 			
 		}
 	});
@@ -1066,7 +1064,10 @@ function dataURIConverter(dataURI) {
 	binder.bind(document.querySelector("#pos_A")
 		,"",Hdrpaint,["cursor_color.3"],f);
 
-	watcher.watch([Hdrpaint],["doc.scale"],function(old){
+	watcher.watch(Hdrpaint,["doc.scale","doc.canvas_pos.0","doc.canvas_pos.1"],function(old){
+		hdrpaint.refreshSelectedRectangle()
+	});
+	watcher.watch(Hdrpaint,["select_rectangle.x","select_rectangle.y","select_rectangle.w","select_rectangle.h"],function(old){
 		hdrpaint.refreshSelectedRectangle()
 	});
 watcher.init();

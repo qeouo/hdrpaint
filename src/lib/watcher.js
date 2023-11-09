@@ -19,11 +19,14 @@ class Watch{
 		var value=this.variable_root;
 		var v=this.variable_direction;
 		for(var j=0;j<v.length-n;j++){
-			value = value[v[j]];
 			if(value == undefined){
 				value=null;
 				break;
 			}
+			if(!value){
+				break;
+			}
+			value = value[v[j]];
 		}
 		return value;
 	}
@@ -84,9 +87,15 @@ export default class Watcher {
 
 	watch(variable_roots,variable_names,func){
 		var ws = [];
-		if(!Array.isArray(variable_roots)){
-			variable_roots = [variable_roots];
+		if(!Array.isArray(variable_names)){
 			variable_names= [variable_names];
+		}
+		if(!Array.isArray(variable_roots)){
+			var root = variable_roots;
+			variable_roots=[];
+			for(var i=0;i<variable_names.length;i++){
+				variable_roots.push(root);
+			}
 		}
 		
 		for(var i=0;i<variable_names.length;i++){
