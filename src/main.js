@@ -19,6 +19,7 @@ import Binder from "./lib/binder.js";
 import Watcher from "./lib/watcher.js";
 var binder =new Binder();
 window.binder=binder;
+var watcher =new Watcher();
 
 
 window.Redraw = Redraw;
@@ -888,7 +889,7 @@ function dataURIConverter(dataURI) {
 			var c=document.getElementById("canvas_field");
 			var spacer=document.getElementById("spcaer");
 			if(doc.canvas_pos[0]<0){
-				c.scrollLeft-=doc.canvas_pos[0];
+			//	c.scrollLeft-=doc.canvas_pos[0];
 				doc.canvas_pos[0]=0;
 			}
 			if(doc.canvas_pos[1]<0){
@@ -901,7 +902,8 @@ function dataURIConverter(dataURI) {
 			oldpos[0]=e.pageX;
 			oldpos[1]=e.pageY;
 
-			Hdrpaint.refreshLayerRectangle();
+			hdrpaint.refreshLayerRectangle();
+			hdrpaint.refreshSelectedRectangle();
 			
 		}
 	});
@@ -949,7 +951,6 @@ function dataURIConverter(dataURI) {
 		//Redraw.refreshPreviewStatus(e);
 
 		hdrpaint.refreshLayerRectangle();
-		hdrpaint.refreshSelectedRectangle();
 
 	}) ;
 
@@ -1064,6 +1065,11 @@ function dataURIConverter(dataURI) {
 		,"",Hdrpaint,["cursor_color.2"],f);
 	binder.bind(document.querySelector("#pos_A")
 		,"",Hdrpaint,["cursor_color.3"],f);
+
+	watcher.watch([Hdrpaint],["doc.scale"],function(old){
+		hdrpaint.refreshSelectedRectangle()
+	});
+watcher.init();
 
 	Brush.init();
 	var brush = Brush.create();

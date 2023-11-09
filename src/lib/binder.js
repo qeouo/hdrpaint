@@ -2,7 +2,6 @@
 
 import Util from "./util.js";
 import Watcher from "./watcher.js";
-var watcher = new Watcher();
 class Bind{
 	constructor(node,variable){
 		this.node=node;
@@ -27,27 +26,27 @@ class Bind{
 			}
 		}
 		//バインド変数にコントロールの値をセットする
-		var val =this.watches[0].setValue(value); 
+		var val =this.task.watches[0].setValue(value); 
 	}
 
-	refresh(){
+	refresh(watches){
 		//バインドされた変数の値をノード属性にセット
 		var bind = this;
 		var check=false;
-		this.watches.forEach((w,idx)=>{
-			if(w.change_flg){
-				check=true;
-			}
-		});
-		if(!check){
-			return;
-		}
+	//	this.watches.forEach((w,idx)=>{
+	//		if(w.change_flg){
+	//			check=true;
+	//		}
+	//	});
+	//	if(!check){
+	//		return;
+	//	}
 
 		var node = bind.node;
 
-		var value = bind.watches[0].getValue(0);
+		var value = watches[0].getValue(0);
 		if(bind.func){
-			var old = bind.watches.map((w)=>w.old_value);
+			var old = bind.task.watches.map((w)=>w.old_value);
 			value=bind.func(old);
 		}
 
@@ -92,6 +91,7 @@ export default class Binder {
 	constructor(){
 		this.binds=[];
 		this.variable_root = window;
+		this.watcher = new Watcher();
 	}
 
 	init(_variable_root){
@@ -99,35 +99,11 @@ export default class Binder {
 		if(_variable_root){
 			this.variable_root = _variable_root;
 		}
-		//this.binds=[];
+		this.bindNodes(document,this.variable_root);
 
-		var bindedNodes = document.querySelectorAll("*");
-		bindedNodes.forEach((node)=>{
-			for(var i=0;i<node.attributes.length;i++){
-				var attribute_name = node.attributes[i].name;
-				if(attribute_name.indexOf("bind:")!==0)continue;
+		this.watcher.init();
 
-				var variable_names = node.getAttribute(attribute_name);
-				variable_names = variable_names.split(",");
 
-				attribute_name = attribute_name.replace("bind:","");
-
-				var func=null;
-				if(node.hasAttribute("bindfunc")){
-					func = node.getAttribute("bindfunc");
-					func = new Function('arg', func);
-				}
-				this.bind(node,attribute_name,null,variable_names,func);
-			
-			};
-		});
-		
-
-		var func =()=>{
-			this.refresh();
-			window.requestAnimationFrame(func);
-		}
-		func();
 	}
 
 	bind(node,attribute_name,variable_root,variable_names,func){
@@ -149,9 +125,10 @@ export default class Binder {
 			variable_names = [variable_names];
 		}
 
-		variable_names.forEach((name)=>{
-			bind.watches.push(watcher.watch(variable_root,name));
-		});
+		var variable_roots = [];
+		for(var i=0;i<variable_names.length;i++){
+			variable_roots.push(variable_root);
+		}
 
 		bind.func=func;
 
@@ -170,6 +147,12 @@ export default class Binder {
 			});
 			
 		}
+
+	//	variable_names.forEach((name)=>{
+	//		bind.watches.push(watcher.watch(variable_root,name));
+	//	});
+		bind.task = this.watcher.watch(variable_roots,variable_names,(watches)=>{bind.refresh(watches)});
+
 		return bind;
 	}
 	bindNodes(node,variable_root){
@@ -179,22 +162,21 @@ export default class Binder {
 				var attribute_name = node.attributes[i].name;
 				if(attribute_name.indexOf("bind:")!==0)continue;
 
-				var variable_name = node.getAttribute(attribute_name);
+				var variable_names = node.getAttribute(attribute_name);
+				variable_names = variable_names.split(",");
 
 				attribute_name = attribute_name.replace("bind:","");
-				this.bind(node,attribute_name,variable_root,variable_name);
+
+				var func=null;
+				if(node.hasAttribute("bindfunc")){
+					func = node.getAttribute("bindfunc");
+					func = new Function('arg', func);
+				}
+				this.bind(node,attribute_name,null,variable_names,func);
 			
 			};
 		});
 		
 	}
 
-	refresh(){
-		watcher.refresh();
-		//バインドしたノードに変数の値をセット
-		for(var i=0;i<this.binds.length;i++){
-			this.binds[i].refresh();
-		}
-
-	}
 }

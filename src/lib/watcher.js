@@ -4,6 +4,7 @@ import Util from "./util.js";
 class Watch{
 	constructor(variable_root,variable_name,callback){
 		this.variable_root=variable_root;
+		this.vairable_name = variable_name;
 		this.variable_direction = variable_name.split(".");
 		this.callback=callback;
 		this.old_value={};
@@ -45,10 +46,26 @@ class Watch{
 		this.old_value = value;
 	}
 }
+class Task{
+	constructor(watches,callback){
+		this.watches=watches;
+		this.callback=callback;
+	}
+	exec(){
+		var flg = false;
+		for(var i=0;i<this.watches.length;i++){
+			flg = flg || this.watches[i].change_flg;
+		}
+		if(flg){
+			this.callback(this.watches);
+		}
+	}
+}
 
 export default class Watcher {
 	constructor(){
 		this.watches=[];
+		this.tasks=[];
 	}
 
 	init(){
@@ -58,18 +75,44 @@ export default class Watcher {
 //			window.requestAnimationFrame(func);
 //		}
 //		func();
+		var func =()=>{
+			this.refresh();
+			window.requestAnimationFrame(func);
+		}
+		func();
 	}
 
-	watch(variable_root,variable_name,func){
-		//監視変数を追加
-		var watch = new Watch(variable_root,variable_name,func);
-		this.watches.push(watch);
-		return watch;
+	watch(variable_roots,variable_names,func){
+		var ws = [];
+		if(!Array.isArray(variable_roots)){
+			variable_roots = [variable_roots];
+			variable_names= [variable_names];
+		}
+		
+		for(var i=0;i<variable_names.length;i++){
+			var variable_root =variable_roots[i];
+			var variable_name = variable_names[i];
+			var w =  this.watches.find((f)=>{return (variable_root == f.variable_root && f.variable_name == variable_name);});
+			if(!w){
+				//変数監視が無い場合は追加
+				w = new Watch(variable_root,variable_name,func);
+				this.watches.push(w);
+			}
+			ws.push(w);
+		}
+		var task = new Task(ws,func);
+		this.tasks.push(task);
+		return task;
 	}
 	refresh(){
 		//監視対象をチェック
 		this.watches.forEach((w)=>{
 			w.refresh();
+		});
+
+		//タスク実行
+		this.tasks.forEach((w)=>{
+			w.exec();
 		});
 	}
 }

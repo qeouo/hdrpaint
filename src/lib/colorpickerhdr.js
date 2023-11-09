@@ -12,14 +12,14 @@ export default class ColorpickerHDR extends Colorpicker{
 		
 	}
 	#bindfunc=`
-var value = this.watches[0].getValue();
+var value = this.task.watches[0].getValue();
 return value;
 	`
 	#feedback=`
 var cols=new Array(3);
 
 Util.hex2rgb(cols,event.currentTarget.value);
-var value = this.watches[0].getValue();
+var value = this.task.watches[0].getValue();
 value[0] = Number(cols[0]);
 value[1] = Number(cols[1]);
 value[2] = Number(cols[2]);
