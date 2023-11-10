@@ -29,25 +29,16 @@ class Bind{
 		var val =this.task.watches[0].setValue(value); 
 	}
 
-	refresh(watches){
+	refresh(values){
 		//バインドされた変数の値をノード属性にセット
 		var bind = this;
 		var check=false;
-	//	this.watches.forEach((w,idx)=>{
-	//		if(w.change_flg){
-	//			check=true;
-	//		}
-	//	});
-	//	if(!check){
-	//		return;
-	//	}
 
 		var node = bind.node;
 
-		var value = watches[0].getValue(0);
+		var value = values[0];
 		if(bind.func){
-			var old = bind.task.watches.map((w)=>w.old_value);
-			value=bind.func(old);
+			value=bind.func(values);
 		}
 
 		if(bind.attribute_name !==""){

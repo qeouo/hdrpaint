@@ -48,8 +48,8 @@ class Hdrpaint{
 		var rect =document.querySelector(".layer_rectangle");
 		var doc = this.doc;
 		var scale = doc.scale/100;
-		rect.style.left=(this.selected_layer.position[0]  +  doc.canvas_pos[0] - 1)+"px";
-		rect.style.top=(this.selected_layer.position[1] + doc.canvas_pos[1] -1) +"px";
+		rect.style.left=(this.selected_layer.position[0]*scale  +  doc.canvas_pos[0] - 1)+"px";
+		rect.style.top=(this.selected_layer.position[1]*scale + doc.canvas_pos[1] -1) +"px";
 		rect.style.width =(this.selected_layer.size[0] * scale) + "px";
 		rect.style.height=(this.selected_layer.size[1] * scale)+ "px";
 		rect.style.display="inline-block"
@@ -92,7 +92,7 @@ class Hdrpaint{
 		rectangle.h -= rectangle.y;
 		return rectangle;
 	}
-	select(target_layer){
+	selectLayer(target_layer){
 		//アクティブレイヤ変更
 		
 		this.selected_layer=target_layer;
@@ -110,8 +110,6 @@ class Hdrpaint{
 			refreshPreview(1);
 		}
 
-
-		this.refreshLayerRectangle();
 
 	}
 	setLayerIdCount(id){
@@ -300,7 +298,7 @@ class Hdrpaint{
 					idx= parent_layer.children.length-1;
 				}
 				
-				parent_layer.children[idx].select();
+				parent_layer.children[idx].selectLayer();
 			}
 		}
 		parent_layer.refreshDiv();
@@ -441,6 +439,7 @@ class Hdrpaint{
 
 }
 const hdrpaint = new Hdrpaint();
+window.hdrpaint = hdrpaint;
 
 	//動的スタイルシート生成
 	var newStyle = document.createElement('style');newStyle.type = "text/css";

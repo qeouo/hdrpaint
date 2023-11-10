@@ -71,7 +71,6 @@ import "./modifier/gradient.js";
 import "./modifier/colormap.js";
 import "./modifier/noise.js";
 
-window.hdrpaint = Hdrpaint;
 window.Brush= Brush;
 
 Hdrpaint.inputs=inputs;
@@ -948,7 +947,6 @@ function dataURIConverter(dataURI) {
 
 		//Redraw.refreshPreviewStatus(e);
 
-		hdrpaint.refreshLayerRectangle();
 
 	}) ;
 
@@ -1030,7 +1028,7 @@ function dataURIConverter(dataURI) {
 	}
 
 	binder.bind(document.querySelector("#status2")
-		,"",Hdrpaint,["doc.scale","cursor_pos.0","cursor_pos.1"],(v)=>{
+		,"",Hdrpaint,["cursor_pos.0","cursor_pos.1","doc.scale"],(v)=>{
 			var img = Hdrpaint.root_layer.img;
 			var data = img.data;
 			var width=img.width;
@@ -1042,7 +1040,7 @@ function dataURIConverter(dataURI) {
 				Hdrpaint.cursor_color[1]=NaN;
 				Hdrpaint.cursor_color[2]=NaN;
 				Hdrpaint.cursor_color[3]=NaN;
-				return "倍率:" ; v[0] + " X:- Y:-";
+				return "倍率:" ; v[2] + " X:- Y:-";
 			}
 
 			var idx=img.getIndex(v[0]|0,v[1]|0)<<2;
@@ -1050,7 +1048,7 @@ function dataURIConverter(dataURI) {
 			Hdrpaint.cursor_color[1]= data[idx+1];
 			Hdrpaint.cursor_color[2]= data[idx+2];
 			Hdrpaint.cursor_color[3]= data[idx+3];
-			return "倍率:" + v[0] + " X:" + v[1] +" Y:" + v[2];
+			return "倍率:" + v[2] + " X:" + v[0] +" Y:" + v[1];
 	});
 
 	var f = (v)=>isNaN(v[0])?"-":v[0].toFixed(3);
@@ -1066,9 +1064,15 @@ function dataURIConverter(dataURI) {
 
 	watcher.watch(Hdrpaint,["doc.scale","doc.canvas_pos.0","doc.canvas_pos.1"],function(old){
 		hdrpaint.refreshSelectedRectangle()
+		hdrpaint.refreshLayerRectangle();
 	});
-	watcher.watch(Hdrpaint,["select_rectangle.x","select_rectangle.y","select_rectangle.w","select_rectangle.h"],function(old){
+	watcher.watch(hdrpaint,["select_rectangle.x","select_rectangle.y","select_rectangle.w","select_rectangle.h"]
+		,function(values){
 		hdrpaint.refreshSelectedRectangle()
+	});
+	watcher.watch(hdrpaint,["selected_layer.size.0","selected_layer.size.1","selected_layer.position.0","selected_layer.position.1"]
+		,function(values){
+		hdrpaint.refreshLayerRectangle();
 	});
 watcher.init();
 

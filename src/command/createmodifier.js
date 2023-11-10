@@ -1,9 +1,8 @@
-
 import {Vec2} from "../lib/vector.js";
 import CommandBase from "./commandbase.js";
 import Hdrpaint from "../hdrpaint.js";
 import Layer from "../layer.js";
-var commandObjs = Hdrpaint.commandObjs;
+
 class CreateModifier extends CommandBase{
 	constructor(){
 		super();
@@ -33,10 +32,10 @@ class CreateModifier extends CommandBase{
 		var parentLayer = Layer.findById(param.parent_layer_id);
 
 		parentLayer.append(n,layer);
-		Hdrpaint.select(layer);
+		hdrpaint.selectLayer(layer);
 
 		return layer;
 	}
 
 }
-commandObjs["createmodifier"] = CreateModifier;
+hdrpaint.commandObjs["createmodifier"] = CreateModifier;

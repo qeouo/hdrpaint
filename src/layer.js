@@ -11,30 +11,32 @@ let composite_img = new Img(512,512);
 let composite_area = new Vec4();
 var drag_layer=null;
 
-	var refreshThumbnail=function(){
-		if(Layer.enableRefreshThumbnail){
-			var layer = stackThumbnail.shift();
-			layer.refreshThumbnail();
-		}
-		if(stackThumbnail.length>0){
-			window.requestAnimationFrame(function(e){
-				refreshThumbnail();
-			});
-		}
+var refreshThumbnail=function(){
+	//サムネイル更新
+	if(Layer.enableRefreshThumbnail){
+		var layer = stackThumbnail.shift();
+		layer.refreshThumbnail();
 	}
-
-	var getLayerFromDiv = function(div){
-		var result_layer = null;
-		Layer.eachLayers(function(layer){
-			if(layer.dom == div){
-				result_layer = layer;
-
-				return true;
-			}
-
+	if(stackThumbnail.length>0){
+		window.requestAnimationFrame(function(e){
+			refreshThumbnail();
 		});
-		return result_layer;
 	}
+}
+
+var getLayerFromDiv = function(div){
+	//選択したdivのレイヤ本体を取得
+	var result_layer = null;
+	Layer.eachLayers(function(layer){
+		if(layer.dom == div){
+			result_layer = layer;
+
+			return true;
+		}
+
+	});
+	return result_layer;
+}
 //レイヤサムネイル作成用
 var thumbnail_img = new Img(64,64,1);
 //ジェネレータサムネイル作成用
@@ -43,7 +45,7 @@ var gen_thumbnail_img = new Img(240,40,0);
 	var click = function(e){
 	//レイヤー一覧クリック時、クリックされたものをアクティブ化する
 		var layer=getLayerFromDiv(e.currentTarget);
-		Hdrpaint.select(layer);
+		Hdrpaint.selectLayer(layer);
 		e.stopPropagation();
 	}
 
@@ -724,7 +726,7 @@ export default class Layer{
 
 	select(){
 		//レイヤを選択状態にする
-		Hdrpaint.select(this);
+		Hdrpaint.selectLayer(this);
 
 	}
 

@@ -38,7 +38,7 @@ class CreateNewLayer extends CommandBase{
 
 		parentLayer.append(n,layer);
 
-		Hdrpaint.select(layer);
+		hdrpaint.selectLayer(layer);
 
 		return layer;
 
@@ -49,5 +49,5 @@ CreateNewLayer.prototype.name="createNewLayer";
 class CreateNewCompositeLayer extends CreateNewLayer{}
 CreateNewCompositeLayer.prototype.name="createNewCompositeLayer";
 
-Hdrpaint.commandObjs["createNewLayer"] = CreateNewLayer;
-Hdrpaint.commandObjs["createNewCompositeLayer"] = CreateNewCompositeLayer;
+hdrpaint.commandObjs["createNewLayer"] = CreateNewLayer;
+hdrpaint.commandObjs["createNewCompositeLayer"] = CreateNewCompositeLayer;

@@ -145,11 +145,11 @@ value[2] = Number(cols[2]);
 
 
 		//カラーピッカーに現在値をセット
-		var rgb = new Vec4();
-		Util.hex2rgb(rgb,node.value);
-		rgb[3]=1;
+		var rgba = new Vec4();
+		Util.str2rgba(rgba,node.value);
+		//rgb[3]=1;
 
-		this.colorselector.setColor(rgb);
+		this.colorselector.setColor(rgba);
 
 	}
 };
