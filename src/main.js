@@ -1102,9 +1102,7 @@ watcher.init();
 	var colorpickerhdr = new ColorpickerHDR();
 	colorpickerhdr.init(document.getElementsByClassName("colorpickerhdr"));
 
-	binder.init(Hdrpaint);
-
-}
+	binder.init(document,Hdrpaint);
 
 	var selectorhdr = new ColorSelector(true);
 	document.querySelector("#color_selector").appendChild(selectorhdr.div);
@@ -1121,6 +1119,8 @@ watcher.init();
 	Vec4.setValues(Hdrpaint.color,1,0.5,0.5,1);
 
 	selectorhdr.setColor(Hdrpaint.color);
+}
+
 
 
 

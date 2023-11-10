@@ -85,12 +85,12 @@ export default class Binder {
 		this.watcher = new Watcher();
 	}
 
-	init(_variable_root){
+	init(dom,_variable_root){
 		//初期化&バインド
 		if(_variable_root){
 			this.variable_root = _variable_root;
 		}
-		this.bindNodes(document,this.variable_root);
+		this.bindNodes(dom,this.variable_root);
 
 		this.watcher.init();
 

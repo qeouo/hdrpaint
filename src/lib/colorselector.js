@@ -1,4 +1,3 @@
-
 import {Vec3,Vec4} from "./vector.js"
 import Slider from "./slider.js";
 import Util from "./util.js";
@@ -63,10 +62,8 @@ export default class ColorSelector{
 
 		this.changeCallback=null;
 		this.drag_from=0;
-		this.rgb=new Vec3();
 		this.hsv=new Vec3();
 		this.parentInput=null;//カラーピッカーが表示されている親コントロール
-		this.hsv = new Vec3();
 
 	var html = `
 				<div class="div_main">
@@ -113,8 +110,6 @@ export default class ColorSelector{
 
 		this.redrawSv(0);
 
-		Vec3.setValue(col,1,1,1);
-		this.setRGB(col);
 
 		if(!flg){
 			var div =  this.div.querySelector("#txtarea");
@@ -122,40 +117,34 @@ export default class ColorSelector{
 		}
 		this.div.querySelector(".color_status").addEventListener("change",()=>{
 			this.changeColor();
+		});
+
+		this.A_txt.addEventListener("change",()=>{
+			this.changeColor();
+		});
+
+		this.Vi_txt.addEventListener("change",()=>{
+			var vi = Math.pow(2,Number(this.Vi_txt.value));
+			Util.hsv2rgb(col,this.hsv);
+			this.R_txt.value=(col[0]*vi).toFixed(3);
+			this.G_txt.value=(col[1]*vi).toFixed(3);
+			this.B_txt.value=(col[2]*vi).toFixed(3);
 			if(this.changeCallback){
 				this.changeCallback();
 			}
+
+		});
+		this.sv_img.parentNode.addEventListener("pointerdown",(e)=>{
+			this.drag_from=1;
+			this.down(e);
+		});
+		
+		this.h_img.parentNode.addEventListener("pointerdown",(e)=>{
+			this.drag_from=2;
+			this.down(e);
 		});
 
-	this.A_txt.addEventListener("change",()=>{
-		this.changeColor();
-		if(this.changeCallback){
-			this.changeCallback();
-		}
-	});
-
-	this.Vi_txt.addEventListener("change",()=>{
-		var vi = Math.pow(2,Number(this.Vi_txt.value));
-		Util.hsv2rgb(col,this.hsv);
-		this.R_txt.value=(col[0]*vi).toFixed(3);
-		this.G_txt.value=(col[1]*vi).toFixed(3);
-		this.B_txt.value=(col[2]*vi).toFixed(3);
-	if(this.changeCallback){
-		this.changeCallback();
-	}
-
-	});
-	this.sv_img.parentNode.addEventListener("pointerdown",(e)=>{
-		this.drag_from=1;
-		this.down(e);
-	});
-	
-	this.h_img.parentNode.addEventListener("pointerdown",(e)=>{
-		this.drag_from=2;
-		this.down(e);
-	});
-
-	window.addEventListener("pointermove",this.down);
+		window.addEventListener("pointermove",this.down);
 	}
 
 	redrawSv(){
@@ -200,14 +189,13 @@ setColor(c){
 
 }
 changeColor(){
-	var rgb = this.rgb;
 	var hsv = this.hsv;
-	rgb[0]=Number(this.R_txt.value);
-	rgb[1]=Number(this.G_txt.value);
-	rgb[2]=Number(this.B_txt.value);
+	col[0]=Number(this.R_txt.value);
+	col[1]=Number(this.G_txt.value);
+	col[2]=Number(this.B_txt.value);
 
-	var max = Math.max(Math.max(rgb[0],Math.max(rgb[1],rgb[2])),1);
-	Vec3.mul(col,rgb,1/max);
+	var max = Math.max(Math.max(col[0],Math.max(col[1],col[2])),1);
+	Vec3.mul(col,col,1/max);
 
 	Util.rgb2hsv(hsv,col);
 
@@ -216,6 +204,10 @@ changeColor(){
 
 	this.Vi_txt.value=Math.log2(max);
 	Util.fireEvent(this.Vi_txt,"input");
+
+	if(this.changeCallback){
+		this.changeCallback();
+	}
 }
 
 
@@ -224,7 +216,6 @@ down=(e)=>{
 		this.drag_from=0;
 	}
 	var hsv = this.hsv;
-	var rgb = this.rgb;
 	switch(this.drag_from){
 	case 1:
 		var rect = this.sv_img.getBoundingClientRect();
@@ -251,20 +242,15 @@ down=(e)=>{
 	this.setCursor(hsv);
 	var vi = Math.pow(2,Number(this.Vi_txt.value));
 
-	Util.hsv2rgb(rgb,hsv);
+	Util.hsv2rgb(col,hsv);
 
-	this.R_txt.value = (rgb[0]*vi).toFixed(3);
-	this.G_txt.value = (rgb[1]*vi).toFixed(3);
-	this.B_txt.value = (rgb[2]*vi).toFixed(3);
+	this.R_txt.value = (col[0]*vi).toFixed(3);
+	this.G_txt.value = (col[1]*vi).toFixed(3);
+	this.B_txt.value = (col[2]*vi).toFixed(3);
 
 	if(this.changeCallback){
 		this.changeCallback();
 	}
-}
-setRGB(col){
-	Vec3.copy(this.rgb,col);
-	Util.rgb2hsv(this.hsv,this.rgb);
-	this.setCursor(this.hsv);
 }
 
 setCursor(hsv){
@@ -274,4 +260,3 @@ setCursor(hsv){
 }
 
 };
-//window.addEventListener("load",colorselector.init,false);
