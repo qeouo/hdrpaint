@@ -51,7 +51,7 @@ class CopyLayer extends CommandBase{
 		var parentLayer = Layer.findById(param.parent);
 
 		parentLayer.append(n,layer);
-		Hdrpaint.select(layer);
+		Hdrpaint.selectLayer(layer);
 
 		return layer;
 	}

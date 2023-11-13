@@ -614,7 +614,7 @@ export default class Layer{
 		if(layer.children){
 
 			layer.dom.style.backgroundImage = "none";
-			return;
+	//		return;
 		}
 
 		if(layer.type === 2){
