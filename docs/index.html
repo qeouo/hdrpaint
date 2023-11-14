@@ -200,32 +200,24 @@
 			</div>
 		</div>
 
-		<div>
-			<div style="float:left;text-align:left;">
-				<input type="button" id="down_layer" value="↓">
-				<input type="button" id="up_layer" value="↑" >
-				<!-- input type="button" id="join_layer" value="一個下のレイヤと結合" -->
-				<button type="button" id="join_layer" ></button>
-			</div>
-			<div style="text-align:right;">
-				<input type="button" id="delete_layer" value="レイヤ削除" ><br>
-			</div>
-		</div>
 		<div class="layers" id="layers_container" >
 		</div>
 
-
 		<div  style="">
 			<input type="button" id="new" onclick="hdrpaint.createNewLayer(event);" value="新規">
+			<input type="button" id="down_layer" value="↓">
+			<input type="button" id="up_layer" value="↑" >
 			<input type="button" id="copylayer" onclick="hdrpaint.copylayer(event);" value="複製">
-			<input type="button" id="new_composite_layer" onclick="hdrpaint.createNewCompositeLayer(event);" value="新規グループレイヤ"><br>
+			<button type="button" id="join_layer" ></button>
+			<input type="button" id="new_composite_layer" onclick="hdrpaint.createNewCompositeLayer(event);" value="グループ">
+			<input type="button" id="delete_layer" value="削除" ><br>
 			<ul>
 			<li><a id="" href="#" onclick="inputs['open_layer'].click();return false;">画像ファイルを新規レイヤで開く</a></li>
 			</ul>
 			<input style="display:none;"type="file" id="open_layer" accept="image/*,.hdr,.exr" >
-			<div id="modifier_area" onclick="hdrpaint.createNewModifier(event)">
-			モディファイア<br>
-			</div>
+			<select style="width:100px;" id="generator_select" onchange="hdrpaint.createNewModifier(event)">
+				<option selected>ジェネレータ</option>
+			</select>
 		</div>
 	</div>
 

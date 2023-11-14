@@ -33,7 +33,7 @@ class Paste extends CommandBase{
 
 		parentLayer.append(n,layer);
 
-		Hdrpaint.select(layer);
+		hdrpaint.selectLayer(layer);
 
 		return layer;
 

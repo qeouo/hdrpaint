@@ -257,7 +257,7 @@ width:80px;
 }
 
 #join_layer::before{
-	content:'下のレイヤと結合';
+	content:'下と結合';
 }
 div[layertype='1'] #join_layer::before{
 	content:'子を結合';

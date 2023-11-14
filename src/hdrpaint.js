@@ -187,6 +187,10 @@ class Hdrpaint{
 		
 		this.executeCommand("createmodifier",{"modifier":modifier,"parent_layer_id":data.parent_layer.id,"position":data.position
 			,"width":data.parent_layer.size[0],"height":data.parent_layer.size[1]});
+
+		//選択状態を元に戻す
+		var generator_select = document.querySelector("#generator_select");
+		generator_select.options[0].selected=true;
 	}
 
 	copylayer(e){
@@ -416,18 +420,24 @@ class Hdrpaint{
 		dialog_parent.appendChild(div);
 
 
-		var area = document.querySelector("#modifier_area");
-		var input= document.createElement("input");
-		input.type="button";
-		input.title=name;
-		input.value=name;
-		area.appendChild(input);
+		//var area = document.querySelector("#modifier_area");
+		//var input= document.createElement("input");
+		//input.type="button";
+		//input.title=name;
+		//input.value=name;
+		//area.appendChild(input);
 
-		this.stylesheet.insertRule(` 
-			#modifier_param_area[modifier="${name}"] div#div_${name}{
-				display:inline;
-			}
-		`, this.stylesheet.cssRules.length);
+		//this.stylesheet.insertRule(` 
+		//	#modifier_param_area[modifier="${name}"] div#div_${name}{
+		//		display:inline;
+		//	}
+		//`, this.stylesheet.cssRules.length);
+
+		var generator_select = document.querySelector("#generator_select");
+		var option = document.createElement("option");
+		option.innerHTML=name;
+		option.value=name;
+		generator_select.appendChild(option);
 	}
 
 
