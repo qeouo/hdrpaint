@@ -427,11 +427,11 @@ class Hdrpaint{
 		//input.value=name;
 		//area.appendChild(input);
 
-		//this.stylesheet.insertRule(` 
-		//	#modifier_param_area[modifier="${name}"] div#div_${name}{
-		//		display:inline;
-		//	}
-		//`, this.stylesheet.cssRules.length);
+		this.stylesheet.insertRule(` 
+			#modifier_param_area[modifier="${name}"] div#div_${name}{
+				display:inline;
+			}
+		`, this.stylesheet.cssRules.length);
 
 		var generator_select = document.querySelector("#generator_select");
 		var filter_select = document.querySelector("#filter_select");

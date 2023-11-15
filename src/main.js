@@ -899,7 +899,6 @@ function dataURIConverter(dataURI) {
 			oldpos[0]=e.pageX;
 			oldpos[1]=e.pageY;
 
-			hdrpaint.refreshLayerRectangle();
 			
 		}
 	});

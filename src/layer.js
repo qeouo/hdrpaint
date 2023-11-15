@@ -426,9 +426,16 @@ export default class Layer{
 		var layer = this;
 
 		var left = 0;
-		var right = layer.img.width-1;
 		var top = 0;
-		var bottom = layer.img.height-1;
+		var right = 0;
+		var bottom = 0;
+		if(layer.img){
+			right = layer.size[0]-1;
+			bottom = layer.size[1]-1;
+		}else{
+			right =Hdrpaint.root_layer.size[0]-1; 
+			bottom =Hdrpaint.root_layer.size[1]-1; 
+		}
 		
 		if( typeof w !== 'undefined'){
 			//更新領域設定、はみ出している場合はクランプする
@@ -524,11 +531,6 @@ export default class Layer{
 	refreshDiv(){
 		var layer = this;
 		var layers_container = null;
-
-		if(Hdrpaint.selected_layer ===layer){
-			Hdrpaint.refreshLayerRectangle();
-		}
-		
 
 		if(layer === Hdrpaint.root_layer){
 			layers_container = document.getElementById("layers_container");
