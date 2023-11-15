@@ -5,6 +5,12 @@ var clip=function(v,min,max){
 	return Math.max(min,Math.min(max,v));
 }
 class ColorMap extends Layer{
+	static name="colormap";
+	static type="filter";
+	static option=`
+		<label><input type="radio" name="gradtype"  value="0" />明るさで判定</label>
+		<label><input type="radio" name="gradtype"  value="1" />アルファ値で判定</label>
+	`;
 	constructor(){
 		super();
 		this.effect=4;
@@ -58,9 +64,4 @@ class ColorMap extends Layer{
 		child.getPixel(ret_pixel,idx,total*(child.size[0]-1),0);
 	}
 };
-var html = `
-		<label><input type="radio" name="gradtype"  value="0" />明るさで判定</label>
-		<label><input type="radio" name="gradtype"  value="1" />アルファ値で判定</label>
-	`;
-ColorMap.prototype.name="colormap";
-Hdrpaint.registModifier(ColorMap,"colormap",html);
+Hdrpaint.registModifier(ColorMap);

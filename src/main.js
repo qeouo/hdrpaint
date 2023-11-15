@@ -3,7 +3,6 @@
 import {Vec2,Vec3,Vec4} from "./lib/vector.js"
 import Hdrpaint from "./hdrpaint.js";
 import Slider from "./lib/slider.js";
-import Geono from "./lib/geono.js";
 import Img from "./lib/img.js";
 import CommandLog from "./commandlog.js";
 import FileManager from "./file.js";

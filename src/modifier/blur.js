@@ -5,6 +5,9 @@ import Layer from "../layer.js";
 
 Hdrpaint.registModifier(
 	class extends Layer{
+	static name = "blur"
+	static type = "filter"
+	static option =`ぼかし半径:<input class="slider modifier_scale" name="scale" step="1" min="1" max="128" ><br>`
 	constructor(){
 		super();
 		this.scale=16;
@@ -38,8 +41,6 @@ Hdrpaint.registModifier(
 	}
 
 }
-	,"blur"
-	,`ぼかし半径:<input class="slider modifier_scale" name="scale" step="1" min="1" max="128" ><br>`
 );
 
 Slider.init();

@@ -5,6 +5,9 @@ import Layer from "../layer.js";
 var img;
 var img_data;
 class Grayscale extends Layer{
+	static name="grayscale";
+	static type="filter";
+	static option="";
 	constructor(){
 		super();
 		this.children=null;
@@ -43,6 +46,5 @@ class Grayscale extends Layer{
 		ret[idx+3] = img_data[idx+3];
 	}
 }
-Grayscale.prototype.name="grayscale";
 
-Hdrpaint.registModifier(Grayscale,"grayscale","");
+Hdrpaint.registModifier(Grayscale);

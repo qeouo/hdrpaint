@@ -397,8 +397,8 @@ class Hdrpaint{
 
 
 	modifier={};
-	registModifier = (mod,name,html)=>{
-		mod.prototype.typename=name;
+	registModifier = (mod)=>{
+		var name = mod.name;
 
 		this.modifier[name] = mod;
 
@@ -406,7 +406,7 @@ class Hdrpaint{
 		var div= document.createElement("div");
 		div.id="div_"+name;
 		div.classList.add("modifier_param");
-		div.insertAdjacentHTML('beforeend',html);
+		div.insertAdjacentHTML('beforeend',mod.option);
 
 		var nodes = div.querySelectorAll("*[name]");
 		for(var i=0;i<nodes.length;i++){
@@ -434,10 +434,15 @@ class Hdrpaint{
 		//`, this.stylesheet.cssRules.length);
 
 		var generator_select = document.querySelector("#generator_select");
+		var filter_select = document.querySelector("#filter_select");
 		var option = document.createElement("option");
 		option.innerHTML=name;
 		option.value=name;
-		generator_select.appendChild(option);
+		if(mod.type==="generator"){
+			generator_select.appendChild(option);
+		}else{
+			filter_select.appendChild(option);
+		}
 	}
 
 

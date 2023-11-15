@@ -216,7 +216,10 @@
 			</ul>
 			<input style="display:none;"type="file" id="open_layer" accept="image/*,.hdr,.exr" >
 			<select style="width:100px;" id="generator_select" onchange="hdrpaint.createNewModifier(event)">
-				<option selected>ジェネレータ</option>
+				<option selected>(generator)</option>
+			</select>
+			<select style="width:100px;" id="filter_select" onchange="hdrpaint.createNewModifier(event)">
+				<option selected>(filter)</option>
 			</select>
 		</div>
 	</div>

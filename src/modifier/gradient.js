@@ -19,6 +19,37 @@ var backimg = new Img(128,1);
 	var mat33 = new Mat33();
 	var _mat33 = new Mat33();
 class Gradient extends Layer{
+	static name="gradient";
+	static type="generator";
+	static option =`
+	角度:<input class="slider modifier_scale" name="radius" value="0" min="0" max="360"><br>
+
+	<div class="modifier_gradient ">
+	R,G,B,A pos<br>
+	<ul>
+	<li>
+	<input type="text" class="col colorpickerhdr" name="col0">
+	<input class="slider pos" name="col0pos" min="0" max="1">
+	</li>
+
+	<li>
+	<input type="text" class="col colorpickerhdr" name="col1">
+	<input class="slider pos" name="col1pos" min="0" max="1">
+	</li>
+
+	<li>
+	<input type="text" class="col colorpickerhdr" name="col2">
+	<input class="slider pos" name="col2pos" min="0" max="1">
+	</li>
+
+	<li>
+	<input type="text" class="col colorpickerhdr" name="col3">
+	<input class="slider pos" name="col3pos" min="0" max="1">
+	</li>
+	</ul>
+
+	</div>
+	`;
 	constructor(){
 		super();
 		for(var i=0;i<4;i++){
@@ -131,34 +162,5 @@ class Gradient extends Layer{
 	}
 
 }
-	var html = `
-		角度:<input class="slider modifier_scale" name="radius" value="0" min="0" max="360"><br>
-
-		<div class="modifier_gradient ">
-		R,G,B,A pos<br>
-		<ul>
-		<li>
-		<input type="text" class="col colorpickerhdr" name="col0">
-		<input class="slider pos" name="col0pos" min="0" max="1">
-		</li>
-
-		<li>
-		<input type="text" class="col colorpickerhdr" name="col1">
-		<input class="slider pos" name="col1pos" min="0" max="1">
-		</li>
-
-		<li>
-		<input type="text" class="col colorpickerhdr" name="col2">
-		<input class="slider pos" name="col2pos" min="0" max="1">
-		</li>
-
-		<li>
-		<input type="text" class="col colorpickerhdr" name="col3">
-		<input class="slider pos" name="col3pos" min="0" max="1">
-		</li>
-		</ul>
-
-		</div>
-		`;
-	Hdrpaint.registModifier(Gradient,"gradient",html);
-	Slider.init();
+Hdrpaint.registModifier(Gradient);
+Slider.init();

@@ -14,6 +14,11 @@ import Layer from "../layer.js";
 		return Math.max(min,Math.min(max,v));
 	}
 class Shift extends Layer{
+	static name="shift";
+	static type="filter";
+	static option= `
+			影響度:<input type="text" class="slider modifier_effect" name="effect" value="0.5" min="0" max="100">
+		`;
 	constructor(){
 		super();
 		this.effect=4;
@@ -110,7 +115,4 @@ class Shift extends Layer{
 	}
 
 }
-	var html = `
-			影響度:<input type="text" class="slider modifier_effect" name="effect" value="0.5" min="0" max="100">
-		`;
-	Hdrpaint.registModifier(Shift,"shift",html);
+	Hdrpaint.registModifier(Shift);
