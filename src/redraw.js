@@ -35,8 +35,9 @@ var refresh_stack=[] ;
 		if( typeof step === 'undefined'){
 			step=0;
 		}
+		var root_layer = hdrpaint.root_layer;
 		var bloom_size = parseFloat(hdrpaint.post_effect.bloom_size);
-		var joined_img = hdrpaint.root_layer.img;
+		var joined_img = root_layer.img;
 
 		
 
@@ -189,6 +190,7 @@ export default class Redraw{
 
 
 	static refreshPreview(step,x,y,w,h){
+		var root_layer = hdrpaint.root_layer;
 		if(refresh_stack.length === 1){
 			//全更新がある場合は無視
 			if(refresh_stack[0].step===0 
@@ -201,8 +203,8 @@ export default class Redraw{
 			refresh_stack=[];
 			x = 0;
 			y = 0;
-			w = hdrpaint.root_layer.img.width;
-			h = hdrpaint.root_layer.img.height;
+			w = root_layer.img.width;
+			h = root_layer.img.height;
 		}
 
 		var refresh_data={};

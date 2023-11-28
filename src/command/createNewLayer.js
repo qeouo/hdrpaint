@@ -18,29 +18,27 @@ class CreateNewLayer extends CommandBase{
 		var height= param.height;
 		var n= param.position;
 
-		var layer;
+		var layer_id;
 		if(!this.undo_data){
-			var img = new Img(width,height);
-			var data = img.data;
-			for(var i=0;i<data.length;i+=4){
-				data[i+0]= 1;
-				data[i+1]= 1;
-				data[i+2]= 1;
-				data[i+3]= 0;
-			}
+			var img = hdrpaint.createImg(width,height);
 
-			layer =Hdrpaint.createLayer(img,param.composite_flg);
-			this.undo_data={"layer":layer};
+			layer_id =Hdrpaint.createLayer(img.id,param.composite_flg);
+			this.undo_data={"layer":layer_id};
 		}else{
-			layer = this.undo_data.layer;
+			layer_id = this.undo_data.layer;
 		}
-		var parentLayer = Layer.findById(param.parent);
+		if(param.parent>0){
+			var parentLayer = Layer.findById(param.parent);
 
-		parentLayer.append(n,layer);
+			parentLayer.append(n,layer_id);
 
-		hdrpaint.selectLayer(layer);
+			hdrpaint.selectLayer(layer_id);
+		}else{
+			hdrpaint.root_layer_id = layer_id;
+			hdrpaint.root_layer = Layer.findById(layer_id);
+		}
 
-		return layer;
+		return layer_id;
 
 	}
 };

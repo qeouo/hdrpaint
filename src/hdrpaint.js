@@ -18,12 +18,18 @@ class Hdrpaint{
 		this.Command = {};
 		this.commandObjs={};
 		this.painted_mask=new Float32Array(1024*1024);
+		//レイヤ
+		this.layers=[];
+		//画像データ
+		this.imgs={};
 		//選択レイヤ
 		this.selected_layer=null;
+		this.selected_layer_id=-1;
 		//選択範囲
 		this.select_rectangle=null;//{x:0,y:0,x2:0,y2:0};
 		this.mode="";
 		this.layer_id_count=0;
+		this.img_id_count=0;
 
 		//全ブラシ
 		this.brushes=[];
@@ -92,10 +98,11 @@ class Hdrpaint{
 		rectangle.h -= rectangle.y;
 		return rectangle;
 	}
-	selectLayer(target_layer){
+	selectLayer(target_layer_id){
 		//アクティブレイヤ変更
-		
+		var target_layer = Layer.findById(target_layer_id);
 		this.selected_layer=target_layer;
+		this.selected_layer_id=target_layer_id;
 		Layer.eachLayers(function(layer){
 			if(target_layer !== layer){
 				//アクティブレイヤ以外の表示を非アクティブにする
@@ -115,8 +122,22 @@ class Hdrpaint{
 	setLayerIdCount(id){
 		this.layer_id_count=id;
 	}
+	createImg(width,height){
+		var img = new Img(width,height);
+		this.img_id_count++;
+		img.id = this.img_id_count;
+		this.imgs[img.id]=img;
+		var data = img.data;
+		for(var i=0;i<data.length;i+=4){
+			data[i+0]= 1;
+			data[i+1]= 1;
+			data[i+2]= 1;
+			data[i+3]= 0;
+		}
+		return img;
+	}
 
-	createLayer(img,composite_flg){
+	createLayer(img_id,composite_flg){
 		var layer = new Layer();
 
 		if(composite_flg){
@@ -131,19 +152,24 @@ class Hdrpaint{
 
 		//layer_div.addEventListener("click",layerSelect);
 
+		layer.img_id=img_id;
+		var img = this.imgs[img_id];
 		layer.img=img;
 		if(img){
 			Vec2.setValues(layer.size,img.width,img.height);
 		}
 
-		layer.id=this.layer_id_count;
 		this.layer_id_count++;
+		layer.id=this.layer_id_count;
 		layer.name ="layer"+("0000"+layer.id).slice(-4);
 
 		layer.refreshDiv();
 		layer.registRefreshThumbnail();
 
-		return layer;
+
+		this.layers[layer.id]=layer;
+
+		return layer.id;
 
 	}
 	createModifier(modifier_name){
@@ -302,11 +328,13 @@ class Hdrpaint{
 					idx= parent_layer.children.length-1;
 				}
 				
-				parent_layer.children[idx].selectLayer();
+				this.selectLayer(parent_layer.children[idx]);
 			}
 		}
 		parent_layer.refreshDiv();
 		parent_layer.bubbleComposite();
+
+		this.layers[layer.id]=null;
 	}
 
 	onlyExecute= function(command,param){

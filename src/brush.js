@@ -145,6 +145,8 @@ export default class Brush{
 		var pen_preview=  document.getElementById('pen_preview');
 		pen_preview_img= new Img(pen_preview.width,pen_preview.height);
 		param.layer =Hdrpaint.createLayer(pen_preview_img,0);
+		param.layer = Layer.findById(param.layer);
+		param.layer.img = pen_preview_img;
 
 		var points=[];
 		var xs=[-1,-0.7,-0.3,0.3,0.7,1];

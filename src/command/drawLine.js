@@ -38,7 +38,7 @@ class Brush extends CommandBase{
 		var param=this.param;
 		var points = param.points;
 		var layer = Layer.findById(param.layer_id);
-		if(!layer){
+		if(!param.layer_id){
 			layer = param.layer;
 		}
 		var img= layer.img;

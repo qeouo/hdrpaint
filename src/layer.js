@@ -147,6 +147,7 @@ var gen_thumbnail_img = new Img(240,40,0);
 export default class Layer{
 //レイヤ
 	constructor(){
+		this.id=-1;
 		this.name="";
 		this.display = true;
 		this.lock = false;
@@ -156,6 +157,7 @@ export default class Layer{
 		this.modifier="layer";
 		this.div=null;
 		this.img=null;
+		this.img_id=-1;
 		this.mask_alpha=0;
 		this.position =new Vec2();
 		this.size=new Vec2();
@@ -243,7 +245,7 @@ export default class Layer{
 
 	//レイヤ合成
 	composite(left,top,right,bottom){
-		var layers=this.children;
+		var children=this.children;
 
 
 		var pow=0;
@@ -263,8 +265,9 @@ export default class Layer{
 
 
 		Vec4.setValues(composite_area,left,top,width,height);
-		for(var li=layers.length;li--;){
-			var layer = layers[li];
+		//合成前処理
+		for(var li=children.length;li--;){
+			var layer = Layer.findById(children[li]);
 			if(!layer.display ){
 				//非表示の場合スルー
 				continue;
@@ -287,22 +290,22 @@ export default class Layer{
 		composite_img.height= bottom-top;
 
 
-		if(this === Hdrpaint.root_layer){
+		if(this.id === Hdrpaint.root_layer.id){
 			var bg = Hdrpaint.doc.background_color;
 			composite_img.fill(bg[0],bg[1],bg[2],bg[3],0,0,composite_img.width,composite_img.height);
 		}else{
 			composite_img.clear(0,0,composite_img.width,composite_img.height);
 		}
 		
-		for(var li=0;li<layers.length;li++){
-			var layer = layers[li];
-			if(!layer.display ){
+		//合成処理
+		for(var li=0;li<children.length;li++){
+			var layer = Layer.findById(children[li]);
+			if(!layer.display){
 				//非表示の場合スルー
 				continue;
 			}
 			layer.beforeReflect();
 			layer.reflect(composite_img,composite_area);
-			
 		}
 
 		var x0 = composite_area[0];
@@ -324,7 +327,7 @@ export default class Layer{
 			, composite_area[3] 
 		);
 
-		if(this === Hdrpaint.root_layer){
+		if(this.id === Hdrpaint.root_layer.id){
 			//ルートレイヤの場合はプレビュー更新
 			Redraw.refreshPreview(0,composite_area[0],composite_area[1],composite_area[2],composite_area[3]);
 		}else{
@@ -360,7 +363,8 @@ export default class Layer{
 	}
 
 
-	static bubble_func(layer,f){
+	static bubble_func(layer_id,f){
+		var layer = Layer.findById(layer_id);
 		//親に伝搬する処理
 		f(layer);
 		//var parent_layer= Layer.findParent(layer);
@@ -377,7 +381,8 @@ export default class Layer{
 		if(!Hdrpaint.root_layer){
 			return;
 		}
-		var cb = function(layer){
+		var cb = function(layer_id){
+			var layer = Layer.findById(layer_id);
 			if(f(layer)){
 				return true;
 			}
@@ -394,20 +399,21 @@ export default class Layer{
 			}
 			return false;
 		}
-		return cb(Hdrpaint.root_layer);
+		return cb(hdrpaint.root_layer.id);
 	}
 
 	static findById(layer_id){
-		var result_layer = null;
-		Layer.eachLayers(function(layer){
-			if(layer.id== layer_id){
-				result_layer = layer;
+	//	var result_layer = null;
+	//	Layer.eachLayers(function(layer){
+	//		if(layer.id== layer_id){
+	//			result_layer = layer;
 
-				return true;
-			}
+	//			return true;
+	//		}
 
-		});
-		return result_layer;
+	//	});
+	//	return result_layer;
+		return hdrpaint.layers[layer_id];
 	}
 
 
@@ -452,11 +458,12 @@ export default class Layer{
 		var height=bottom-top+1;
 
 		if(layer.parent){
+			var parent = Layer.findById(layer.parent);
 			if(typeof w === 'undefined'){
-				layer.parent.bubbleComposite();
+				parent.bubbleComposite();
 
 			}else{
-				layer.parent.bubbleComposite(left+layer.position[0]
+				parent.bubbleComposite(left+layer.position[0]
 					,top + layer.position[1]
 					,right -left +1
 					,bottom -top +1);
@@ -531,12 +538,13 @@ export default class Layer{
 	refreshDiv(){
 		var layer = this;
 		var layers_container = null;
+		if(!hdrpaint.root_layer){return;};
 
-		if(layer === Hdrpaint.root_layer){
+		if(layer.id === hdrpaint.root_layer.id){
 			layers_container = document.getElementById("layers_container");
 		}else{
 			//layer.dom.className="layer";
-			if(Hdrpaint.selected_layer === layer){
+			if(Hdrpaint.selected_layer_id === layer.id){
 				layer.dom.classList.add("active");
 			}else{
 				layer.dom.classList.remove("active");
@@ -587,7 +595,8 @@ export default class Layer{
 		while (layers_container.firstChild) layers_container.removeChild(layers_container.firstChild);
 		if(layer.children){
 			for(var li=layer.children.length;li--;){
-				layers_container.appendChild(layer.children[li].dom);
+				var child = Layer.findById(layer.children[li]);
+				layers_container.appendChild(child.dom);
 			}
 		}
 
@@ -598,11 +607,11 @@ export default class Layer{
 
 	}
 
-	append(idx,layer){
-		var layers = this.children;
-		layers.splice(idx,0,layer);
+	append(idx,layer_id){
+		var layer = Layer.findById(layer_id);
+		this.children.splice(idx,0,layer_id);
 
-		layer.parent = this;
+		layer.parent = this.id;
 
 		this.refreshDiv();
 		//refreshMain();
@@ -721,7 +730,7 @@ export default class Layer{
 		//レイヤの絶対座標取得
 		Vec2.setValues(p,0,0);
 
-		Layer.bubble_func(this,function(layer){
+		Layer.bubble_func(this.id,function(layer){
 			Vec2.add(p,p,layer.position);
 		});
 	}

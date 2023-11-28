@@ -32,7 +32,7 @@ class ResizeCanvas extends CommandBase{
 		bloomed_img = new Img(width,height);
 		bloom_img = new Img(width,height);
 
-		var root_layer = Hdrpaint.root_layer;
+		var root_layer =  hdrpaint.root_layer;
 		root_layer.width=width;
 		root_layer.height=height;
 		root_layer.img=new Img(width,height);

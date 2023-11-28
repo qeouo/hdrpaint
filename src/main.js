@@ -69,6 +69,7 @@ import "./modifier/blur.js";
 import "./modifier/gradient.js";
 import "./modifier/colormap.js";
 import "./modifier/noise.js";
+import "./modifier/link.js";
 
 window.Brush= Brush;
 
@@ -181,10 +182,11 @@ var onloadfunc=function(e){
 
 		if((e.buttons & 2) || (Hdrpaint.selected_tool === "color_picker")){
 			//カラーピッカー
-			var img= Hdrpaint.root_layer.img;
+			var layer_id = Hdrpaint.root_layer;
 			if(inputs["selected_layer_only"].checked){
-				img= Hdrpaint.selected_layer.img;
+				layer_id = Hdrpaint.selected_layer_id;
 			}
+			var img = Layer.findById(layer_id).img;
 			if(x<0 || x>=img.width || y<0 || y>img.height){
 			}else{
 				var data = img.data;
@@ -1002,8 +1004,8 @@ function dataURIConverter(dataURI) {
 		//	loadHpd(buffer);
 		//});
 	}else{
-		Hdrpaint.root_layer = Hdrpaint.createLayer(new Img(1,1),1);
 		//Hdrpaint.executeCommand("resizeLayer",{"layer_id":root_layer.id,"width":512,"height":512});
+		Hdrpaint.executeCommand("createNewLayer",{"position":0,"parent":0,"width":512,"height":512,"composite_flg":1});
 
 		Hdrpaint.executeCommand("resizeCanvas",{"width":512,"height":512});
 
@@ -1016,18 +1018,19 @@ function dataURIConverter(dataURI) {
 
 		CommandLog.reset();
 
-		Hdrpaint.executeCommand("createNewLayer",{"position":1,"parent":Hdrpaint.root_layer.id,"width":preview.width,"height":preview.height});
-		var layer = Hdrpaint.root_layer.children[0];
+		Hdrpaint.executeCommand("createNewLayer",{"position":0,"parent":Hdrpaint.root_layer.id,"width":preview.width,"height":preview.height});
+		var layer = Layer.findById(hdrpaint.root_layer.children[0]);
 		layer.name="default"
 		layer.refreshDiv();
 		layer.registRefreshThumbnail();
 
-		Hdrpaint.root_layer.refreshDiv();
+		hdrpaint.root_layer.refreshDiv();
 	}
 
 	binder.bind(document.querySelector("#status2")
 		,"",Hdrpaint,["cursor_pos.0","cursor_pos.1","doc.scale"],(v)=>{
-			var img = Hdrpaint.root_layer.img;
+			var root_layer =hdrpaint.root_layer;
+			var img = root_layer.img;
 			var data = img.data;
 			var width=img.width;
 			var height=img.height;
@@ -1072,6 +1075,27 @@ function dataURIConverter(dataURI) {
 		,function(values){
 		hdrpaint.refreshLayerRectangle();
 	});
+
+//	watcher.watch(hdrpaint,"layers"
+//		,function(values){
+//			var node = document.getElementById("layerlist");
+//				while( node.firstChild ){
+//				  node.removeChild( node.firstChild );
+//				}
+//				var options = values[0];
+//				if(!Array.isArray(options)){
+//					options=[];
+//				}
+//				for(var i=0;i<options.length;i++){
+//					var op= options[i];
+//
+//					var option = document.createElement("option");
+//					option.value = op.id;
+//					Util.setText(option,op.name);
+//					node.appendChild(option);
+//				}
+//		hdrpaint.refreshLayerRectangle();
+//	});
 watcher.init();
 
 	Brush.init();
@@ -1117,6 +1141,7 @@ watcher.init();
 	Vec4.setValues(Hdrpaint.color,1,0.5,0.5,1);
 
 	selectorhdr.setColor(Hdrpaint.color);
+
 }
 
 

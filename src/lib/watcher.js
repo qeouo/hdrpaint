@@ -60,7 +60,7 @@ class Task{
 			flg = flg || this.watches[i].change_flg;
 		}
 		if(flg){
-			var values= this.watches.map((w)=>w.old_value);
+			var values= this.watches.map((w)=>w.getValue(0));
 			this.callback(values);
 		}
 	}

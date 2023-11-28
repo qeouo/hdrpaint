@@ -49,10 +49,29 @@ class Bind{
 				}
 				
 			}
-			node.setAttribute(bind.attribute_name,value);
+			if(node.tagName ==="SELECT" && bind.attribute_name==="options"){
+				while( node.firstChild ){
+				  node.removeChild( node.firstChild );
+				}
+				var options = value;
+				if(!Array.isArray(options)){
+					options=[];
+				}
+				for(var i=0;i<options.length;i++){
+					var op= options[i];
+
+					var option = document.createElement("option");
+					option.value = op.value;
+					Util.setText(option,op.name);
+					node.appendChild(option);
+				}
+
+			}else{
+				node.setAttribute(bind.attribute_name,value);
+			}
 			return;
 		}
-			node.setAttribute("content",value);
+		node.setAttribute("content",value);
 		switch(node.tagName){
 			case "INPUT":
 			case "SELECT":
@@ -151,15 +170,17 @@ export default class Binder {
 		bindedNodes.forEach((node)=>{
 			for(var i=0;i<node.attributes.length;i++){
 				var attribute_name = node.attributes[i].name;
-				if(attribute_name.indexOf("bind:")!==0)continue;
+				if(attribute_name.indexOf(":")==-1)continue;
+				//if(attribute_name.indexOf("bind:")!==0)continue;
 
 				var variable_names = node.getAttribute(attribute_name);
 				variable_names = variable_names.split(",");
 
-				attribute_name = attribute_name.replace("bind:","");
+				attribute_name = attribute_name.replace(":","");
+				attribute_name = attribute_name.replace("bind","");
 
 				var func=null;
-				if(node.hasAttribute("bindfunc")){
+				if(node.hasAttribute("bindfunc") && attribute_name ==""){
 					func = node.getAttribute("bindfunc");
 					func = new Function('arg', func);
 				}
