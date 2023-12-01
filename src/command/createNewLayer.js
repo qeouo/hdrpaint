@@ -9,7 +9,7 @@ class CreateNewLayer extends CommandBase{
 		super();
 	}
 	undo(){
-		Hdrpaint.removeLayer(this.undo_data.layer);
+		Hdrpaint.removeLayer(this.undo_data.layer_id);
 		return;
 	}
 	func(){
@@ -22,8 +22,9 @@ class CreateNewLayer extends CommandBase{
 		if(!this.undo_data){
 			var img = hdrpaint.createImg(width,height);
 
-			layer_id =Hdrpaint.createLayer(img.id,param.composite_flg);
-			this.undo_data={"layer":layer_id};
+			var layer =Hdrpaint.createLayer(img.id,param.composite_flg);
+			layer_id=layer.id;
+			this.undo_data={"layer_id":layer.id};
 		}else{
 			layer_id = this.undo_data.layer;
 		}

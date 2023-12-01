@@ -31,9 +31,9 @@ class Paste extends CommandBase{
 		}
 		var parentLayer = Layer.findById(param.parent);
 
-		parentLayer.append(n,layer);
+		parentLayer.append(n,layer.id);
 
-		hdrpaint.selectLayer(layer);
+		hdrpaint.selectLayer(layer.id);
 
 		return layer;
 

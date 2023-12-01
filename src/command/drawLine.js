@@ -43,7 +43,7 @@ class Brush extends CommandBase{
 		}
 		var img= layer.img;
 
-		layer.getAbsolutePosition(absolute);
+//		layer.getAbsolutePosition(absolute);
 
 		var point0=points[n-1];
 		var point1=points[n];
@@ -122,7 +122,7 @@ class Brush extends CommandBase{
 			Vec2.mad(p.pos,p.pos,B,dt*dt);
 			Vec2.mad(p.pos,p.pos,C,dt);
 			Vec2.add (p.pos,p.pos,D);
-			Vec2.sub(p.pos,p.pos,absolute);
+			//Vec2.sub(p.pos,p.pos,absolute);
 
 
 			p.pressure=point0.pressure + dp*dt;

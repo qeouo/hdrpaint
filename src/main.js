@@ -236,8 +236,10 @@ var onloadfunc=function(e){
 			if(!pen_log)return;
 
 			var point=new PenPoint();
-			point.pos[0]= x;
-			point.pos[1]= y;
+			var layer = Layer.findById(hdrpaint.selected_layer_id);
+			layer.getAbsolutePosition(point.pos);
+			point.pos[0]= x- point.pos[0];
+			point.pos[1]= y - point.pos[1];
 			if(e.buttons&1){
 				if(e.pointerType === "mouse"){
 					point.pressure=1;

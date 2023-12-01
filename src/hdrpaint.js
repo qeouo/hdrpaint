@@ -169,7 +169,7 @@ class Hdrpaint{
 
 		this.layers[layer.id]=layer;
 
-		return layer.id;
+		return layer;
 
 	}
 	createModifier(modifier_name){
@@ -279,14 +279,15 @@ class Hdrpaint{
 			data.parent_layer = Hdrpaint.root_layer;
 			data.position = Hdrpaint.root_layer.length;
 		}else{
+			var parent = Layer.findById(this.selected_layer.parent);
 			if(this.selected_layer.children && this.selected_layer.dom.classList.contains("open")){
 				data.parent_layer_id = this.selected_layer.id;
 				data.parent_layer = this.selected_layer;
 				data.position = this.selected_layer.length;
 			}else{
-				data.parent_layer_id = this.selected_layer.parent.id;
-				data.parent_layer = this.selected_layer.parent;
-				data.position = this.selected_layer.parent.children.indexOf(this.selected_layer)+1;
+				data.parent_layer_id = parent.id;
+				data.parent_layer = parent;
+				data.position = parent.children.indexOf(this.selected_layer_id)+1;
 			}
 		}
 		return data;
@@ -316,10 +317,11 @@ class Hdrpaint{
 		return dif;
 	}
 
-	removeLayer(layer){
-		var parent_layer = layer.parent;
+	removeLayer(layer_id){
+		var layer = Layer.findById(layer_id);
+		var parent_layer = Layer.findById(layer.parent);
 		var layers = parent_layer.children;
-		var idx = layers.indexOf(layer);
+		var idx = layers.indexOf(layer_id);
 
 		layers.splice(idx,1);
 		if(layer == this.selected_layer){
