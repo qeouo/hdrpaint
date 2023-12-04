@@ -19,10 +19,13 @@ class Paste extends CommandBase{
 
 		var layer;
 		if(!this.undo_data){
-			var img = Hdrpaint.clipboard;
+			var clip = Hdrpaint.clipboard;
+			var img = hdrpaint.createImg(clip.width,clip.height);
+			img.copy(0,0,clip,0,0,clip.width,clip.height);
+				
 			var rectangle = Hdrpaint.getSelectArea();
 
-			layer =Hdrpaint.createLayer(img,param.composite_flg);
+			layer =Hdrpaint.createLayer(img.id,param.composite_flg);
 			layer.position[0]=rectangle.x;
 			layer.position[1]=rectangle.y;
 			this.undo_data={"layer":layer};

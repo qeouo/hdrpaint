@@ -174,8 +174,8 @@ export default class Img{
 			}
 		}
 	}
-	copy(dst,dst_x,dst_y,src,src_x,src_y,src_w,src_h){
-		Img.copy(this,dst,dst_x,dst_y,src,src_x,src_y,src_w,src_h);
+	copy(dst_x,dst_y,src,src_x,src_y,src_w,src_h){
+		Img.copy(this,dst_x,dst_y,src,src_x,src_y,src_w,src_h);
 	}
 
 	getIndex(x,y){

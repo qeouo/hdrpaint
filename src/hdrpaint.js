@@ -122,6 +122,9 @@ class Hdrpaint{
 	setLayerIdCount(id){
 		this.layer_id_count=id;
 	}
+	getImgById(id){
+		return this.imgs[id];
+	}
 	createImg(width,height){
 		var img = new Img(width,height);
 		this.img_id_count++;
@@ -306,12 +309,15 @@ class Hdrpaint{
 	 	}
 	}
 
-	createDif(layer,left,top,width,height){
+	createDif(img,left,top,width,height){
+		if(img instanceof Layer){
+			img = img.img;
+		}
 		//更新領域の古い情報を保存
-		var img = new Img(width,height);
-		Img.copy(img,0,0,layer.img,left,top,width,height);
+		var dif_img = new Img(width,height);
+		Img.copy(dif_img,0,0,img,left,top,width,height);
 		var dif={};
-		dif.img=img;
+		dif.img=dif_img;
 		dif.x=left;
 		dif.y=top;
 		return dif;

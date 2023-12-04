@@ -37,13 +37,8 @@ class Brush extends CommandBase{
 	draw(n){
 		var param=this.param;
 		var points = param.points;
-		var layer = Layer.findById(param.layer_id);
-		if(!param.layer_id){
-			layer = param.layer;
-		}
-		var img= layer.img;
+		var img = hdrpaint.getImgById(param.img_id);
 
-//		layer.getAbsolutePosition(absolute);
 
 		var point0=points[n-1];
 		var point1=points[n];
@@ -146,17 +141,23 @@ class Brush extends CommandBase{
 				this.undo_data={"difs":[]};
 			}
 			if(this.undo_data.difs.length<n){
-				var dif= Hdrpaint.createDif(layer,left,top,right-left+1,bottom-top+1);
+				var dif= Hdrpaint.createDif(img,left,top,right-left+1,bottom-top+1);
 				this.undo_data.difs.push(dif);
 			}
 		
 
 		for(var i=0;i<devide;i++){
-			drawPen(layer.img,_p[i],_p[i+1],param);
+			drawPen(img,_p[i],_p[i+1],param);
 		}
 
 		//再描画
-		layer.refreshImg(left,top,right-left+1,bottom-top+1);
+		var keys = Object.keys(hdrpaint.layers);
+		for(var i=0;i<keys.length;i++){
+			var layer = hdrpaint.layers[keys[i]];
+			if(layer.img_id === param.img_id){
+				layer.refreshImg(left,top,right-left+1,bottom-top+1);
+			}
+		}
 
 	}
 };

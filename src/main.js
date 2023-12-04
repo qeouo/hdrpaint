@@ -460,7 +460,7 @@ var onloadfunc=function(e){
 			Brush.setParam(param);
 			param.alpha_mask = Hdrpaint.selected_layer.mask_alpha;
 			param.points=[];
-			param.layer_id = Hdrpaint.selected_layer.id;
+			param.img_id= Hdrpaint.selected_layer.img_id;
 			pen_log = Hdrpaint.executeCommand("brush",param);
 			if(pen_log){
 				pen_func= new PenFunc();

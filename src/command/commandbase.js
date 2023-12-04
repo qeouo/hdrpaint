@@ -13,13 +13,28 @@ export default class CommandBase{
 		if(difs){
 			//画像戻す
 			var param = this.param;
-			var layer_id= param.layer_id;
-			var layer = Layer.findById(layer_id);
+			var img_id = null;
+			if(param.img_id){
+				img_id = param.img_id;
+			}else{
+				var layer_id= param.layer_id;
+				var layer = Layer.findById(layer_id);
+				img_id = layer.img_id;
+			}
+			var img = hdrpaint.getImgById(param.img_id)
 
 			for(var di=difs.length;di--;){
 				var dif = difs[di];
-				Img.copy(layer.img,dif.x,dif.y,dif.img,0,0,dif.img.width,dif.img.height);
-				layer.refreshImg(dif.x,dif.y,dif.img.width,dif.img.height);
+				Img.copy(img,dif.x,dif.y,dif.img,0,0,dif.img.width,dif.img.height);
+
+				//再描画
+				var keys = Object.keys(hdrpaint.layers);
+				for(var i=0;i<keys.length;i++){
+					var layer = hdrpaint.layers[keys[i]];
+					if(layer.img_id === param.img_id){
+						layer.refreshImg(dif.x,dif.y,dif.img.width,dif.img.height);
+					}
+				}
 			}
 		}
 	};

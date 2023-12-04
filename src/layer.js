@@ -45,7 +45,7 @@ var gen_thumbnail_img = new Img(240,40,0);
 	var click = function(e){
 	//レイヤー一覧クリック時、クリックされたものをアクティブ化する
 		var layer=getLayerFromDiv(e.currentTarget);
-		Hdrpaint.selectLayer(layer);
+		hdrpaint.selectLayer(layer.id);
 		e.stopPropagation();
 	}
 
