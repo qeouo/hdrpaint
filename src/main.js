@@ -719,23 +719,25 @@ var onloadfunc=function(e){
 		e.preventDefault();
 		return false;
 	});
-
-	inputs["down_layer"].addEventListener("click",function(e){
+	var layerMove = function(delta){
 		if(!Hdrpaint.selected_layer){
 			return;
 		}
-		var parent_layer =  Hdrpaint.selected_layer.parent;
-		var layers = parent_layer.children;
-		var position = layers.indexOf(Hdrpaint.selected_layer);
-		if(position<=0){return;}
-		Hdrpaint.executeCommand("moveLayer",{"layer_id":Hdrpaint.selected_layer.id,"parent_layer_id":parent_layer.id,"position":position-1});
+		var layer_id = Hdrpaint.selected_layer_id;
+		var layer = Layer.findById(layer_id);
+		var parent_layer =  Layer.findById(layer.parent);
+		var children = parent_layer.children;
+		var position = children.indexOf(layer_id);
+		position +=delta;
+		if(position>=children.length || position < 0){return;}
+		Hdrpaint.executeCommand("moveLayer",{"layer_id":layer_id,"parent_layer_id":parent_layer.id,"position":position});
+	}
+
+	inputs["down_layer"].addEventListener("click",function(e){
+		layerMove(-1);
 	});
 	inputs["up_layer"].addEventListener("click",function(e){
-		var parent_layer =  Hdrpaint.selected_layer.parent;
-		var layers = parent_layer.children;
-		var position = layers.indexOf(Hdrpaint.selected_layer);
-		if(position+1>=layers.length){return;}
-		Hdrpaint.executeCommand("moveLayer",{"layer_id":Hdrpaint.selected_layer.id,"parent_layer_id":parent_layer.id,"position":position+1});
+		layerMove(1);
 	});
 
 	//レイヤ結合ボタン押下時

@@ -215,10 +215,11 @@ export default class Layer{
 		var layer = this;
 		var img_data = img.data;
 		var img_width = img.width;
-		var layer_img_data = layer.img.data;
+		var layer_img = hdrpaint.getImgById(layer.img_id);
+		var layer_img_data = layer_img.data;
 		var layer_alpha=layer.alpha;
 		var layer_power=Math.pow(2,layer.power);
-		var layer_img_width = layer.img.width;
+		var layer_img_width = layer_img.width;
 		var func = Hdrpaint.blendfuncs[layer.blendfunc];
 		var layer_position_x= layer.position[0];
 		var layer_position_y= layer.position[1];
@@ -226,8 +227,8 @@ export default class Layer{
 		//レイヤのクランプ
 		var left2 = Math.max(x,layer.position[0]);
 		var top2 = Math.max(y,layer.position[1]);
-		var right2 = Math.min(layer.img.width + layer_position_x ,x1);
-		var bottom2 = Math.min(layer.img.height + layer_position_y ,y1);
+		var right2 = Math.min(layer_img.width + layer_position_x ,x1);
+		var bottom2 = Math.min(layer_img.height + layer_position_y ,y1);
 
 		for(var yi=top2;yi<bottom2;yi++){
 			var idx = (yi-img.offsety) * img_width + left2  - img.offsetx << 2;
@@ -435,7 +436,8 @@ export default class Layer{
 		var top = 0;
 		var right = 0;
 		var bottom = 0;
-		if(layer.img){
+		var layer_img = hdrpaint.getImgById(layer.img_id);
+		if(layer_img){
 			right = layer.size[0]-1;
 			bottom = layer.size[1]-1;
 		}else{
@@ -655,13 +657,14 @@ export default class Layer{
 			
 		}
 
-		if(!layer.img){
+		var layer_img = hdrpaint.getImgById(layer.img_id);
+		if(!layer_img){
 			return;
 		}
-		if(!layer.img.data){
+		if(!layer_img.data){
 			return;
 		}
-		var img = layer.img;
+		var img = layer_img;
 		var img_data=img.data;
 
 		var layer_img=layer.dom.getElementsByTagName("img")[0];

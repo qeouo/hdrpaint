@@ -157,7 +157,7 @@ class Hdrpaint{
 
 		layer.img_id=img_id;
 		var img = this.imgs[img_id];
-		layer.img=img;
+	//	layer.img=img;
 		if(img){
 			Vec2.setValues(layer.size,img.width,img.height);
 		}

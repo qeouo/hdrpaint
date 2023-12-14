@@ -26,7 +26,7 @@ class CreateNewLayer extends CommandBase{
 			layer_id=layer.id;
 			this.undo_data={"layer_id":layer.id};
 		}else{
-			layer_id = this.undo_data.layer;
+			layer_id = this.undo_data.layer_id;
 		}
 		if(param.parent>0){
 			var parentLayer = Layer.findById(param.parent);

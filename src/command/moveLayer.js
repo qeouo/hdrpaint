@@ -12,11 +12,11 @@ class MoveLayer extends CommandBase{
 		var param = this.param;
 		var layer = Layer.findById(param.layer_id);
 //		var now_parent_layer= Layer.findParent(layer);
-		var now_parent_layer= layer.parent;
+		var now_parent_layer= Layer.findById(layer.parent);
 		var layers =now_parent_layer.children;
 		var next_parent_layer = param.parent_layer_id;
 		var position = param.position;
-		var layer_num = layers.indexOf(layer);
+		var layer_num = layers.indexOf(param.layer_id);
 
 		if(undo_flg){
 			position = this.undo_data.before;
@@ -36,7 +36,7 @@ class MoveLayer extends CommandBase{
 
 		var layers_container = layer.dom.parentNode;
 
-		next_parent_layer.append(position,layer);
+		next_parent_layer.append(position,param.layer_id);
 
 		if(!this.undo_data){
 			this.undo_data = {"before":layer_num,"before_parent":now_parent_layer.id};
