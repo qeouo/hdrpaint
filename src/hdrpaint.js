@@ -326,10 +326,10 @@ class Hdrpaint{
 	removeLayer(layer_id){
 		var layer = Layer.findById(layer_id);
 		var parent_layer = Layer.findById(layer.parent);
-		var layers = parent_layer.children;
-		var idx = layers.indexOf(layer_id);
+		var children = parent_layer.children;
+		var idx = children.indexOf(layer_id);
 
-		layers.splice(idx,1);
+		children.splice(idx,1);
 		if(layer == this.selected_layer){
 			if(parent_layer.children.length>0){
 				if(parent_layer.children.length<=idx){
@@ -342,7 +342,7 @@ class Hdrpaint{
 		parent_layer.refreshDiv();
 		parent_layer.bubbleComposite();
 
-		this.layers[layer.id]=null;
+		//this.layers[layer.id]=null;
 	}
 
 	onlyExecute= function(command,param){

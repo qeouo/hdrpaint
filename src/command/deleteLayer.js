@@ -8,40 +8,35 @@ class DeleteLayer extends CommandBase{
 		var idx = this.undo_data.position;
 		var parent_layer = Layer.findById(this.undo_data.parent);
 
-		parent_layer.append(idx,layer);
-		layer.select();
+		parent_layer.append(idx,layer.id);
 	}
 	func(){
 
 		var layer_id = this.param.layer_id;
 
 		var layer = Layer.findById(layer_id);
-		var parent_layer = layer.parent;
+		var parent_layer = Layer.findById(layer.parent);
 		if(parent_layer){
-			var layers = parent_layer.children;
-			var idx=  layers.indexOf(layer);
+			var children = parent_layer.children;
+			var idx=  children.indexOf(layer_id);
 
 			if(!this.undo_data){
 				this.undo_data ={"layer":layer,"position":idx,"parent":parent_layer.id};
 			}
 
-			var index = layers.indexOf(layer);
 			//レイヤ削除
-			Hdrpaint.removeLayer(layer);
+			Hdrpaint.removeLayer(layer_id);
 			if(layer === Hdrpaint.selected_layer){
-				if(layers.length===0){
-					parent_layer.select();
+				if(children.length===0){
+					hdrpaint.selectLayer(parent_layer.id);
 				}else{
-					if(index<layers.length){
-						layers[index].select();
+					if(idx<children.length){
+						layers[idx].select();
 					}else{
-						layers[layers.length-1].select();
+						layers[children.length-1].select();
 					}
 				}
 			}
-
-		}
-		if(parent_layer){
 			parent_layer.bubbleComposite();
 		}
 	}

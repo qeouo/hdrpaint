@@ -27,8 +27,9 @@ class CopyLayer extends CommandBase{
 		var layer;
 		if(!this.undo_data){
 			var src_layer = Layer.findById(param.src_layer_id);
+			var src_img = hdrpaint.getImgById(src_layer.img_id);
 			var img = new Img(src_layer.size[0],src_layer.size[1]);
-			Img.copy(img,0,0,src_layer.img,0,0,img.width,img.height);
+			Img.copy(img,0,0,src_img,0,0,img.width,img.height);
 
 			layer =Hdrpaint.createLayer(img,0);
 
@@ -50,8 +51,8 @@ class CopyLayer extends CommandBase{
 		}
 		var parentLayer = Layer.findById(param.parent);
 
-		parentLayer.append(n,layer);
-		Hdrpaint.selectLayer(layer);
+		parentLayer.append(n,layer.id);
+		Hdrpaint.selectLayer(layer.id);
 
 		return layer;
 	}
