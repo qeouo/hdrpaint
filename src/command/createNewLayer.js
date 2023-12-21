@@ -23,6 +23,8 @@ class CreateNewLayer extends CommandBase{
 			var img = hdrpaint.createImg(width,height);
 
 			var layer =Hdrpaint.createLayer(img.id,param.composite_flg);
+			layer.width=width;
+			layer.height=height;
 			layer_id=layer.id;
 			this.undo_data={"layer_id":layer.id};
 		}else{

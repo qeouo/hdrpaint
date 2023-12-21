@@ -13,9 +13,7 @@ class CopyLayer extends CommandBase{
 	static name ="copylayer";
 
 	undo(){
-		var undo_data=this.undo_data;
-		var layer = undo_data.layer;
-		Hdrpaint.removeLayer(layer);
+		Hdrpaint.removeLayer(this.undo_data.layer_id);
 		return;
 	}
 
@@ -24,14 +22,14 @@ class CopyLayer extends CommandBase{
 		var src_layer= param.src_layer;
 		var n= param.position;
 
-		var layer;
+		var layer_id;
 		if(!this.undo_data){
 			var src_layer = Layer.findById(param.src_layer_id);
 			var src_img = hdrpaint.getImgById(src_layer.img_id);
 			var img = new Img(src_layer.size[0],src_layer.size[1]);
 			Img.copy(img,0,0,src_img,0,0,img.width,img.height);
 
-			layer =Hdrpaint.createLayer(img,0);
+			var layer =Hdrpaint.createLayer(img,0);
 
 			var keys=Object.keys(layer);
 			for(var i=0;i<keys.length;i++){
@@ -45,14 +43,15 @@ class CopyLayer extends CommandBase{
 			}
 
 			layer.refreshDiv();
-			this.undo_data={"layer":layer};
+			this.undo_data={"layer_id":layer.id};
+			layer_id = layer.id;
 		}else{
-			layer = this.undo_data.layer;
+			layer_id = this.undo_data.layer_id;
 		}
 		var parentLayer = Layer.findById(param.parent);
 
-		parentLayer.append(n,layer.id);
-		Hdrpaint.selectLayer(layer.id);
+		parentLayer.append(n,layer_id);
+		Hdrpaint.selectLayer(layer_id);
 
 		return layer;
 	}

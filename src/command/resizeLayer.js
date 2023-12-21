@@ -41,12 +41,12 @@ class ResizeLayer extends CommandBase{
 		}
 
 		var layer = Layer.findById(param.layer_id);
-		var img = layer.img;
-		if(!img){
+		var old_img = hdrpaint.getImgById(layer.img_id);
+		if(!old_img){
 			return;
 		}
-		var old_width=img.width;
-		var old_height=img.height;
+		var old_width=old_img.width;
+		var old_height=old_img.height;
 		var width  = param.width;
 		var height= param.height;
 
@@ -54,6 +54,8 @@ class ResizeLayer extends CommandBase{
 			width=this.undo_data.width;
 			height=this.undo_data.height;
 		}
+		layer.width=width;
+		layer.height=height;
 		
 		//差分ログ作成
 		if(!this.undo_data){
@@ -64,24 +66,25 @@ class ResizeLayer extends CommandBase{
 			
 			var dif;
 			if(dx>0){
-				dif = Hdrpaint.createDif(layer,width,0,dx,old_height);
+				dif = Hdrpaint.createDif(old_img,width,0,dx,old_height);
 				this.undo_data.difs.push(dif);
 			}
 			if(dy>0){
-				dif= Hdrpaint.createDif(layer,0,height,old_width,dy);
+				dif= Hdrpaint.createDif(old_img,0,height,old_width,dy);
 				this.undo_data.difs.push(dif);
 			}
 		}
-		var old_img = img;
 
-		layer.img=new Img(width,height);
+		var new_img = hdrpaint.createImg(width,height);
+		layer.img_id= new_img.id;
 		layer.size[0]=width;
 		layer.size[1]=height;
-		Img.copy(layer.img,0,0,old_img,0,0,old_img.width,old_img.height);
+		Img.copy(new_img,0,0,old_img,0,0,old_img.width,old_img.height);
 		layer.refreshDiv();
 		layer.registRefreshThumbnail();
 		if(layer.parent){
-			layer.parent.bubbleComposite();
+			var parentLayer = Layer.findById(layer.parent);
+			parentLayer.bubbleComposite();
 		}
 	}
 };

@@ -157,6 +157,8 @@ export default class Layer{
 		this.modifier="layer";
 		this.div=null;
 		this.img=null;
+		this.width=0;
+		this.height=0;
 		this.img_id=-1;
 		this.mask_alpha=0;
 		this.position =new Vec2();

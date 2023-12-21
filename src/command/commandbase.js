@@ -21,7 +21,7 @@ export default class CommandBase{
 				var layer = Layer.findById(layer_id);
 				img_id = layer.img_id;
 			}
-			var img = hdrpaint.getImgById(param.img_id)
+			var img = hdrpaint.getImgById(img_id)
 
 			for(var di=difs.length;di--;){
 				var dif = difs[di];
@@ -31,7 +31,7 @@ export default class CommandBase{
 				var keys = Object.keys(hdrpaint.layers);
 				for(var i=0;i<keys.length;i++){
 					var layer = hdrpaint.layers[keys[i]];
-					if(layer.img_id === param.img_id){
+					if(layer.img_id === img_id){
 						layer.refreshImg(dif.x,dif.y,dif.img.width,dif.img.height);
 					}
 				}
