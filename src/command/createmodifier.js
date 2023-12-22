@@ -10,10 +10,7 @@ class CreateModifier extends CommandBase{
 	static name ="createmodifier";
 
 	undo(){
-		var undo_data=this.undo_data;
-		var layer = undo_data.layer;
-		Hdrpaint.removeLayer(layer);
-		return;
+		Hdrpaint.removeLayer(this.undo_data.layer_id);
 	}
 	func(){
 		var param = this.param;
@@ -25,14 +22,12 @@ class CreateModifier extends CommandBase{
 			layer = Hdrpaint.createModifier(param.modifier);
 			Vec2.setValues(layer.size,param.width,param.height);
 
-			this.undo_data={"layer":layer};
-		}else{
-			layer = this.undo_data.layer;
+			this.undo_data={"layer_id":layer.id};
 		}
 		var parentLayer = Layer.findById(param.parent_layer_id);
 
-		parentLayer.append(n,layer);
-		hdrpaint.selectLayer(layer);
+		parentLayer.append(n,this.undo_data.layer_id);
+		hdrpaint.selectLayer(this.undo_data.layer_id);
 
 		return layer;
 	}

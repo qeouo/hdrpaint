@@ -418,7 +418,7 @@ var onloadfunc=function(e){
 			//Hdrpaint.selected_layer.getAbsolutePosition(absolute);
 			//x -= absolute[0];
 			//y -= absolute[1];
-			if(x<0 || x>=layer.img.width || y<0 || y>=layer.img.height){
+			if(x<0 || x>=layer.width || y<0 || y>=layer.height){
 				//範囲外は無視
 				return;
 			}

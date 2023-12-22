@@ -187,13 +187,14 @@ class Hdrpaint{
 
 		layer.img=null;
 
-		layer.id=this.layer_id_count;
 		this.layer_id_count++;
+		layer.id=this.layer_id_count;
 		layer.modifier=modifier_name;
 		layer.name =modifier_name+("0000"+layer.id).slice(-4);
 
 		layer.refreshDiv();
 		layer.registRefreshThumbnail();
+		this.layers[layer.id]=layer;
 		return layer;
 
 	}

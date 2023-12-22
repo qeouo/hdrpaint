@@ -12,13 +12,12 @@ var target_r,target_g,target_b,target_a;
 var offset = new Vec2();
 var refresh_left,refresh_top,refresh_bottom,refresh_right;
 
-var fillCheckAll = function(layer,joined,x,y){
+var fillCheckAll = function(target,joined,x,y){
 	var x2 = x+offset[0];
 	var y2 = y+offset[1];
 	if(joined.width<=x2 || x2<0 || y2<0 || joined.height<=y2){
 		return false;
 	}
-	var target = layer.img;
 	var idx  = target.getIndex(x,y) <<2;
 	var idx2 = joined.getIndex(x2,y2) <<2;
 	var joined_data = joined.data;
@@ -32,8 +31,7 @@ var fillCheckAll = function(layer,joined,x,y){
 	&& target_b===target_data[idx+2]
 	&& target_a===target_data[idx+3]);
 }
-var fillCheckLayer = function(layer,joined,x,y){
-	var target = layer.img;
+var fillCheckLayer = function(target,joined,x,y){
 	var idx  = target.getIndex(x,y) <<2;
 	var target_data = target.data;
 	return ( target_r===target_data[idx]
@@ -41,13 +39,12 @@ var fillCheckLayer = function(layer,joined,x,y){
 	&& target_b===target_data[idx+2]
 	&& target_a===target_data[idx+3]);
 }
-var fillCheckAlpha= function(layer,joined,x,y){
+var fillCheckAlpha= function(target,joined,x,y){
 	var x2 = x+offset[0];
 	var y2 = y+offset[1];
 	if(joined.width<=x2 || x2<0 || y2<0 || joined.height<=y2){
 		return false;
 	}
-	var target = layer.img;
 	var idx  = target.getIndex(x,y) <<2;
 	var idx2 = joined.getIndex(x2,y2) <<2;
 	var joined_data = joined.data;
@@ -56,8 +53,7 @@ var fillCheckAlpha= function(layer,joined,x,y){
 		   	&& joined_data[idx2+3]!==1);
 }
 var fillCheck=fillCheckAll;
-var fillSub=function(layer,y,left,right){
-	var target = layer.img;
+var fillSub=function(layer_img,y,left,right){
 	var joined_img = Hdrpaint.root_layer.img;
 
 	var mode=0;
@@ -66,10 +62,10 @@ var fillSub=function(layer,y,left,right){
 
 	//左の端を探す
 	var xi = left;
-	var yidx = target.getIndex(0,y) <<2;
+	var yidx = layer_img.getIndex(0,y) <<2;
 	for(;xi>=0;xi--){
 		var idx2 = yidx + (xi<<2);
-		if(fillCheck(layer,joined_img,xi,y)){
+		if(fillCheck(layer_img,joined_img,xi,y)){
 			if(mode===0){
 				mode=1;
 			}
@@ -85,7 +81,7 @@ var fillSub=function(layer,y,left,right){
 
 	for(var xi=left;xi<right;xi++){
 		var idx2 = yidx + (xi<<2);
-		if(fillCheck(layer,joined_img,xi,y)){
+		if(fillCheck(layer_img,joined_img,xi,y)){
 			if(mode===0){
 				//塗りつぶし領域開始
 				fillStack.push(y);
@@ -104,9 +100,9 @@ var fillSub=function(layer,y,left,right){
 	//右端
 	if(mode===1){
 		var xi = right-1;
-		for(;xi<target.width;xi++){
+		for(;xi<layer_img.width;xi++){
 			var idx2 = yidx + (xi<<2);
-			if(!fillCheck(layer,joined_img,xi,y)){
+			if(!fillCheck(layer_img,joined_img,xi,y)){
 				break;
 			}
 		}
@@ -148,8 +144,8 @@ class Fill extends CommandBase{
 
 
 		//塗りつぶし対象色
-		var target= layer.img;
-		var joined_img = Hdrpaint.root_layer.img;
+		var target= hdrpaint.getImgById(layer.img_id);
+		var joined_img = hdrpaint.getImgById(hdrpaint.root_layer.img_id);
 		var idx = joined_img.getIndex(x+layer.position[0],y+layer.position[1])<<2;
 		joined_r=joined_img.data[idx];
 		joined_g=joined_img.data[idx+1];
@@ -200,11 +196,11 @@ class Fill extends CommandBase{
 
 			if(yi>0){
 				//上端に到達していない場合、ひとつ上の行を探索
-				fillSub(layer,yi-1,left,right);
+				fillSub(target,yi-1,left,right);
 			}
 			if(yi<target.height-1){
 				//下端に到達していない場合、ひとつ下の行を探索
-				fillSub(layer,yi+1,left,right);
+				fillSub(target,yi+1,left,right);
 			}
 
 			//更新領域を求める
