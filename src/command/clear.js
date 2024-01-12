@@ -20,7 +20,8 @@ class Clear extends CommandBase{
 		if(!this.undo_data){
 			var undo_data ={};
 			this.undo_data=undo_data;
-			var dif=Hdrpaint.createDif(layer,range.x,range.y,range.w,range.h);
+			var layer_img = hdrpaint.getImgById(this.img_id);
+			var dif=Hdrpaint.createDif(layer_img,range.x,range.y,range.w,range.h);
 			undo_data.difs=[];
 			undo_data.difs.push(dif);
 		}

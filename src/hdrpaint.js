@@ -122,6 +122,10 @@ class Hdrpaint{
 	setLayerIdCount(id){
 		this.layer_id_count=id;
 	}
+
+	getLayerById(id){
+		return this.layers[id];
+	}
 	getImgById(id){
 		return this.imgs[id];
 	}
@@ -195,6 +199,7 @@ class Hdrpaint{
 		layer.refreshDiv();
 		layer.registRefreshThumbnail();
 		this.layers[layer.id]=layer;
+
 		return layer;
 
 	}

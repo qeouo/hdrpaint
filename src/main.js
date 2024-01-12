@@ -70,6 +70,7 @@ import "./modifier/gradient.js";
 import "./modifier/colormap.js";
 import "./modifier/noise.js";
 import "./modifier/link.js";
+import "./modifier/composite.js";
 
 window.Brush= Brush;
 

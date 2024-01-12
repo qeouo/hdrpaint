@@ -1,5 +1,5 @@
 "use strict"
-import {Vec2,Vec4} from "./lib/vector.js"
+import {Vec2,Vec3,Vec4,Mat33} from "./lib/vector.js"
 import Img from "./lib/img.js";
 import Redraw from "./redraw.js";
 import Hdrpaint from "./hdrpaint.js";
@@ -93,7 +93,7 @@ var gen_thumbnail_img = new Img(240,40,0);
 			}
 		}
 
-		var parent_layer = drop_layer.parent;//Layer.findParent(drop_layer);
+		var parent_layer = hdrpaint.getLayerById(drop_layer.parent);//Layer.findParent(drop_layer);
 		var position= parent_layer.children.indexOf(drop_layer);
 		var now_position= parent_layer.children.indexOf(drag_layer);
 		if(now_position <0){
@@ -199,6 +199,7 @@ export default class Layer{
 
 
 	};
+	init(){ };
 
 	static enableRefreshThumbnail=true;
 
@@ -209,7 +210,7 @@ export default class Layer{
 	beforeReflect(){};
 
 	//レイヤ合成処理
-	reflect (img,x,y,w,h){
+	reflect (img,composite_area){
 		var x = Math.max(img.offsetx,composite_area[0]);
 		var y = Math.max(img.offsety,composite_area[1]);
 		var x1 = Math.min(img.width+img.offsetx,composite_area[2]+composite_area[0]);
@@ -232,16 +233,34 @@ export default class Layer{
 		var right2 = Math.min(layer_img.width + layer_position_x ,x1);
 		var bottom2 = Math.min(layer_img.height + layer_position_y ,y1);
 
+
+		var pos = new Vec3();
+		var pos2 = new Vec3();
+		pos[2]=1;
+		var matrix = new Mat33();
+		matrix[0]=1;
+		matrix[4]=1;
+		matrix[8]=1;
+		matrix[6]=layer_position_x;
+		matrix[7]=layer_position_y;
+		Mat33.getInv(matrix,matrix);
+
 		for(var yi=top2;yi<bottom2;yi++){
 			var idx = (yi-img.offsety) * img_width + left2  - img.offsetx << 2;
-			var max = (yi-img.offsety) * img_width + right2 - img.offsetx << 2;
-			var idx2 = (yi-layer_position_y) * layer_img_width + left2 - layer_position_x << 2;
-			var xi = left2;
-			for(;idx<max;idx+=4){
+			//var max = (yi-img.offsety) * img_width + right2 - img.offsetx << 2;
+			pos[1] = yi;
+			for(var xi=left2;xi<right2;xi++){
+				pos[0] = xi;
+				Mat33.dotVec3(pos2,matrix,pos);
+				var idx2 = (yi-layer_position_y) * layer_img_width + xi - layer_position_x << 2;
 				func(img_data,idx,layer_img_data,idx2,layer_alpha,layer_power);
-				idx2+=4;
-				xi++;
+				idx+=4;
 			}
+			//var idx2 = (yi-layer_position_y) * layer_img_width + left2 - layer_position_x << 2;
+			//for(;idx<max;idx+=4){
+			//	func(img_data,idx,layer_img_data,idx2,layer_alpha,layer_power);
+			//	idx2+=4;
+			//}
 		}
 			
 	};
@@ -491,9 +510,10 @@ export default class Layer{
 
 		left = Math.max(0,left);
 		top = Math.max(0,top);
-		if(this.img){
-			right = Math.min(this.img.width-1,right);
-			bottom = Math.min(this.img.height-1,bottom);
+		var layer_img = hdrpaint.getImgById(this.img_id);
+		if(layer_img){
+			right = Math.min(layer_img.width-1,right);
+			bottom = Math.min(layer_img.height-1,bottom);
 		}
 		left=Math.floor(left);
 		right=Math.ceil(right);
@@ -506,7 +526,8 @@ export default class Layer{
 
 		if(this.type===2){
 			if(this.parent){
-				this.parent.bubbleComposite(left+this.position[0]
+				var parent = Layer.findById(this.parent);
+				parent.bubbleComposite(left+this.position[0]
 					,top + this.position[1]
 					,right-left+1
 					,bottom-top+1);
@@ -519,7 +540,8 @@ export default class Layer{
 			this.composite(left,top,right,bottom);
 		}
 		if(this.parent){
-			this.parent.bubbleComposite(left+this.position[0]
+			var parent = Layer.findById(this.parent);
+			parent.bubbleComposite(left+this.position[0]
 				,top + this.position[1]
 				,right-left+1
 				,bottom-top+1);
