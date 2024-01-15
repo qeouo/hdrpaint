@@ -505,5 +505,4 @@ window.hdrpaint = hdrpaint;
 export default hdrpaint;
 
 
-
-
+hdrpaint.registModifier(Layer);

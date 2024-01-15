@@ -11,7 +11,7 @@ class ChangeLayerAttribute extends CommandBase{
 	f(value){
 		var param = this.param;
 		var name = param.name;
-		var layer = Layer.findById(param.layer_id);
+		var layer = hdrpaint.getLayerById(param.layer_id);
 
 		if(!this.undo_data){
 			this.undo_data= {value:layer[name]};
@@ -22,8 +22,9 @@ class ChangeLayerAttribute extends CommandBase{
 		if(layer.type===2){
 			layer.registRefreshThumbnail();
 		}
+		parent = hdrpaint.getLayerById(layer.parent);
 
-		layer.parent.bubbleComposite();
+		parent.bubbleComposite();
 	}
 	func(){
 		this.f(this.param.value);

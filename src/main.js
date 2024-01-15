@@ -834,21 +834,20 @@ document.querySelector("#layer_param").addEventListener("change"
 	if(input.hasAttribute("number")){
 		value = Number(value);
 	}
+	var int_val = parseInt(value);
 
 	switch(member){
 		case "width":
+			Hdrpaint.executeCommand("resizeLayer",{"layer_id":layer.id,"width":int_val,"height":layer.height});
+			break;
 		case "height":
-			var width = parseInt(inputs["layer_width"].value);
-			var height= parseInt(inputs["layer_height"].value);
-			Hdrpaint.executeCommand("resizeLayer",{"layer_id":layer.id,"width":width,"height":height});
+			Hdrpaint.executeCommand("resizeLayer",{"layer_id":layer.id,"width":layer.width,"height":int_val});
 			break;
 		case "x":
+			Hdrpaint.executeCommand("translateLayer",{"layer_id":layer.id,"x":int_val - layer.position[0],"y":0});
+			break;
 		case "y":
-			var x= parseInt(inputs["layer_x"].value);
-			var y= parseInt(inputs["layer_y"].value);
-			x-=layer.position[0];
-			y-=layer.position[1];
-			Hdrpaint.executeCommand("translateLayer",{"layer_id":layer.id,"x":x,"y":y});
+			Hdrpaint.executeCommand("translateLayer",{"layer_id":layer.id,"x":0,"y":int_val - layer.position[1]});
 			break;
 		default:
 			Hdrpaint.executeCommand("changeLayerAttribute",{"layer_id":layer.id,"name":member,"value":value});

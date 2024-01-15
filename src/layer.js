@@ -146,6 +146,19 @@ var gen_thumbnail_img = new Img(240,40,0);
 
 export default class Layer{
 //レイヤ
+	static name="layer";
+	static type="generator";
+	static option=`
+		位置<input type="text" id="layer_x" value="" class="size" name="position.0">
+		<input type="text" id="layer_y" value="" class="size" name="position.1">
+		サイズ<input type="text" id="layer_width" value="" class="size" name="width">
+		<input type="text" id="layer_height" value="" class="size" name="height"><br>
+		<div id="div_blendfunc">合成func<select type="text" id="layer_blendfunc" name="blendfunc">
+		</select></div>
+		α<input class="slider" id="layer_alpha" max="1" name="alpha"/>
+		<label><input type="checkbox" id="layer_mask_alpha" name="mask_alpha"/>αロック</label><br>
+		明るさ<input class="slider" id="layer_power" min="-10" max="10" name="power"/><br>
+	`;
 	constructor(){
 		this.id=-1;
 		this.name="";
@@ -788,7 +801,6 @@ export default class Layer{
 
 };
 
-Layer.prototype.typename="normal_layer";
 
 Layer.prototype.type={
 	IMAGE : 0
