@@ -145,12 +145,13 @@ class Hdrpaint{
 	}
 
 	createLayer(img_id,composite_flg){
-		var layer = new Layer();
 
+		var layer = null;
 		if(composite_flg){
+			layer = new this.modifier["composite"]();
 			//グループレイヤの場合
-			layer.type=1;
-			layer.children=[];
+		}else{
+			layer = new Layer();
 		}
 
 		if(layer.type == 1){
@@ -187,7 +188,7 @@ class Hdrpaint{
 		if(layer.children){
 			layer.dom.classList.add("group");
 		}
-		layer.dom.classList.add("modifier");
+		//layer.dom.classList.add("modifier");
 
 		layer.img=null;
 
@@ -210,7 +211,9 @@ class Hdrpaint{
 		var width= preview.width;
 		var height= preview.height;
 		
-		this.executeCommand("createNewCompositeLayer",{"parent":data.parent_layer.id,"position":data.position,"width":width,"height":height,"composite_flg":1});
+//		this.executeCommand("createNewCompositeLayer",{"parent":data.parent_layer.id,"position":data.position,"width":width,"height":height,"composite_flg":1});
+		this.executeCommand("createmodifier",{"modifier":"composite","parent_layer_id":data.parent_layer.id,"position":data.position
+			,"width":data.parent_layer.size[0],"height":data.parent_layer.size[1]});
 
 	}
 

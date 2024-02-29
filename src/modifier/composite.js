@@ -10,22 +10,11 @@ let composite_area = new Vec4();
 class Composite extends Layer{
 	static name="composite";
 	static type="filter";
-	static option=`
-		位置<input type="text" id="layer_x" value="" class="size" name="position.0">
-		<input type="text" id="layer_y" value="" class="size" name="position.1">
-		サイズ<input type="text" id="layer_width" value="" class="size" name="width">
-		<input type="text" id="layer_height" value="" class="size" name="height"><br>
-		<div id="div_blendfunc">合成func<select type="text" id="layer_blendfunc" name="blendfunc">
-		</select></div>
-		α<input class="slider" id="layer_alpha" max="1" name="alpha"/>
-		<label><input type="checkbox" id="layer_mask_alpha" name="mask_alpha"/>αロック</label><br>
-		明るさ<input class="slider" id="layer_power" min="-10" max="10" name="power"/><br>
-	`;
 	constructor(){
 		super();
 
-
 		this.children=[];
+		this.type=1;
 	};
 	init(){
 		var width = this.size[0];
@@ -35,6 +24,10 @@ class Composite extends Layer{
 		//var layer =Hdrpaint.createLayer(img.id,1);
 		this.width=width;
 		this.height=height;
+
+		if(img){
+			Vec2.setValues(this.size,img.width,img.height);
+		}
 		this.type=1;
 	}
 
@@ -56,25 +49,21 @@ class Composite extends Layer{
 	composite(left,top,right,bottom){
 		var children=this.children;
 
-
 		var layer_img = hdrpaint.getImgById(this.img_id);
-		var pow=0;
+
 		if(typeof left === 'undefined'){
+			//エリア指定無しの場合は全体
 			left=0;
 			top=0;
 			right = layer_img.width-1;
 			bottom= layer_img.height-1;
 		}
 
-		if(this.type !==1){
-			return;
-		}
-
 		var width = right-left+1;
 		var height = bottom-top+1;
 
-
 		Vec4.setValues(composite_area,left,top,width,height);
+
 		//合成前処理
 		for(var li=children.length;li--;){
 			var layer = Layer.findById(children[li]);
@@ -83,10 +72,9 @@ class Composite extends Layer{
 				continue;
 			}
 			layer.before(composite_area);
-			
 		}
 
-
+		//コンポジットバッファエリア再計算
 		left = Math.max(0,composite_area[0]);
 		top= Math.max(0,composite_area[1]);
 		right= Math.min(layer_img.width,composite_area[2]+ left);
@@ -101,9 +89,11 @@ class Composite extends Layer{
 
 
 		if(this.id === Hdrpaint.root_layer.id){
+			//ルートレイヤなら背景色塗りつぶし
 			var bg = Hdrpaint.doc.background_color;
 			composite_img.fill(bg[0],bg[1],bg[2],bg[3],0,0,composite_img.width,composite_img.height);
 		}else{
+			//ルートレイヤ以外は透明色塗りつぶし
 			composite_img.clear(0,0,composite_img.width,composite_img.height);
 		}
 		
@@ -118,6 +108,7 @@ class Composite extends Layer{
 			layer.reflect(composite_img,composite_area);
 		}
 
+		//コンポジット結果をコンポジットキャッシュに反映
 		var x0 = composite_area[0];
 		var x1 = composite_area[0]+composite_area[2];
 		var y0 = composite_area[1];

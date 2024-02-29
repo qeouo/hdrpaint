@@ -23,8 +23,9 @@ class Grayscale extends Layer{
 
 		var x = Math.max(0,composite_area[0]);
 		var y = Math.max(0,composite_area[1]);
-		var x1 = Math.min(this.parent.size[0],composite_area[2]+x);
-		var y1 = Math.min(this.parent.size[1],composite_area[3]+y);
+		var parent = Layer.findById(this.parent);
+		var x1 = Math.min(parent.size[0],composite_area[2]+x);
+		var y1 = Math.min(parent.size[1],composite_area[3]+y);
 
 		var layer= this;
 		img.scan(layer.getPixel,x-img.offsetx,y-img.offsety,x1-x,y1-y);
