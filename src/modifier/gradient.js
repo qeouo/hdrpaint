@@ -77,7 +77,7 @@ class Gradient extends Layer{
 		return "";
 	}
 
-	beforeReflect(img){
+	beforeReflect(img,composite_area){
 
 		for(var i=0;i<4;i++){
 			var nam = "col"+i;
@@ -103,14 +103,16 @@ class Gradient extends Layer{
 			}
 		}
 
-		var parent= this.parent;
+		var parent = Layer.findById(this.parent);
 		if(parent){
 			width=parent.size[0];
 			height=parent.size[1];
 		}
 		if(img){
-			width=img.width;
-			height=img.height;
+			if(img.thumbnail){
+				width=img.width;
+				height=img.height;
+			}
 		}
 
 		Mat33.rotate(mat33,this.radius*Math.PI/180,0,0,1);
@@ -124,6 +126,7 @@ class Gradient extends Layer{
 		
 	}
 	reflect(img,area){
+		this.beforeReflect(img,area);
 		var layer = this;
 		var offx = -this.position[0] + img.offsetx;
 		var offy = -this.position[1] + img.offsety;

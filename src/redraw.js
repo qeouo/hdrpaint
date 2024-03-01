@@ -9,9 +9,7 @@ var refresh_stack=[] ;
 
 		if(Redraw.refreshoff){
 			//更新禁止フラグが立っている場合は処理しない
-			return;
-		}
-		if(refresh_stack.length===0){
+			window.requestAnimationFrame( refreshMain_);
 			return;
 		}
 		
@@ -21,12 +19,7 @@ var refresh_stack=[] ;
 		}
 		refresh_stack=[];
 		
-		//if(refresh_stack.length>0){
-
-		//	window.requestAnimationFrame(function(e){
-		//		refreshMain_();
-		//	});
-		//}
+		window.requestAnimationFrame( refreshMain_);
 	}
 
 	var refreshMain_sub=function(step,x,y,w,h){
@@ -215,11 +208,11 @@ export default class Redraw{
 		refresh_data.h=h;
 		refresh_stack.push(refresh_data);
 
-		if(refresh_stack.length===1){
-			window.requestAnimationFrame(function(e){
-				refreshMain_();
-			});
-		}
+//		if(refresh_stack.length===1){
+//			window.requestAnimationFrame(function(e){
+//				refreshMain_();
+//			});
+	//	}
 	}
 	static compositeAll(){
 		//全レイヤ更新
@@ -240,3 +233,5 @@ export default class Redraw{
 	}
 
 }
+
+window.requestAnimationFrame( refreshMain_);

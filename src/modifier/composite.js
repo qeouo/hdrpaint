@@ -30,21 +30,10 @@ class Composite extends Layer{
 		}
 		this.type=1;
 	}
-
-//
-//	reflect(img,composite_area){
-//
-//		var x = Math.max(0,composite_area[0]);
-//		var y = Math.max(0,composite_area[1]);
-//		var x1 = Math.min(this.parent.size[0],composite_area[2]+x);
-//		var y1 = Math.min(this.parent.size[1],composite_area[3]+y);
-//		var layer = this;
-//
-//
-//		var offx =  img.offsetx;
-//		var offy =  img.offsety;
-//		img.scan(function(r,idx,x,y){layer.getPixel(r,idx,x +offx,y+offy);} ,x-img.offsetx,y-img.offsety,x1-x,y1-y);
+//	reflect(img,area){
+//		composite(
 //	}
+
 	//レイヤ合成
 	composite(left,top,right,bottom){
 		var children=this.children;
@@ -104,7 +93,7 @@ class Composite extends Layer{
 				//非表示の場合スルー
 				continue;
 			}
-			layer.beforeReflect();
+			//layer.beforeReflect(composite_area);
 			layer.reflect(composite_img,composite_area);
 		}
 

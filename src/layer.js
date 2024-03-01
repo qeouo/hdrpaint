@@ -277,8 +277,7 @@ export default class Layer{
 		}
 			
 	};
-
-	//レイヤ合成
+	composite(){}
 
 
 	getPixel(ret,idx,x,y){
@@ -578,9 +577,10 @@ export default class Layer{
 
 		if(layer.type === 2){
 			var img = gen_thumbnail_img;
+			img.thumbnail=true;
 			var newx = img.width;
 			var newy = img.height;
-			layer.beforeReflect(img);
+//			layer.beforeReflect(img);
 
 		img.offsetx=0;
 		img.offsety=0;
