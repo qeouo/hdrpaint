@@ -4,6 +4,7 @@ import Img from "./lib/img.js";
 import Layer from "./layer.js";
 import CommandLog from "./commandlog.js";
 import {Vec2,Vec3,Vec4} from "./lib/vector.js";
+import Mat43 from "./lib/mat43.js";
 
 
 class Hdrpaint{
@@ -54,10 +55,30 @@ class Hdrpaint{
 		var rect =document.querySelector(".layer_rectangle");
 		var doc = this.doc;
 		var scale = doc.scale/100;
-		rect.style.left=(this.selected_layer.position[0]*scale  +  doc.canvas_pos[0] - 1)+"px";
-		rect.style.top=(this.selected_layer.position[1]*scale + doc.canvas_pos[1] -1) +"px";
+		var absolute=new Vec2();
+		var mat43 = new Mat43();
+		this.selected_layer.getAbsoluteMatrix(mat43);
+		mat43[9] = mat43[9] * scale + doc.canvas_pos[0];
+		mat43[10] = mat43[10] * scale + doc.canvas_pos[1];
+
+		var l = new Vec3();
+		var s = new Vec3();
+		var e = new Vec3();
+		Mat43.toLSE(l,s,e,mat43);
+
+		var x =  +this.selected_layer.size[0]*(1-mat43[0]) - this.selected_layer.size[1]*mat43[3];
+		var y =  -this.selected_layer.size[0]*mat43[1] + this.selected_layer.size[1]*(1-mat43[4]);
+		l[0]-=x*0.5;
+		l[1]-=y*0.5;
+
+		rect.style.left=(l[0]   - 1)+"px";
+		rect.style.top=(l[1]  -1) +"px";
 		rect.style.width =(this.selected_layer.size[0] * scale) + "px";
 		rect.style.height=(this.selected_layer.size[1] * scale)+ "px";
+
+		if(e[0]<0)e[2]=Math.PI-e[2];
+		rect.style.transform="rotate("+ e[2]+ "rad)"
+
 		rect.style.display="inline-block"
 	}
 	refreshSelectedRectangle(){

@@ -407,4 +407,11 @@ export default class Mat43{
 		m33[8]=m[8]*invz;
 		Mat33.getEuler(e,m33);
 	}
+
+	static toMat44csv(m){
+		return m[0] + "," +  m[1] + "," +  m[2] + ",0"   
+		+"," + m[3] + "," +  m[4] + "," +  m[5]  +",0"
+		+"," + m[6] + "," +  m[7] + "," +  m[8]  +",0"
+		+"," + m[9] + "," +  m[10] + "," +  m[11]  +",1";
+	}
 }

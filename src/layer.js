@@ -4,6 +4,7 @@ import Img from "./lib/img.js";
 import Redraw from "./redraw.js";
 import Hdrpaint from "./hdrpaint.js";
 import Util from "./lib/util.js";
+import Mat43 from "./lib/mat43.js";
 
 var arr=new Vec4();
 let stackThumbnail=[];
@@ -117,7 +118,7 @@ var gen_thumbnail_img = new Img(240,40,0);
 		if(drag_layer.type !==0){
 			//グループレイヤドラッグ時は、自身の子になるかチェックし、その場合は無視
 			var flg = false;
-			Layer.bubble_func(parent_layer,
+			Layer.bubble_func(parent_layer.id,
 				function(layer){
 					if(layer === drag_layer){
 						flg=true;
@@ -153,6 +154,7 @@ export default class Layer{
 		<input type="text" id="layer_y" value="" class="size" name="position.1">
 		サイズ<input type="text" id="layer_width" value="" class="size" name="width">
 		<input type="text" id="layer_height" value="" class="size" name="height"><br>
+		回転<input class="slider" min="0" max="360" id="angle" value="" class="size" name="angle"><br>
 		<div id="div_blendfunc">合成func<select type="text" id="layer_blendfunc" name="blendfunc">
 		</select></div>
 		α<input class="slider" id="layer_alpha" max="1" name="alpha"/>
@@ -174,7 +176,10 @@ export default class Layer{
 		this.height=0;
 		this.img_id=-1;
 		this.mask_alpha=0;
-		this.position =new Vec2();
+		this.position =new Vec3();
+		this.scale=new Vec3();
+		Vec3.setValues(this.scale,1,1,1);
+		this.angle = 0;//new Vec3();
 		this.size=new Vec2();
 		this.modifier_param={};
 
@@ -216,6 +221,17 @@ export default class Layer{
 
 	static enableRefreshThumbnail=true;
 
+	getMatrix(mat43){
+		var rot = new Vec3();
+		rot[2]=this.angle/360*(Math.PI*2);
+		Mat43.fromLSE(mat43,this.position,this.scale,rot);
+
+		var x =  this.size[0]*(1-mat43[0]) - this.size[1]*mat43[3];
+		var y =  -this.size[0]*mat43[1] + this.size[1]*(1-mat43[4]);
+		mat43[9] +=(x)*0.5;
+		mat43[10] +=(y)*0.5;
+	}
+
 	//レイヤ合成開始前処理
 	before(area){};
 
@@ -241,39 +257,38 @@ export default class Layer{
 		var layer_position_y= layer.position[1];
 
 		//レイヤのクランプ
-		var left2 = Math.max(x,layer.position[0]);
-		var top2 = Math.max(y,layer.position[1]);
-		var right2 = Math.min(layer_img.width + layer_position_x ,x1);
-		var bottom2 = Math.min(layer_img.height + layer_position_y ,y1);
-
+		var cos = Math.abs(Math.cos(layer.angle /360*Math.PI*2))
+		var sin = Math.abs(Math.sin(layer.angle /360*Math.PI*2))
+		var width = cos*layer_img.width + sin*layer_img.height>>1;
+		var height= sin*layer_img.width + cos*layer_img.height>>1;
+		var left2 = Math.max(x,layer.position[0]+ layer_img.width*0.5-width);
+		var top2 = Math.max(y,layer.position[1]+layer_img.height*0.5-height);
+		var right2 = Math.min(layer_img.width*0.5+width + layer_position_x ,x1);
+		var bottom2 = Math.min(layer_img.height*0.5+height + layer_position_y ,y1);
 
 		var pos = new Vec3();
 		var pos2 = new Vec3();
 		pos[2]=1;
-		var matrix = new Mat33();
-		matrix[0]=1;
-		matrix[4]=1;
-		matrix[8]=1;
-		matrix[6]=layer_position_x;
-		matrix[7]=layer_position_y;
-		Mat33.getInv(matrix,matrix);
+		var matrix = new Mat43();
+		this.getMatrix(matrix);
+		Mat43.getInv(matrix,matrix);
 
 		for(var yi=top2;yi<bottom2;yi++){
 			var idx = (yi-img.offsety) * img_width + left2  - img.offsetx << 2;
-			//var max = (yi-img.offsety) * img_width + right2 - img.offsetx << 2;
 			pos[1] = yi;
 			for(var xi=left2;xi<right2;xi++){
 				pos[0] = xi;
-				Mat33.dotVec3(pos2,matrix,pos);
-				var idx2 = (yi-layer_position_y) * layer_img_width + xi - layer_position_x << 2;
-				func(img_data,idx,layer_img_data,idx2,layer_alpha,layer_power);
+				Mat43.dotVec3(pos2,matrix,pos);
+				pos2[0]=pos2[0]+0.5<<0;
+				pos2[1]=pos2[1]+0.5<<0;
 				idx+=4;
+				if(pos2[0]<0)continue;
+				if(pos2[0]>=layer_img.width)continue;
+				if(pos2[1]<0)continue;
+				if(pos2[1]>=layer_img.height)continue;
+				var idx2 = pos2[1] * layer_img_width   + pos2[0] << 2;
+				func(img_data,idx-4,layer_img_data,idx2,layer_alpha,layer_power);
 			}
-			//var idx2 = (yi-layer_position_y) * layer_img_width + left2 - layer_position_x << 2;
-			//for(;idx<max;idx+=4){
-			//	func(img_data,idx,layer_img_data,idx2,layer_alpha,layer_power);
-			//	idx2+=4;
-			//}
 		}
 			
 	};
@@ -569,54 +584,38 @@ export default class Layer{
 		//レイヤサムネイル更新
 		var layer=this;
 		var sum=new Vec4();
-		if(layer.children){
+		//if(layer.children){
 
 			layer.dom.style.backgroundImage = "none";
-	//		return;
-		}
+		//}
 
-		if(layer.type === 2){
+		if(layer.type === 2){ 
+			//ジェネレータレイヤ
 			var img = gen_thumbnail_img;
 			img.thumbnail=true;
 			var newx = img.width;
 			var newy = img.height;
-//			layer.beforeReflect(img);
 
-		img.offsetx=0;
-		img.offsety=0;
-		//img.scan(function(ret,idx,x,y){
-		//	layer.getPixel(arr,x,y);
-		//	ret[idx+0]=arr[0];
-		//	ret[idx+1]=arr[1];
-		//	ret[idx+2]=arr[2];
-		//	ret[idx+3]=arr[3];
-		//});
-		layer.reflect(img,[0,0,img.width,img.height]);
+			img.offsetx=0;
+			img.offsety=0;
+			layer.reflect(img,[0,0,img.width,img.height]);
 
-		layer.dom.style.backgroundImage = "url(" + img.toDataURL() + "),url(./css/back.png)";
-
-	//		img.toBlob((blob)=>{
-	//			URL.revokeObjectURL(img.src);
-	//			layer.dom.style.backgroundImage = "url("  + URL.createObjectURL(blob); +")";
-	//		});
+			layer.dom.style.backgroundImage = "url(" + img.toDataURL() + "),url(./css/back.png)";
 			return;
 			
 		}
 
-		var layer_img = hdrpaint.getImgById(layer.img_id);
-		if(!layer_img){
+		var img = hdrpaint.getImgById(layer.img_id);
+		if(!img){
 			return;
 		}
-		if(!layer_img.data){
+		if(!img.data){
 			return;
 		}
-		var img = layer_img;
 		var img_data=img.data;
 
 		var layer_img=layer.dom.getElementsByTagName("img")[0];
 
-		var can = img.toCanvas();
-		var ctx = Img.ctx;
 		var r=img.width;
 		if(img.width<img.height){
 			r = img.height;
@@ -662,8 +661,6 @@ export default class Layer{
 		}
 		thumbnail_img.width=newx;
 		thumbnail_img.height=newy;
-//		thumbnail_img.width=64;
-//		thumbnail_img.height=64;
 
 		thumbnail_img.toBlob((blob)=>{
 			URL.revokeObjectURL(layer_img.src);
@@ -674,6 +671,17 @@ export default class Layer{
 
 	}
 
+	getAbsoluteMatrix(mat){
+		//レイヤの絶対座標取得
+		Mat43.setInit(mat);
+
+		Layer.bubble_func(this.id,function(layer){
+			var a = new Mat43();
+			layer.getMatrix(a);
+
+			Mat43.dot(mat,a,mat);
+		});
+	}
 
 	getAbsolutePosition(p){
 		//レイヤの絶対座標取得

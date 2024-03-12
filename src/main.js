@@ -1075,7 +1075,7 @@ function dataURIConverter(dataURI) {
 		,function(values){
 		hdrpaint.refreshSelectedRectangle()
 	});
-	watcher.watch(hdrpaint,["selected_layer.size.0","selected_layer.size.1","selected_layer.position.0","selected_layer.position.1"]
+	watcher.watch(hdrpaint,["selected_layer.id","selected_layer.size.0","selected_layer.size.1","selected_layer.position.0","selected_layer.position.1","selected_layer.angle"]
 		,function(values){
 		hdrpaint.refreshLayerRectangle();
 	});
@@ -1147,7 +1147,6 @@ watcher.init();
 	selectorhdr.setColor(Hdrpaint.color);
 
 }
-
 
 
 
