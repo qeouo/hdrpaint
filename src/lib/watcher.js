@@ -125,5 +125,26 @@ export default class Watcher {
 			w.exec();
 		});
 	}
+	static getValue(root,name,flg = 0){
+		var v= name.split(".");
+		var value=root;
+		for(var j=0;j<v.length - flg;j++){
+			if(value == undefined){
+				value=null;
+				break;
+			}
+			if(!value){
+				break;
+			}
+			value = value[v[j]];
+		}
+		return value;
+	}
+	static setValue(root,name,value){
+		var v= name.split(".");
+		var val =this.getValue(root,name,1); //対象の変数の親を取得
+		val[v[v.length-1]]=value;
+	}
+
 }
 

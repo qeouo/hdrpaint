@@ -1,4 +1,5 @@
 
+import Watcher from "../lib/watcher.js";
 import Layer from "../layer.js";
 import Hdrpaint from "../hdrpaint.js";
 import CommandBase from "./commandbase.js";
@@ -14,10 +15,10 @@ class ChangeLayerAttribute extends CommandBase{
 		var layer = hdrpaint.getLayerById(param.layer_id);
 
 		if(!this.undo_data){
-			this.undo_data= {value:layer[name]};
+			this.undo_data= {value:Watcher.getValue(layer,name)};
 		}
-
-		layer[name] = value;
+		Watcher.setValue(layer,name,value)
+		//layer[name] = value;
 		layer.refreshDiv();
 		if(layer.type===2){
 			layer.registRefreshThumbnail();

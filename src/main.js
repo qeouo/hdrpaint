@@ -818,7 +818,9 @@ document.querySelector("#layer_param").addEventListener("change"
 	if(!input){return;}
 
 	var layer = Hdrpaint.selected_layer;
-	var member = input.id.replace("layer_","");
+	//var member = input.id.replace("layer_","");
+	var member = input.getAttribute("name");
+	//var member = input.name;
 	if(input.getAttribute("type")==="radio"){
 		member = input.name;
 	}
@@ -842,12 +844,6 @@ document.querySelector("#layer_param").addEventListener("change"
 			break;
 		case "height":
 			Hdrpaint.executeCommand("resizeLayer",{"layer_id":layer.id,"width":layer.width,"height":int_val});
-			break;
-		case "x":
-			Hdrpaint.executeCommand("translateLayer",{"layer_id":layer.id,"x":int_val - layer.position[0],"y":0});
-			break;
-		case "y":
-			Hdrpaint.executeCommand("translateLayer",{"layer_id":layer.id,"x":0,"y":int_val - layer.position[1]});
 			break;
 		default:
 			Hdrpaint.executeCommand("changeLayerAttribute",{"layer_id":layer.id,"name":member,"value":value});

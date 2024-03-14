@@ -150,10 +150,12 @@ export default class Layer{
 	static name="layer";
 	static type="generator";
 	static option=`
-		位置<input type="text" id="layer_x" value="" class="size" name="position.0">
-		<input type="text" id="layer_y" value="" class="size" name="position.1">
 		サイズ<input type="text" id="layer_width" value="" class="size" name="width">
 		<input type="text" id="layer_height" value="" class="size" name="height"><br>
+		位置<input type="text" id="layer_x" value="" class="size" name="position.0">
+		<input type="text" id="layer_y" value="" class="size" name="position.1"><br>
+		スケール<input type="text" id="scale.0" value="" class="size" name="scale.0">
+		<input type="text" id="scale.1" value="" class="size" name="scale.1"><br>
 		回転<input class="slider" min="0" max="360" id="angle" value="" class="size" name="angle"><br>
 		<div id="div_blendfunc">合成func<select type="text" id="layer_blendfunc" name="blendfunc">
 		</select></div>
@@ -261,8 +263,8 @@ export default class Layer{
 		var sin = Math.abs(Math.sin(layer.angle /360*Math.PI*2))
 		var width = cos*layer_img.width + sin*layer_img.height>>1;
 		var height= sin*layer_img.width + cos*layer_img.height>>1;
-		var left2 = Math.max(x,layer.position[0]+ layer_img.width*0.5-width);
-		var top2 = Math.max(y,layer.position[1]+layer_img.height*0.5-height);
+		var left2 = Math.max(x,layer.position[0]+ layer_img.width*0.5-width*layer.scale[0]);
+		var top2 = Math.max(y,layer.position[1]+layer_img.height*0.5-height*layer.scale[1]);
 		var right2 = Math.min(layer_img.width*0.5+width + layer_position_x ,x1);
 		var bottom2 = Math.min(layer_img.height*0.5+height + layer_position_y ,y1);
 

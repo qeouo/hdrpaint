@@ -66,15 +66,15 @@ class Hdrpaint{
 		var e = new Vec3();
 		Mat43.toLSE(l,s,e,mat43);
 
-		var x =  +this.selected_layer.size[0]*(1-mat43[0]) - this.selected_layer.size[1]*mat43[3];
-		var y =  -this.selected_layer.size[0]*mat43[1] + this.selected_layer.size[1]*(1-mat43[4]);
-		l[0]-=x*0.5;
-		l[1]-=y*0.5;
+		var x =  +this.selected_layer.size[0]*(s[0]-mat43[0]) - this.selected_layer.size[1]*mat43[3];
+		var y =  -this.selected_layer.size[0]*mat43[1] + this.selected_layer.size[1]*(s[1]-mat43[4]);
+		l[0]-=x*0.5*scale;
+		l[1]-=y*0.5*scale;
 
 		rect.style.left=(l[0]   - 1)+"px";
 		rect.style.top=(l[1]  -1) +"px";
-		rect.style.width =(this.selected_layer.size[0] * scale) + "px";
-		rect.style.height=(this.selected_layer.size[1] * scale)+ "px";
+		rect.style.width =(this.selected_layer.size[0] *s[0]* scale) + "px";
+		rect.style.height=(this.selected_layer.size[1] *s[1]* scale)+ "px";
 
 		if(e[0]<0)e[2]=Math.PI-e[2];
 		rect.style.transform="rotate("+ e[2]+ "rad)"
@@ -462,13 +462,14 @@ class Hdrpaint{
 
 
 
+//モディファイア登録
 	modifier={};
 	registModifier = (mod)=>{
 		var name = mod.name;
 
 		this.modifier[name] = mod;
 
-		
+		//オプション設定コントロール作成
 		var div= document.createElement("div");
 		div.id="div_"+name;
 		div.classList.add("modifier_param");
