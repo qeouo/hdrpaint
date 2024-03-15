@@ -22,7 +22,7 @@ class Hdrpaint{
 		//レイヤ
 		this.layers=[];
 		//画像データ
-		this.imgs={};
+		this.imgs=[];
 		//選択レイヤ
 		this.selected_layer=null;
 		this.selected_layer_id=-1;
@@ -81,6 +81,8 @@ class Hdrpaint{
 
 		rect.style.display="inline-block"
 	}
+
+	//選択範囲を示す点線
 	refreshSelectedRectangle(){
 		if(!this.select_rectangle)return;
 		var rect =document.querySelector(".select_rectangle");
@@ -94,6 +96,7 @@ class Hdrpaint{
 		rect.style.display="inline-block"
 	}
 
+	//領域取得
 	getSelectArea(){
 		//領域選択されていない場合はレイヤー全体を選択
 		var rectangle= {};
@@ -356,6 +359,7 @@ class Hdrpaint{
 	removeLayer(layer_id){
 		var layer = Layer.findById(layer_id);
 		var parent_layer = Layer.findById(layer.parent);
+		if(!parent_layer)return;
 		var children = parent_layer.children;
 		var idx = children.indexOf(layer_id);
 
@@ -386,9 +390,9 @@ class Hdrpaint{
 		}
 
 		var commandObjs = this.commandObjs;
-		log.obj = new commandObjs[command]();
-		log.obj.param = param;
-		log.obj.func();
+		var obj = new commandObjs[command]();
+		obj.param = param;
+		obj.func();
 	}
 	executeCommand(command,param,flg){
 

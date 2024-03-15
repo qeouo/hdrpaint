@@ -187,7 +187,7 @@ var onloadfunc=function(e){
 			if(inputs["selected_layer_only"].checked){
 				layer_id = Hdrpaint.selected_layer_id;
 			}
-			var img = Layer.findById(layer_id).img;
+			var img = hdrpaint.getLayerById(layer_id).img;
 			if(x<0 || x>=img.width || y<0 || y>img.height){
 			}else{
 				var data = img.data;
@@ -237,10 +237,11 @@ var onloadfunc=function(e){
 			if(!pen_log)return;
 
 			var point=new PenPoint();
-			var layer = Layer.findById(hdrpaint.selected_layer_id);
-			layer.getAbsolutePosition(point.pos);
-			point.pos[0]= x- point.pos[0];
-			point.pos[1]= y - point.pos[1];
+			var layer = hdrpaint.getLayerById(hdrpaint.selected_layer_id);
+			var vec3 = new Vec3(x,y,0);
+			layer.toRelative(vec3);
+			point.pos[0]= vec3[0];
+			point.pos[1]= vec3[1];
 			if(e.buttons&1){
 				if(e.pointerType === "mouse"){
 					point.pressure=1;
@@ -725,8 +726,8 @@ var onloadfunc=function(e){
 			return;
 		}
 		var layer_id = Hdrpaint.selected_layer_id;
-		var layer = Layer.findById(layer_id);
-		var parent_layer =  Layer.findById(layer.parent);
+		var layer = hdrpaint.getLayerById(layer_id);
+		var parent_layer =  hdrpaint.getLayerById(layer.parent);
 		var children = parent_layer.children;
 		var position = children.indexOf(layer_id);
 		position +=delta;
@@ -1005,7 +1006,8 @@ function dataURIConverter(dataURI) {
 		//});
 	}else{
 		//Hdrpaint.executeCommand("resizeLayer",{"layer_id":root_layer.id,"width":512,"height":512});
-		Hdrpaint.executeCommand("createNewLayer",{"position":0,"parent":0,"width":512,"height":512,"composite_flg":1});
+		//Hdrpaint.executeCommand("createNewLayer",{"position":0,"parent":0,"width":512,"height":512,"composite_flg":1});
+		hdrpaint.executeCommand("createmodifier",{"modifier":"composite","parent_layer_id":-1,"width":512,"height":512});
 
 		Hdrpaint.executeCommand("resizeCanvas",{"width":512,"height":512});
 
@@ -1019,7 +1021,7 @@ function dataURIConverter(dataURI) {
 		CommandLog.reset();
 
 		Hdrpaint.executeCommand("createNewLayer",{"position":0,"parent":Hdrpaint.root_layer.id,"width":preview.width,"height":preview.height});
-		var layer = Layer.findById(hdrpaint.root_layer.children[0]);
+		var layer = hdrpaint.getLayerById(hdrpaint.root_layer.children[0]);
 		layer.name="default"
 		layer.refreshDiv();
 		layer.registRefreshThumbnail();
@@ -1028,7 +1030,7 @@ function dataURIConverter(dataURI) {
 	}
 
 	binder.bind(document.querySelector("#status2")
-		,"",Hdrpaint,["cursor_pos.0","cursor_pos.1","doc.scale"],(v)=>{
+		,"",Hdrpaint,["cursor_pos","cursor_pos","doc.scale"],(v)=>{
 			var root_layer =hdrpaint.root_layer;
 			var img = root_layer.img;
 			var data = img.data;
@@ -1063,7 +1065,7 @@ function dataURIConverter(dataURI) {
 	binder.bind(document.querySelector("#pos_A")
 		,"",Hdrpaint,["cursor_color.3"],f);
 
-	watcher.watch(Hdrpaint,["doc.scale","doc.canvas_pos.0","doc.canvas_pos.1"],function(old){
+	watcher.watch(hdrpaint,["doc.scale","doc.canvas_pos.0","doc.canvas_pos.1"],function(old){
 		hdrpaint.refreshSelectedRectangle()
 		hdrpaint.refreshLayerRectangle();
 	});
@@ -1071,31 +1073,11 @@ function dataURIConverter(dataURI) {
 		,function(values){
 		hdrpaint.refreshSelectedRectangle()
 	});
-	watcher.watch(hdrpaint,["selected_layer.id","selected_layer.size.0","selected_layer.size.1","selected_layer.position.0","selected_layer.position.1","selected_layer.angle"]
+	watcher.watch(hdrpaint,["selected_layer.id","selected_layer.size","selected_layer.scale","selected_layer.position","selected_layer.angle"]
 		,function(values){
 		hdrpaint.refreshLayerRectangle();
 	});
 
-//	watcher.watch(hdrpaint,"layers"
-//		,function(values){
-//			var node = document.getElementById("layerlist");
-//				while( node.firstChild ){
-//				  node.removeChild( node.firstChild );
-//				}
-//				var options = values[0];
-//				if(!Array.isArray(options)){
-//					options=[];
-//				}
-//				for(var i=0;i<options.length;i++){
-//					var op= options[i];
-//
-//					var option = document.createElement("option");
-//					option.value = op.id;
-//					Util.setText(option,op.name);
-//					node.appendChild(option);
-//				}
-//		hdrpaint.refreshLayerRectangle();
-//	});
 watcher.init();
 
 	Brush.init();

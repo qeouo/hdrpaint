@@ -78,10 +78,10 @@ var gen_thumbnail_img = new Img(240,40,0);
 			return;
 		}
 
-		if(drag_layer.type !==0){
+		if(drag_layer.children){
 			//グループレイヤドラッグ時は、自身の子になるかチェックし、その場合は無視
 			var flg = false;
-			Layer.bubble_func(drop_layer,
+			Layer.bubble_func(drop_layer.id,
 				function(layer){
 					if(layer === drag_layer){
 						flg=true;
@@ -249,7 +249,10 @@ export default class Layer{
 		var layer = this;
 		var img_data = img.data;
 		var img_width = img.width;
-		var layer_img = hdrpaint.getImgById(layer.img_id);
+		var layer_img = layer.img;
+		if(layer.img_id>0){
+			layer_img = hdrpaint.getImgById(layer.img_id);
+		}
 		var layer_img_data = layer_img.data;
 		var layer_alpha=layer.alpha;
 		var layer_power=Math.pow(2,layer.power);
@@ -363,16 +366,6 @@ export default class Layer{
 	}
 
 	static findById(layer_id){
-	//	var result_layer = null;
-	//	Layer.eachLayers(function(layer){
-	//		if(layer.id== layer_id){
-	//			result_layer = layer;
-
-	//			return true;
-	//		}
-
-	//	});
-	//	return result_layer;
 		return hdrpaint.layers[layer_id];
 	}
 
@@ -395,7 +388,10 @@ export default class Layer{
 		var top = 0;
 		var right = 0;
 		var bottom = 0;
-		var layer_img = hdrpaint.getImgById(layer.img_id);
+		var layer_img = this.img;
+		if(this.img_id>0){
+			layer_img = hdrpaint.getImgById(this.img_id);
+		}
 		if(layer_img){
 			right = layer.size[0]-1;
 			bottom = layer.size[1]-1;
@@ -403,7 +399,7 @@ export default class Layer{
 			right =Hdrpaint.root_layer.size[0]-1; 
 			bottom =Hdrpaint.root_layer.size[1]-1; 
 		}
-		
+
 		if( typeof w !== 'undefined'){
 			//更新領域設定、はみ出している場合はクランプする
 			left=Math.max(left,x);
@@ -411,27 +407,43 @@ export default class Layer{
 			top=Math.max(top,y);
 			bottom=Math.min(bottom,y+h-1);
 		}
+
+		var mat43 = new Mat43();
+		this.getMatrix(mat43);
+		var poses=[];
+		poses.push(new Vec3(left,top,0));
+		poses.push(new Vec3(left,bottom,0));
+		poses.push(new Vec3(right,bottom,0));
+		poses.push(new Vec3(right,top,0));
+		Mat43.dotVec3(poses[0],mat43,poses[0]);
+		left = poses[0][0];
+		right= poses[0][0];
+		bottom= poses[0][1];
+		top = poses[0][1];
+		for(var i=1;i<poses.length;i++){
+			Mat43.dotVec3(poses[i],mat43,poses[i]);
+			left = Math.min(left,poses[i][0]);
+			right = Math.max(right,poses[i][0]);
+			top = Math.min(top,poses[i][1]);
+			bottom = Math.max(bottom,poses[i][1]);
+		}
+
+		
 		left=Math.floor(left);
 		right=Math.ceil(right);
 		top=Math.floor(top);
 		bottom=Math.ceil(bottom);
-		var width=right-left+1;
-		var height=bottom-top+1;
 
 		if(layer.parent){
 			var parent = Layer.findById(layer.parent);
-			if(typeof w === 'undefined'){
-				parent.bubbleComposite();
-
-			}else{
-				parent.bubbleComposite(left+layer.position[0]
-					,top + layer.position[1]
-					,right -left +1
-					,bottom -top +1);
-			}
+			parent.composite(left,top,right,bottom);
 		}
 		this.registRefreshThumbnail();
 	}
+	composite(left,top,right,bottom){
+		this.refreshImg(left,top,right,bottom);
+	}
+
 	bubbleComposite(x,y,w,h){
 
 		if(typeof x === 'undefined'){
@@ -448,7 +460,10 @@ export default class Layer{
 
 		left = Math.max(0,left);
 		top = Math.max(0,top);
-		var layer_img = hdrpaint.getImgById(this.img_id);
+		var layer_img = this.img;
+		if(this.img_id>0){
+			layer_img = hdrpaint.getImgById(this.img_id);
+		}
 		if(layer_img){
 			right = Math.min(layer_img.width-1,right);
 			bottom = Math.min(layer_img.height-1,bottom);
@@ -607,7 +622,10 @@ export default class Layer{
 			
 		}
 
-		var img = hdrpaint.getImgById(layer.img_id);
+		var img = this.img;
+		if(layer.img_id>0){
+			img = hdrpaint.getImgById(layer.img_id);
+		}
 		if(!img){
 			return;
 		}
@@ -692,6 +710,12 @@ export default class Layer{
 		Layer.bubble_func(this.id,function(layer){
 			Vec2.add(p,p,layer.position);
 		});
+	}
+	toRelative(p){
+		var mat43  =new Mat43();
+		this.getAbsoluteMatrix(mat43);
+		Mat43.getInv(mat43,mat43);
+		Mat43.dotVec3(p,mat43,p);
 	}
 
 	select(){

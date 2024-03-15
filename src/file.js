@@ -7,6 +7,7 @@ import Brush from "./brush.js"
 import Zip from "./lib/zip.js"
 import Redraw from "./redraw.js"
 import Layer from "./layer.js";
+import CommandLog from "./commandlog.js";
 var loadHpd_=function(buffer){
 	var files=Zip.read(buffer);
 
@@ -16,8 +17,9 @@ var loadHpd_=function(buffer){
 	}
 
 	Redraw.disableRefresh();
-	if(root_layer){
-		Command.deleteLayer({param:{"layer_id":root_layer.id}});
+	if(hdrpaint.root_layer){
+		hdrpaint.removeLayer(hdrpaint.root_layer.id);
+		//hdrpaint.commandObjs.deleteLayer({param:{"layer_id":hdrpaint.root_layer.id}});
 	}
 
 	var doc_data = JSON.parse(Util.utf8ToString(doc_file.data));
@@ -55,7 +57,19 @@ var loadHpd_=function(buffer){
 	}
 	Brush.refreshBrush();
 
-	var layers=[];
+
+	for(var i=0;i<files.length;i++){
+		var file= files[i];
+		if(file.name.indexOf(".exr")<0){
+			continue;
+		}
+		var id = file.name.replace(".exr");
+		id = Number(id);
+		hdrpaint.imgs[id]= _Img.loadExr(file.data);
+	}
+
+	hdrpaint.layers=[];
+	hdrpaint.layer_id_count=0;
 	for(var li=0;li<doc_data.layers.length;li++){
 		//レイヤ読み込み
 		var layer;
@@ -63,23 +77,16 @@ var loadHpd_=function(buffer){
 		switch(parseInt(doc_layer.type)){
 		case 0:
 			//通常レイヤ
-			var img_file_name = doc_data.layers[li].id + ".exr";
-			var img_file = files.find(function(f){return f.name===img_file_name;});
-			var img = _Img.loadExr(img_file.data);
-			layer =Layer.create(img,0);
+			layer =hdrpaint.createLayer(doc_layer.img_id,0);
 			break;
-		case 1:
+		default:
 			//グループレイヤ
-			img = new _Img(doc_layer.size[0],doc_layer.size[1]);
-			layer =Layer.create(img,1);
+			layer = Hdrpaint.createModifier(doc_layer.modifier);
 			break;
-		case 2:
-			//モディファイア
-			layer = Layer.createModifier(doc_layer.modifier);
 
 		}
 
-		layers.push(layer);
+		//layers.push(layer);
 
 		//レイヤパラメータ設定
 		var keys=Object.keys(doc_layer);
@@ -90,42 +97,29 @@ var loadHpd_=function(buffer){
 				layer[keys[ki]]=doc_layer[keys[ki]];
 			}
 		}
+		hdrpaint.layers[layer.id]=layer;
 		
 	}
-	root_layer=layers[0];
-	Hdrpaint.onlyExecute("resizeCanvas",{"width":root_layer.img.width,"height":root_layer.img.height});
-	for(var li=layers.length;li--;){
-		//レイヤ親子復元
-		var layer = layers[li];
-		var doc_layer=doc_data.layers[li];
-		if(doc_layer.children){
-			layer.children=[];
-			for(var ki=0;ki<doc_layer.children.length;ki++){
-				var child_id = doc_layer.children[ki];
-				var child = layers.find(
-					function(a){return a.id===child_id;});
-				layer.append(ki,child);
-				//layer.children[ki]=layers.find(
-			}
-		}
-	}
-	var maxid=0;
-	for(var li=0;li<layers.length;li++){
-		var layer = layers[li];
+	for(var li=0;li<hdrpaint.layers.length;li++){
+		layer = hdrpaint.layers[li];
+		if(!layer)continue;
 		layer.refreshDiv();
-		maxid=Math.max(maxid,layer.id);
 	}
-	Hdrpaint.setLayerIdCount(maxid+1);
+	hdrpaint.root_layer=hdrpaint.layers[1];
+	hdrpaint.root_layer_id=1;
+	Hdrpaint.onlyExecute("resizeCanvas",{"width":hdrpaint.root_layer.width,"height":hdrpaint.root_layer.height});
+
+	var maxid=0;
+	//for(var li=0;li<layers.length;li++){
+	//	var layer = layers[li];
+	//	layer.refreshDiv();
+	//	maxid=Math.max(maxid,layer.id);
+	//}
+	//Hdrpaint.setLayerIdCount(maxid+1);
 	Redraw.enableRefresh();
 
 
 	Redraw.compositeAll();
-	refreshTab("tools");
-	root_layer.children[root_layer.children.length-1].select();
-	
-	//refreshTab("color_selector_tab");
-	//createRGBA();
-	Hdrpaint.changeColor(null);
 	
 	CommandLog.reset();
 
@@ -184,44 +178,31 @@ static saveHpd(e){
 	var brushes = Hdrpaint.brushes;
 
 
-	var layers = Layer.layerArray();
+	var layers = hdrpaint.layers;
+	var imgs = hdrpaint.imgs;
 	doc_data.layers=[];
 
+	for(var li=0;li<imgs.length;li++){
+		//通常レイヤ
+		if(!imgs[li]){continue;}
+		var file={};
+		files.push(file);
+		file.data= new Uint8Array(imgs[li].createExr(3));
+		file.name = li+".exr";
+	}
 	for(var li=0;li<layers.length;li++){
 		var layer = layers[li];
+		if(!layer)continue;
 		var layer2={};
-
-		//レイヤをopneExrファイル化
-		if(layer.type===0){
-			//通常レイヤ
-			var file={};
-			files.push(file);
-			file.data= new Uint8Array(layer.img.createExr(3));
-			file.name = layer.id+".exr";
-		}else{
-			//グループレイヤ
-			//モディファイア
-			layer2.size = new Vec2();
-			Vec2.copy(layer2.size,layer.size);
-
-		}
 
 		//レイヤ情報収集
 		var keys=Object.keys(layer);
 		for(var ki=0;ki<keys.length;ki++){
 			layer2[keys[ki]]=layer[keys[ki]];
 		}
-		//親子関係をid化
-		if(layer.children){
-			layer2.children=[];
-			for(var ki=0;ki<layer.children.length;ki++){
-				layer2.children.push(layer.children[ki].id);
-			}
-		}
-		//不要なデータを削除
 		delete layer2.img;
-		delete layer2.parent;
 		delete layer2.div;
+		delete layer2.dom;
 		delete layer2.aaadiv;
 
 		doc_data.layers.push(layer2);
@@ -239,6 +220,7 @@ static saveHpd(e){
 		}
 		//不要なデータを削除
 		delete brush2.div;
+		delete brush2.dom;
 
 		doc_data.brushes.push(brush2);
 	}

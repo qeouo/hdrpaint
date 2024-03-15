@@ -25,10 +25,15 @@ class CreateModifier extends CommandBase{
 
 			this.undo_data={"layer_id":layer.id};
 		}
-		var parentLayer = Layer.findById(param.parent_layer_id);
+		if(param.parent_layer_id>0){
+			var parentLayer = Layer.findById(param.parent_layer_id);
 
-		parentLayer.append(n,this.undo_data.layer_id);
-		hdrpaint.selectLayer(this.undo_data.layer_id);
+			parentLayer.append(n,this.undo_data.layer_id);
+			hdrpaint.selectLayer(this.undo_data.layer_id);
+		}else{
+			hdrpaint.root_layer_id = layer.id;
+			hdrpaint.root_layer = layer;
+		}
 
 		return layer;
 	}

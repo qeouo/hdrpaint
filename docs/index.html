@@ -180,9 +180,9 @@
 		<div class="label" >レイヤ/モディファイア</div>
 		<div id="layer_param" >
 			<div style="width:100%;">
-				名前<input type="text" id="layer_name" style="width:100px;" bind:="selected_layer.name">
-				<label><input type="checkbox" id="layer_display" bind:="selected_layer.display"/>表示</label>
-				<label><input type="checkbox" id="layer_lock" bind:="selected_layer.lock"/>ロック</label>
+				名前<input type="text" name="name" style="width:100px;" bind:="selected_layer.name">
+				<label><input type="checkbox" name="display" bind:="selected_layer.display"/>表示</label>
+				<label><input type="checkbox" name="lock" bind:="selected_layer.lock"/>ロック</label>
 			</div>
 
 			<div id="modifier_param_area"  bind:modifier="selected_layer.modifier">

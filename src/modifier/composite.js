@@ -19,8 +19,10 @@ class Composite extends Layer{
 	init(){
 		var width = this.size[0];
 		var height= this.size[1];
-		var img = hdrpaint.createImg(width,height);
-		this.img_id = img.id;
+		//var img = hdrpaint.createImg(width,height);
+		var img = new Img(width,height);
+		//this.img_id = img.id;
+		this.img=img;
 		//var layer =Hdrpaint.createLayer(img.id,1);
 		this.width=width;
 		this.height=height;
@@ -30,15 +32,12 @@ class Composite extends Layer{
 		}
 		this.type=1;
 	}
-//	reflect(img,area){
-//		composite(
-//	}
 
 	//レイヤ合成
 	composite(left,top,right,bottom){
 		var children=this.children;
 
-		var layer_img = hdrpaint.getImgById(this.img_id);
+		var layer_img = this.img;
 
 		if(typeof left === 'undefined'){
 			//エリア指定無しの場合は全体
@@ -121,6 +120,7 @@ class Composite extends Layer{
 			//ルートレイヤの場合はプレビュー更新
 			Redraw.refreshPreview(0,composite_area[0],composite_area[1],composite_area[2],composite_area[3]);
 		}else{
+			this.refreshImg(composite_area[0],composite_area[1],composite_area[2],composite_area[3]);
 			//通常レイヤの場合はサムネ更新
 			this.registRefreshThumbnail();
 		}

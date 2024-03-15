@@ -35,9 +35,8 @@ class ResizeCanvas extends CommandBase{
 		var root_layer =  hdrpaint.root_layer;
 		root_layer.width=width;
 		root_layer.height=height;
-		var new_img = hdrpaint.createImg(width,height);
-		root_layer.img=new_img;
-		root_layer.img_id = new_img.id;
+		root_layer.img = new Img (width,height);
+		root_layer.img_id=-1;
 
 		Vec2.setValues(root_layer.size,width,height);
 
