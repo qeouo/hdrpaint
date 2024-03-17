@@ -63,7 +63,7 @@ var loadHpd_=function(buffer){
 		if(file.name.indexOf(".exr")<0){
 			continue;
 		}
-		var id = file.name.replace(".exr");
+		var id = file.name.replace(".exr","");
 		id = Number(id);
 		hdrpaint.imgs[id]= _Img.loadExr(file.data);
 	}
