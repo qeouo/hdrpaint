@@ -782,6 +782,12 @@ static str2rgba(rgba,str){
 		}
 		return  decodeURIComponent(escape(str));	
 	}
+	static toArray(val){
+		if(!Array.isArray(val)){
+			return [val];
+		}
+		return val;
+	}
 
 }
 

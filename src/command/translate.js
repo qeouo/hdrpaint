@@ -53,4 +53,6 @@ class TranslateLayer extends CommandBase{
 		}
 	}
 };
+
+TranslateLayer.prototype.name="translateLayer";
 Hdrpaint.commandObjs["translateLayer"] = TranslateLayer;

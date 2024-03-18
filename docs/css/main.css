@@ -253,7 +253,20 @@ width:80px;
 	border-image-width:1.5px;
 	display:none;
 	position:absolute;
-	pointer-events:none;
+/*	pointer-events:none;*/
+}
+.handle{
+	border:1px solid black;
+	border-image:url('area.png') repeat;
+	border-image-slice:1;
+	border-image-width:1.5px;
+	position:absolute;
+	width:32px;
+	height:32px;
+	margin:-16px;
+}
+.handles:not([tool="translate"]){
+	display:none;
 }
 
 #join_layer::before{

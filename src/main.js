@@ -295,29 +295,30 @@ var onloadfunc=function(e){
 
 			
 		}else if(Hdrpaint.selected_tool==="translate") {
+			if(!(e.buttons&1)){
+				pen_log=null;
+			}else if(pen_log){
 			//移動のとき
-			if((e.buttons & 1) && pen_log){
 				var oldx =pen_log.obj.param.x;
 				var oldy =pen_log.obj.param.y;
 				x = (x|0) - drag_start[0];
 				y = (y|0) - drag_start[1];
 				
+				if(pen_log.obj.name==="translateLayer"){
 
-				//一旦元の座標に戻してから再度移動させる
-				pen_log.obj.param.x=x-oldx;
-				pen_log.obj.param.y=y-oldy;
-				pen_log.obj.func();
-				pen_log.obj.param.x=x;
-				pen_log.obj.param.y=y;
+					//一旦元の座標に戻してから再度移動させる
+					pen_log.obj.param.x=x-oldx;
+					pen_log.obj.param.y=y-oldy;
+					pen_log.obj.func();
+					pen_log.obj.param.x=x;
+					pen_log.obj.param.y=y;
 
-				pen_log.refreshLabel();
-				//CommandLog.appendOption();
+					pen_log.refreshLabel();
+					//CommandLog.appendOption();
+				}
 				
 			}
 
-			if(!(e.buttons&1)){
-				pen_log=null;
-			}
 		}
 	};
 
@@ -359,6 +360,44 @@ var onloadfunc=function(e){
 	preview.addEventListener("contextmenu",function(e){
 		event.preventDefault();
 	},false);
+	var handle_field= document.querySelector("#handles");
+	var func_name="";
+
+	handle_field.addEventListener("pointerdown",function(e){
+		if(!(e.buttons &1) ){
+			return;
+		}
+
+		getPos(e);
+		var x =Hdrpaint.cursor_pos[0];
+		var y = Hdrpaint.cursor_pos[1];
+		drag_start[0]= x;
+		drag_start[1]= y;
+
+		Layer.enableRefreshThumbnail = false;
+
+		if(Hdrpaint.selected_layer===null){
+			return;
+		}
+			//レイヤ位置移動
+			drag_start[0]= x | 0;
+			drag_start[1]= y | 0;
+			var layer_id=-1;//全レイヤ移動
+			var flg_active_layer_only = inputs["selected_layer_only"].checked;
+			//if(flg_active_layer_only){
+				//アクティブレイヤ
+				layer_id=Hdrpaint.selected_layer.id;
+			//}
+		//
+		if(e.target.id=="right_down"){
+			pen_log = Hdrpaint.executeCommand("changeLayerAttribute",{"layer_id":layer_id,"x":0,"y":0} );
+		}else{
+			pen_log = Hdrpaint.executeCommand("translateLayer",{"layer_id":layer_id,"x":0,"y":0} );
+		}
+		e.stopPropagation();
+
+	});
+
 	canvas_field.addEventListener("pointerdown",function(e){
 
 		if(e.buttons&4){
