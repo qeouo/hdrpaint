@@ -266,10 +266,10 @@ export default class Layer{
 		var sin = Math.abs(Math.sin(layer.angle /360*Math.PI*2))
 		var width = cos*layer_img.width + sin*layer_img.height>>1;
 		var height= sin*layer_img.width + cos*layer_img.height>>1;
-		var left2 = Math.max(x,layer.position[0]+ layer_img.width*0.5-width*layer.scale[0]);
-		var top2 = Math.max(y,layer.position[1]+layer_img.height*0.5-height*layer.scale[1]);
-		var right2 = Math.min(layer_img.width*0.5+width + layer_position_x ,x1);
-		var bottom2 = Math.min(layer_img.height*0.5+height + layer_position_y ,y1);
+		var left2 = Math.max(x,layer.position[0]+ layer_img.width*0.5-width*layer.scale[0]|0);
+		var top2 = Math.max(y,layer.position[1]+layer_img.height*0.5-height*layer.scale[1]|0);
+		var right2 = Math.min(layer_img.width*0.5+width + layer_position_x |0,x1);
+		var bottom2 = Math.min(layer_img.height*0.5+height + layer_position_y|0 ,y1);
 
 		var pos = new Vec3();
 		var pos2 = new Vec3();

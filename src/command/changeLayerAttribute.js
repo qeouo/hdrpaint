@@ -18,12 +18,12 @@ class ChangeLayerAttribute extends CommandBase{
 
 		if(!this.undo_data){
 			var undo_values =[];
-			for(var i=0;i<names;i++){
+			for(var i=0;i<names.length;i++){
 				undo_values.push(Watcher.getValue(layer,names[i]));
 			}
 			this.undo_data= {value:undo_values};
 		}
-		for(var i=0;i<names;i++){
+		for(var i=0;i<names.length;i++){
 			Watcher.setValue(layer,names[i],values[i])
 		}
 		//layer[name] = value;

@@ -299,19 +299,44 @@ var onloadfunc=function(e){
 				pen_log=null;
 			}else if(pen_log){
 			//移動のとき
+				
+				if(pen_log.obj.name==="translateLayer"){
 				var oldx =pen_log.obj.param.x;
 				var oldy =pen_log.obj.param.y;
 				x = (x|0) - drag_start[0];
 				y = (y|0) - drag_start[1];
-				
-				if(pen_log.obj.name==="translateLayer"){
 
 					//一旦元の座標に戻してから再度移動させる
-					pen_log.obj.param.x=x-oldx;
-					pen_log.obj.param.y=y-oldy;
-					pen_log.obj.func();
+					pen_log.obj.undo();
+					//pen_log.obj.param.x=x-oldx;
+					//pen_log.obj.param.y=y-oldy;
 					pen_log.obj.param.x=x;
 					pen_log.obj.param.y=y;
+					pen_log.obj.func();
+
+					pen_log.refreshLabel();
+					//CommandLog.appendOption();
+				}else if(pen_log.obj.name==="changeLayerAttribute"){
+					var layer = hdrpaint.getLayerById(pen_log.obj.param.layer_id);
+					x = x + pen_log.obj.param.offsetx;
+					y = y + pen_log.obj.param.offsety;
+					//drag_start[0]= x;
+					//drag_start[1]= y;
+					x = ((x*2 - (layer.position[0]*2+layer.width))/(layer.width));
+					y = ((y*2 - (layer.position[1]*2+layer.height))/(layer.height));
+					if(!pen_log.obj.param.areax){
+						x=pen_log.obj.undo_data.value[0];
+					}else{
+						x*=pen_log.obj.param.areax;
+					}
+					if(!pen_log.obj.param.areay){
+						y=pen_log.obj.undo_data.value[1];
+					}else{
+						y*=pen_log.obj.param.areay;
+					}
+					//一旦元の座標に戻してから再度移動させる
+					pen_log.obj.param.value=[x,y];
+					pen_log.obj.func();
 
 					pen_log.refreshLabel();
 					//CommandLog.appendOption();
@@ -389,10 +414,26 @@ var onloadfunc=function(e){
 				layer_id=Hdrpaint.selected_layer.id;
 			//}
 		//
-		if(e.target.id=="right_down"){
-			pen_log = Hdrpaint.executeCommand("changeLayerAttribute",{"layer_id":layer_id,"x":0,"y":0} );
-		}else{
+		var layer = hdrpaint.getLayerById(layer_id);
+		if(e.target.id=="layer_rectangle"){
 			pen_log = Hdrpaint.executeCommand("translateLayer",{"layer_id":layer_id,"x":0,"y":0} );
+		}else{
+			pen_log = Hdrpaint.executeCommand("changeLayerAttribute",{"layer_id":layer_id,"name":["scale.0","scale.1"],"value":[layer.scale[0],layer.scale[1]]} );
+			pen_log.obj.param.offsetx=(layer.position[0]+layer.width )-x;
+			pen_log.obj.param.offsety=(layer.position[1]+layer.height )-y;
+
+			if(e.target.id=="right_down"){
+				pen_log.obj.param.areax=1;
+				pen_log.obj.param.areay=1;
+			}
+			if(e.target.id=="right"){
+				pen_log.obj.param.areax=1;
+				pen_log.obj.param.areay=0;
+			}
+			if(e.target.id=="down"){
+				pen_log.obj.param.areax=0;
+				pen_log.obj.param.areay=1;
+			}
 		}
 		e.stopPropagation();
 
@@ -468,17 +509,6 @@ var onloadfunc=function(e){
 			var flg_active_layer_only = inputs["selected_layer_only"].checked;
 			Hdrpaint.executeCommand("fill",{"layer_id":Hdrpaint.selected_layer.id,"x":x,"y":y,"color":color,"is_layer":flg_active_layer_only});
 
-		}else if(Hdrpaint.selected_tool ==="translate" && (e.buttons &1) ){
-			//レイヤ位置移動
-			drag_start[0]= x | 0;
-			drag_start[1]= y | 0;
-			var layer_id=-1;//全レイヤ移動
-			var flg_active_layer_only = inputs["selected_layer_only"].checked;
-			//if(flg_active_layer_only){
-				//アクティブレイヤ
-				layer_id=Hdrpaint.selected_layer.id;
-			//}
-			pen_log = Hdrpaint.executeCommand("translateLayer",{"layer_id":layer_id,"x":0,"y":0} ,{"x":Hdrpaint.selected_layer.position[0],"y":Hdrpaint.selected_layer.position[1]},1);
 
 
 		}else if((Hdrpaint.selected_tool==="pen") && (e.buttons &1) ){
