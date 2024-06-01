@@ -183,7 +183,7 @@ var onloadfunc=function(e){
 
 		if((e.buttons & 2) || (Hdrpaint.selected_tool === "color_picker")){
 			//カラーピッカー
-			var layer_id = Hdrpaint.root_layer;
+			var layer_id = Hdrpaint.root_layer_id;
 			if(inputs["selected_layer_only"].checked){
 				layer_id = Hdrpaint.selected_layer_id;
 			}
@@ -318,12 +318,27 @@ var onloadfunc=function(e){
 					//CommandLog.appendOption();
 				}else if(pen_log.obj.name==="changeLayerAttribute"){
 					var layer = hdrpaint.getLayerById(pen_log.obj.param.layer_id);
-					x = x + pen_log.obj.param.offsetx;
-					y = y + pen_log.obj.param.offsety;
-					//drag_start[0]= x;
-					//drag_start[1]= y;
-					x = ((x*2 - (layer.position[0]*2+layer.width))/(layer.width));
-					y = ((y*2 - (layer.position[1]*2+layer.height))/(layer.height));
+					if(pen_log.obj.param.name[0]==='angle'){
+						var x =Hdrpaint.cursor_pos[0];
+						var y = Hdrpaint.cursor_pos[1];
+						var vec3 = new Vec3(x,y,0);
+						var parent_layer =  hdrpaint.getLayerById(layer.parent);
+						parent_layer.toRelative(vec3);
+						pen_log.obj.param.value=[Math.atan2(vec3[1] - layer.height*0.5,vec3[0]-layer.width*0.5)*(360/(Math.PI*2)) - pen_log.obj.param.offset];
+					}else{
+
+					var x =Hdrpaint.cursor_pos[0];
+					var y = Hdrpaint.cursor_pos[1];
+
+					var vec3 = new Vec3(x,y,0);
+					var parent_layer =  hdrpaint.getLayerById(layer.parent);
+					x=vec3[0];
+					y=vec3[1];
+					layer.scale[0]=1;
+					layer.scale[1]=1;
+					layer.toRelative(vec3);
+					x = (vec3[0] - pen_log.obj.param.offsetx - layer.width*0.5)/(layer.width*0.5);
+					y = (vec3[1] - pen_log.obj.param.offsety - layer.height*0.5)/(layer.height*0.5);
 					if(!pen_log.obj.param.areax){
 						x=pen_log.obj.undo_data.value[0];
 					}else{
@@ -336,6 +351,7 @@ var onloadfunc=function(e){
 					}
 					//一旦元の座標に戻してから再度移動させる
 					pen_log.obj.param.value=[x,y];
+					}
 					pen_log.obj.func();
 
 					pen_log.refreshLabel();
@@ -415,12 +431,27 @@ var onloadfunc=function(e){
 			//}
 		//
 		var layer = hdrpaint.getLayerById(layer_id);
-		if(e.target.id=="layer_rectangle"){
+		if(e.target.id=="handles"){
 			pen_log = Hdrpaint.executeCommand("translateLayer",{"layer_id":layer_id,"x":0,"y":0} );
+		}else if(e.target.id=="rotate"){
+			pen_log = Hdrpaint.executeCommand("changeLayerAttribute",{"layer_id":layer_id,"name":["angle"],"value":[layer.angle]} );
+			var x =Hdrpaint.cursor_pos[0];
+			var y = Hdrpaint.cursor_pos[1];
+			var vec3 = new Vec3(x,y,0);
+			var parent_layer =  hdrpaint.getLayerById(layer.parent);
+			parent_layer.toRelative(vec3);
+			pen_log.obj.param.offset=Math.atan2(vec3[1] - layer.height*0.5,vec3[0]-layer.width*0.5) *(360/(Math.PI*2)) - layer.angle;
 		}else{
 			pen_log = Hdrpaint.executeCommand("changeLayerAttribute",{"layer_id":layer_id,"name":["scale.0","scale.1"],"value":[layer.scale[0],layer.scale[1]]} );
-			pen_log.obj.param.offsetx=(layer.position[0]+layer.width )-x;
-			pen_log.obj.param.offsety=(layer.position[1]+layer.height )-y;
+				
+			var x =Hdrpaint.cursor_pos[0];
+			var y = Hdrpaint.cursor_pos[1];
+
+			var vec3 = new Vec3(x,y,0);
+			var parent_layer =  hdrpaint.getLayerById(layer.parent);
+			layer.toRelative(vec3);
+			pen_log.obj.param.offsetx=(vec3[0]-layer.width )
+			pen_log.obj.param.offsety=(vec3[1]-layer.height)
 
 			if(e.target.id=="right_down"){
 				pen_log.obj.param.areax=1;
@@ -434,6 +465,7 @@ var onloadfunc=function(e){
 				pen_log.obj.param.areax=0;
 				pen_log.obj.param.areay=1;
 			}
+			pen_log.obj.func();
 		}
 		e.stopPropagation();
 
