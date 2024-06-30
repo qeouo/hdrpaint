@@ -43,6 +43,7 @@
 				<li><label><input type="radio" name="tool" feedback id="pen" g value="pen" bind:="selected_tool" >ブラシ</label></li>
 				<li><label><input type="radio" name="tool" feedback id="rectangle" g value="rectangle"  bind:="selected_tool" shortcut="r">[r]矩形選択</label></li>
 				<li><label><input type="radio" name="tool" feedback id="translate" g value="translate" bind:="selected_tool" shortcut="t">[t]移動</label></li>
+				<li><label><input type="radio" name="tool" feedback id="trapezoid" g value="trapezoid" bind:="selected_tool" shortcut="g">[g]自由変形</label></li>
 				<li><label><input type="radio" name="tool" feedback id="fill" g value="fill" bind:="selected_tool" shortcut="f">[f]塗り潰し</label></li>
 				<li><label><input type="radio" name="tool" feedback id="color_picker" value="color_picker" bind:="selected_tool">(q)カラーピッカー</label></li>
 			</ul>
@@ -145,6 +146,7 @@
 			<input type="button" id="btn_resize_layer" value="アクティブレイヤをキャンバスに合わせる" >
 			<input type="button" id="btn_resize_layers" value="全レイヤをキャンバスに合わせる" >
 			背景色<input type="input" id="background_color" class="colorpickerhdr" value="1,1,1,1" style="width:10px;" readonly="readonly">
+			<input type="button" id="btn_crop" value="crop" >
 		</div>
 		<div id="canvas_field" style="clear:both;" class="canvas_field" >
 			<div id="spacer" class="spacer">
@@ -153,15 +155,22 @@
 			<div class="select_rectangle"></div>
 			<div class="layer_rectangle">
 				<div style="width:100%;height:100%;" class="handles" bind:tool="selected_tool" id="handles">
-				<div class="handle" style="left:0%;top:0%;"></div>
-				<div class="handle" style="left:0%;top:50%;"></div>
-				<div class="handle" style="left:0%;top:100%;"></div>
-				<div class="handle" style="left:50%;top:0%;"></div>
-				<div class="handle" style="left:50%;top:100%;" id="down"></div>
-				<div class="handle" style="left:100%;top:0%;"></div>
-				<div class="handle" style="left:100%;top:50%;" id="right"></div>
-				<div class="handle" style="left:100%;top:100%;" id="right_down"></div>
-				<div class="handle" style="left:110%;top:-10%;" id="rotate"></div>
+					<div class="handle" style="left:0%;top:0%;"></div>
+					<div class="handle" style="left:0%;top:50%;"></div>
+					<div class="handle" style="left:0%;top:100%;"></div>
+					<div class="handle" style="left:50%;top:0%;"></div>
+					<div class="handle" style="left:50%;top:100%;" id="down"></div>
+					<div class="handle" style="left:100%;top:0%;"></div>
+					<div class="handle" style="left:100%;top:50%;" id="right"></div>
+					<div class="handle" style="left:100%;top:100%;" id="right_down"></div>
+					<div class="handle" style="left:110%;top:-10%;" id="rotate"></div>
+				</div>
+
+				<div style="width:100%;height:100%;" class="trapezoid_handles" bind:tool="selected_tool" id="handles">
+					<div class="trapezoid_handle handle" id="trapezoid0"></div>
+					<div class="trapezoid_handle handle" id="trapezoid1"></div>
+					<div class="trapezoid_handle handle" id="trapezoid2"></div>
+					<div class="trapezoid_handle handle" id="trapezoid3"></div>
 				</div>
 			</div>
 		</div>

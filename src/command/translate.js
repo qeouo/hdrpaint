@@ -3,6 +3,7 @@ import Hdrpaint from "../hdrpaint.js";
 import Layer from "../layer.js";
 import CommandBase from "./commandbase.js";
 class TranslateLayer extends CommandBase{
+	static name = "translateLayer";
 
 	undo(){
 		this.param.x*=-1;
@@ -14,6 +15,7 @@ class TranslateLayer extends CommandBase{
 	func(){
 		var param = this.param;
 		var layer = Layer.findById(param.layer_id);
+		var root_layer = hdrpaint.root_layer;
 
 		var x = param.x;
 		var y = param.y;
@@ -26,7 +28,7 @@ class TranslateLayer extends CommandBase{
 			//レイヤ指定無しの場合はルート直下のレイヤすべてを移動
 			var layers = root_layer.children;
 			for(var li=0;li<layers.length;li++){
-				var l = layers[li];
+				var l = Layer.findById(layers[li]);
 				l.position[0]+=x;
 				l.position[1]+=y;
 				if(isNaN(l.position[0])){
@@ -55,4 +57,4 @@ class TranslateLayer extends CommandBase{
 };
 
 TranslateLayer.prototype.name="translateLayer";
-Hdrpaint.commandObjs["translateLayer"] = TranslateLayer;
+hdrpaint.registCommand(TranslateLayer);

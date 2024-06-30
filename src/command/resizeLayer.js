@@ -7,8 +7,10 @@ import Layer from "../layer.js";
 import Img from "../lib/img.js";
 
 class ResizeLayer extends CommandBase{
+	static name = "resizeLayer";
 	undo(){
 		this.func(true);
+		super.undo();
 	}
 
 	func(undo_flg){
@@ -88,5 +90,4 @@ class ResizeLayer extends CommandBase{
 		}
 	}
 };
-ResizeLayer.prototype.name="resizeLayer";
-Hdrpaint.commandObjs["resizeLayer"] = ResizeLayer;
+hdrpaint.registCommand(ResizeLayer);

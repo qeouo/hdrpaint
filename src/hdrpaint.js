@@ -27,7 +27,7 @@ class Hdrpaint{
 		this.selected_layer=null;
 		this.selected_layer_id=-1;
 		//選択範囲
-		this.select_rectangle=null;//{x:0,y:0,x2:0,y2:0};
+		this.select_rectangle=null;
 		this.mode="";
 		this.layer_id_count=0;
 		this.img_id_count=0;
@@ -80,6 +80,13 @@ class Hdrpaint{
 		rect.style.transform="rotate("+ e[2]+ "rad)"
 
 		rect.style.display="inline-block"
+
+		for(var i=0;i<4;i++){
+			var a = document.getElementById("trapezoid"+i);
+			a.style.left = this.selected_layer.trapezoid[i][0]*100+ "%";
+			a.style.top= this.selected_layer.trapezoid[i][1]*100+ "%";
+			
+		}
 	}
 
 	//選択範囲を示す点線
@@ -151,6 +158,9 @@ class Hdrpaint{
 		return this.layers[id];
 	}
 	getImgById(id){
+		if(id <0){
+			return this.root_layer.img;
+		}
 		return this.imgs[id];
 	}
 	createImg(width,height){
@@ -169,7 +179,6 @@ class Hdrpaint{
 	}
 
 	createLayer(img_id,composite_flg){
-
 		var layer = null;
 		if(composite_flg){
 			layer = new this.modifier["composite"]();
@@ -379,21 +388,16 @@ class Hdrpaint{
 		//this.layers[layer.id]=null;
 	}
 
-	onlyExecute= function(command,param){
-		if(param.layer_id && command !=="changeLayerAttribute"){
-			var layer = Layer.findById(param.layer_id);
-			if(layer){
-				if(layer.lock || !layer.display){
-					return;
-				}
-			}
-		}
-
-		var commandObjs = this.commandObjs;
-		var obj = new commandObjs[command]();
-		obj.param = param;
-		obj.func();
+	registCommand(command){
+		this.commandObjs[command.name] = command;
 	}
+
+	createCommand(name,param){
+		var command = new this.commandObjs[name]();
+		command.param = param;
+		return command;
+	}
+		 
 	executeCommand(command,param,flg){
 
 		if(param.layer_id && command !=="changeLayerAttribute" && command!=="moveLayer"){
@@ -409,7 +413,7 @@ class Hdrpaint{
 		CommandLog.appendOption();
 		var commandObjs = this.commandObjs;
 		if(!log.obj){
-			log.obj = new commandObjs[command]();
+			log.obj = this.createCommand(command,param);
 		}
 		log.obj.param = param;
 		log.obj.func();

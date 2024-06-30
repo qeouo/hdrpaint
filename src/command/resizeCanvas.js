@@ -6,6 +6,8 @@ import CommandBase from "./commandbase.js";
 import Layer from "../layer.js";
 
 class ResizeCanvas extends CommandBase{
+	static name="resizeCanvas";
+
 	undo(){
 		this.func(true);
 		
@@ -44,6 +46,5 @@ class ResizeCanvas extends CommandBase{
 		root_layer.composite();
 	}
 };
-ResizeCanvas.prototype.name= "resizeCavnas";
-Hdrpaint.commandObjs["resizeCanvas"] = ResizeCanvas;
 
+hdrpaint.registCommand(ResizeCanvas);

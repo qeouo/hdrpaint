@@ -12,6 +12,11 @@ let composite_img = new Img(512,512);
 let composite_area = new Vec4();
 var drag_layer=null;
 
+var CBDA =new Vec3();
+var PA=new Vec3();
+var BA=new Vec3();
+var DA=new Vec3();
+
 var refreshThumbnail=function(){
 	//サムネイル更新
 	if(Layer.enableRefreshThumbnail){
@@ -183,6 +188,16 @@ export default class Layer{
 		Vec3.setValues(this.scale,1,1,1);
 		this.angle = 0;//new Vec3();
 		this.size=new Vec2();
+		this.trapezoid=[];
+		for(var i=0;i<4;i++){
+			this.trapezoid.push(new Vec3());
+		}
+		this.trapezoid_flg=0;
+		Vec2.setValues(this.trapezoid[0],0,0,0);
+		Vec2.setValues(this.trapezoid[1],0,1,0);
+		Vec2.setValues(this.trapezoid[2],1,1,0);
+		Vec2.setValues(this.trapezoid[3],1,0,0);
+
 		this.modifier_param={};
 
 		this.type=0; //1なら階層レイヤ ,2ならモデファイア
@@ -240,6 +255,33 @@ export default class Layer{
 	//レイヤ合成直前処理
 	beforeReflect(){};
 
+calcYugami(A,B,C,D,P){
+	
+	Vec3.sub(CBDA,C,B)
+	Vec3.sub(CBDA,CBDA,D)
+	Vec3.add(CBDA,CBDA,A)
+	Vec3.sub(PA,P,A)
+	Vec3.sub(BA,B,A)
+	Vec3.sub(DA,D,A)
+
+	var a = -CBDA[1]*DA[0]+DA[1]*CBDA[0];
+
+
+	var b = - BA[1]*DA[0]+CBDA[1]*PA[0] + DA[1]*BA[0]-PA[1]*CBDA[0];
+	var c = BA[1]*PA[0]-PA[1]*BA[0];
+
+	if(b*b-4*a*c<0){
+		return -1;
+	}
+	if(!a){
+		return -c/b;
+	}
+	var res = (-b -Math.sqrt(b*b-4*a*c))/(2*a);
+	if(res<0 || res>1){
+		res = (-b +Math.sqrt(b*b-4*a*c))/(2*a);
+	}
+	return res;
+}
 	//レイヤ合成処理
 	reflect (img,composite_area){
 		var x = Math.max(img.offsetx,composite_area[0]);
@@ -264,35 +306,69 @@ export default class Layer{
 		//レイヤのクランプ
 		var cos = Math.abs(Math.cos(layer.angle /360*Math.PI*2))
 		var sin = Math.abs(Math.sin(layer.angle /360*Math.PI*2))
-		var width = cos*layer_img.width + sin*layer_img.height>>1;
-		var height= sin*layer_img.width + cos*layer_img.height>>1;
-		var left2 = Math.max(x,layer.position[0]+ layer_img.width*0.5-width*layer.scale[0]|0);
-		var top2 = Math.max(y,layer.position[1]+layer_img.height*0.5-height*layer.scale[1]|0);
-		var right2 = Math.min(layer_img.width*0.5+width + layer_position_x |0,x1);
-		var bottom2 = Math.min(layer_img.height*0.5+height + layer_position_y|0 ,y1);
+		var width = cos*layer_img.width*layer.scale[0] + sin*layer_img.height * layer.scale[1]>>1;
+		var height= sin*layer_img.width*layer.scale[0] + cos*layer_img.height * layer.scale[1]>>1;
+		var left = Math.max(x,layer.position[0]+ layer_img.width*0.5-width|0);
+		var top = Math.max(y,layer.position[1]+layer_img.height*0.5-height|0);
+		var right = Math.min(layer_img.width*0.5+width + layer_position_x |0,x1);
+		var bottom = Math.min(layer_img.height*0.5+height + layer_position_y|0 ,y1);
 
 		var pos = new Vec3();
 		var pos2 = new Vec3();
 		pos[2]=1;
 		var matrix = new Mat43();
 		this.getMatrix(matrix);
-		Mat43.getInv(matrix,matrix);
 
-		for(var yi=top2;yi<bottom2;yi++){
-			var idx = (yi-img.offsety) * img_width + left2  - img.offsetx << 2;
-			pos[1] = yi;
-			for(var xi=left2;xi<right2;xi++){
-				pos[0] = xi;
-				Mat43.dotVec3(pos2,matrix,pos);
-				pos2[0]=pos2[0]+0.5<<0;
-				pos2[1]=pos2[1]+0.5<<0;
-				idx+=4;
-				if(pos2[0]<0)continue;
-				if(pos2[0]>=layer_img.width)continue;
-				if(pos2[1]<0)continue;
-				if(pos2[1]>=layer_img.height)continue;
-				var idx2 = pos2[1] * layer_img_width   + pos2[0] << 2;
-				func(img_data,idx-4,layer_img_data,idx2,layer_alpha,layer_power);
+		var trapezoid = this.trapezoid;
+		if(this.trapezoid_flg===0){
+
+			Mat43.getInv(matrix,matrix);
+			for(var yi=top;yi<bottom;yi++){
+				var idx = (yi-img.offsety) * img_width + left  - img.offsetx << 2;
+				pos[1] = yi;
+				for(var xi=left;xi<right;xi++){
+					pos[0] = xi;
+					Mat43.dotVec3(pos2,matrix,pos);
+					pos2[0]=pos2[0]+0.5<<0;
+					pos2[1]=pos2[1]+0.5<<0;
+					idx+=4;
+					if(pos2[0]<0)continue;
+					if(pos2[0]>=layer_img.width)continue;
+					if(pos2[1]<0)continue;
+					if(pos2[1]>=layer_img.height)continue;
+					var idx2 = pos2[1] * layer_img_width   + pos2[0] << 2;
+					func(img_data,idx-4,layer_img_data,idx2,layer_alpha,layer_power);
+				}
+			}
+		}else{
+
+			var rect=[[0,0,0],[0,layer_img.height,0],[layer_img.width,layer_img.height,0],[layer_img.width,0,0]];
+			for(var i=0;i<4;i++){
+				rect[i][0] = trapezoid[i][0] * layer_img.width;
+				rect[i][1] = trapezoid[i][1] * layer_img.height;
+				Mat43.dotVec3(rect[i],matrix,rect[i]);
+//				rect[i][0]*=layer_img.width;
+//				rect[i][1]*=layer_img.height;
+			}
+
+
+			for(var yi=top;yi<bottom;yi++){
+				var idx = (yi-img.offsety) * img_width + left  - img.offsetx << 2;
+				pos[1] = yi;
+				for(var xi=left;xi<right;xi++){
+					pos[0] = xi;
+					pos2[0] = this.calcYugami(rect[0],rect[1],rect[2],rect[3],pos);
+					pos2[1] = this.calcYugami(rect[0],rect[3],rect[2],rect[1],pos);
+					pos2[0]=pos2[0]*layer_img.width+0.5<<0;
+					pos2[1]=pos2[1]*layer_img.height+0.5<<0;
+					idx+=4;
+					if(pos2[0]<0)continue;
+					if(pos2[0]>=layer_img.width)continue;
+					if(pos2[1]<0)continue;
+					if(pos2[1]>=layer_img.height)continue;
+					var idx2 = pos2[1] * layer_img_width   + pos2[0] << 2;
+					func(img_data,idx-4,layer_img_data,idx2,layer_alpha,layer_power);
+				}
 			}
 		}
 			
@@ -715,6 +791,11 @@ export default class Layer{
 		var mat43  =new Mat43();
 		this.getAbsoluteMatrix(mat43);
 		Mat43.getInv(mat43,mat43);
+		Mat43.dotVec3(p,mat43,p);
+	}
+	toAbsolute(p){
+		var mat43  =new Mat43();
+		this.getAbsoluteMatrix(mat43);
 		Mat43.dotVec3(p,mat43,p);
 	}
 
