@@ -13,11 +13,27 @@ var refresh_stack=[] ;
 			return;
 		}
 		
+		if(hdrpaint.redraw_ui){
+			var ctx = hdrpaint.ui_ctx;
+			ctx.clearRect(0,0,hdrpaint.ui_canvas.width,hdrpaint.ui_canvas.height);
+			for(var i=0;i<hdrpaint.layers.length;i++){
+				var layer = hdrpaint.layers[i];
+				if(!layer)continue;
+				hdrpaint.layers[i].redraw();
+			}
+			hdrpaint.redraw_ui=false;
+		}
 		for(var ri=0;ri<refresh_stack.length;ri++){
 			var r= refresh_stack[ri];
 			refreshMain_sub(r.step,r.x,r.y,r.w,r.h);
 		}
 		refresh_stack=[];
+
+		var root_layer = hdrpaint.root_layer;
+		if(root_layer && preview){
+			preview.style.left = root_layer.position[0] + "px";
+			preview.style.top = root_layer.position[1] + "px";
+		}
 		
 		window.requestAnimationFrame( refreshMain_);
 	}
@@ -78,8 +94,11 @@ var refresh_stack=[] ;
 			
 			bloom_img.clear(left,top,width,height);
 			layer.getAbsolutePosition(absolute);
-			if(layer.typename==="normal_layer"){
-				bloom_img.copy(left,top,layer.img,left-absolute[0]
+			var layer_img = hdrpaint.getImgById(layer.img_id);
+			if(layer.modifier==="layer"){
+				absolute[0]-= hdrpaint.root_layer.position[0];
+				absolute[1]-= hdrpaint.root_layer.position[1];
+				bloom_img.copy(left,top,layer_img,left-absolute[0]
 					,top-absolute[1],width,height);
 			}else{
 				layer.beforeReflect();

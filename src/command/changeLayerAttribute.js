@@ -1,5 +1,5 @@
 
-import Watcher from "../lib/watcher.js";
+import Watcher from "../lib/binder/watcher.js";
 import Layer from "../layer.js";
 import Hdrpaint from "../hdrpaint.js";
 import CommandBase from "./commandbase.js";
@@ -13,7 +13,7 @@ class ChangeLayerAttribute extends CommandBase{
 	f(value){
 		var param = this.param;
 		var names = Util.toArray(param.name);
-		var values = Util.toArray(param.value);
+		var values =Util.toArray(value);
 		var layer = hdrpaint.getLayerById(param.layer_id);
 
 		if(!this.undo_data){
@@ -33,6 +33,7 @@ class ChangeLayerAttribute extends CommandBase{
 		}
 		parent = hdrpaint.getLayerById(layer.parent);
 
+		hdrpaint.redraw_ui=true;
 		parent.bubbleComposite();
 	}
 	func(){

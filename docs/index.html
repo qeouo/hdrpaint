@@ -81,15 +81,13 @@
 		
 		</div>
 		<div>
-			<label><input type="checkbox" id="stroke_correction" feedback bind:="brush_status.stroke_correction"/>補正</label>
 			<label><input type="checkbox" id="stroke_interpolation" feedback bind:="brush_status.stroke_interpolation"/>補間</label>
-		</div>
 		上書き処理<select id="brush_overlap" feedback bind:="brush_status.overlap">
 			<option value="0">大きいα優先</option>
 			<option value="1">αブレンド</option>
 			<option value="2">α直書</option>
 		</select>
-		</ul>
+		</div>
 
 		<div>
 			<div style="float:left;text-align:left;">
@@ -149,6 +147,7 @@
 			<input type="button" id="btn_crop" value="crop" >
 		</div>
 		<div id="canvas_field" style="clear:both;" class="canvas_field" >
+			<canvas width="256" height="256" id="ui_canvas" style="border:1px solid black;z-index:10;position:fixed;" ></canvas>
 			<div id="spacer" class="spacer">
 				<canvas width="256" height="256" id="preview" ></canvas>
 			</div>

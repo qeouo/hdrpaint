@@ -37,8 +37,11 @@ class CreateNewLayer extends CommandBase{
 
 			hdrpaint.selectLayer(layer_id);
 		}else{
+
 			hdrpaint.root_layer_id = layer_id;
 			hdrpaint.root_layer = Layer.findById(layer_id);
+
+			doc.canvas_pos = hdrpaint.root_layer.position;
 		}
 
 		return layer_id;

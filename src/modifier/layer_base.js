@@ -6,7 +6,7 @@ import Hdrpaint from "../hdrpaint.js";
 import Util from "../lib/util.js";
 import Mat43 from "../lib/mat43.js";
 
-export default class Layer{
+export default class LayerBase{
 //ƒŒƒCƒ„
 	static name="layer";
 	static type="generator";

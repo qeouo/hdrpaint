@@ -10,6 +10,7 @@ var painted_mask = Hdrpaint.painted_mask;
 class Brush extends CommandBase{
 	constructor(){
 		super();
+		this.undo_data={"difs":[]};
 	}
 	toString(){
 		var points = this.param.points;
@@ -26,110 +27,56 @@ class Brush extends CommandBase{
 		//ペン描画
 		var param = this.param;
 		var layer = Layer.findById(param.layer_id);
+
+		if(layer){
+			if(layer.modifier === "vector"){
+				var a = layer.commands.indexOf(this);
+				if(a<0){
+					layer.commands.push(this);
+					var parent_layer = Layer.findById(layer.parent);
+					parent_layer.bubbleComposite();
+				}
+			}
+		}
 		var points = param.points;
 
-			painted_mask.fill(0);
+		painted_mask.fill(0);
 
 		for(var li=1;li<points.length;li++){
 			this.draw(li);
 		}
 	}
 	draw(n){
-		var param=this.param;
+		var param = this.param;
 		var points = param.points;
-		var img = hdrpaint.getImgById(param.img_id);
-
-
-		var point0=points[n-1];
-		var point1=points[n];
-		var p0=point0.pos;
-		var p1=point1.pos;
-
-
-		var offset=0;
-		//補間するための係数を求める
-		if(n>=2 ){
-			Vec2.sub(A,p0,points[n-2].pos);
-			var l1 = Vec2.scalar(A);
-			Vec2.sub(B,p1,p0);
-			var l2 = Vec2.scalar(B);
-			if(l1+l2>0){
-				Vec2.mul(q0,A,  (l2/(l1+l2)));
-				Vec2.mad(q0,q0,B, (l1/(l1+l2)));
-			}
-			
+		var img ;
+		var vector_flg=false;
+		if(param.img_id>=0){
+			img = hdrpaint.getImgById(param.img_id);
 		}else{
-			Vec2.sub(q0,p1,p0);
-		}
-		if(n+ 1<points.length) {
-			Vec2.sub(A,p1,p0);
-			var l1 = Vec2.scalar(A);
-			Vec2.sub(B,points[n+1].pos,p1);
-			var l2 = Vec2.scalar(B);
-			if(l1+l2>0){
-				Vec2.mul(q1,A, (l2/(l1+l2)));
-				Vec2.mad(q1,q1,B, (l1/(l1+l2)));
-			}
-
-		}else{
-
-			Vec2.sub(q1,p1,p0);
-			Vec2.mad(q1,q1,q0,-0.5);
+			var img_id = Layer.findById(param.layer_id).img_id;
+			img = hdrpaint.getImgById(img_id);
+			vector_flg=true;
 		}
 
-		Vec2.copy(D,p0);
-
-		Vec2.copy(C,q0);
-		
-		Vec2.mad(A,q1,p1,-2);
-		Vec2.add(A,A,q0);
-		Vec2.mad(A,A,p0,2);
-
-		Vec2.sub(B,p1,A);
-		Vec2.sub(B,B,q0);
-		Vec2.sub(B,B,p0);
-
-
-		var dp = point1.pressure - point0.pressure;
-		var len = Vec2.len(p1,p0);
-		var devide= clamp((len/4)|0,1,MAX-1);
-
-		if(!param.stroke_interpolation){
-			//補間しない
-			devide=1;
-		}
-		var _devide=1/devide;
-
-		var wei = param.weight*0.5;
-		if(param.pressure_effect_flgs & 1){
-			wei *=Math.max(point0.pressure,point1.pressure);
-		}
 		var left   = img.width;
 		var right  = 0;
 		var top    = img.height;
 		var bottom = 0;
 
-		for(var i=0;i<devide+1;i++){
-			var p=_p[i];
+		var wei = param.brush.weight;
 
-			var dt = i*_devide+offset;
-			Vec2.mul (p.pos,  A,dt*dt*dt);
-			Vec2.mad(p.pos,p.pos,B,dt*dt);
-			Vec2.mad(p.pos,p.pos,C,dt);
-			Vec2.add (p.pos,p.pos,D);
-			//Vec2.sub(p.pos,p.pos,absolute);
+		var p = points[Math.max(0,n-1)]
+		left = Math.min(p.pos[0],left);
+		right= Math.max(p.pos[0],right);
+		top= Math.min(p.pos[1],top);
+		bottom = Math.max(p.pos[1],bottom);
 
-
-			p.pressure=point0.pressure + dp*dt;
-
-			//Vec2.sub(p.pos,p.pos,layer.position);
-
-			left   = Math.min(p.pos[0],left);
-			right  = Math.max(p.pos[0],right);
-			top    = Math.min(p.pos[1],top);
-			bottom = Math.max(p.pos[1],bottom);
-			
-		}
+		p = points[Math.max(0,n)]
+		left = Math.min(p.pos[0],left);
+		right= Math.max(p.pos[0],right);
+		top= Math.min(p.pos[1],top);
+		bottom = Math.max(p.pos[1],bottom);
 
 		left = Math.floor(clamp(left -wei,0,img.width-1));
 		right= Math.ceil(clamp(right + wei,0,img.width-1));
@@ -137,29 +84,99 @@ class Brush extends CommandBase{
 		bottom=Math.ceil(clamp(bottom + wei,0,img.height-1));
 
 			//差分ログ作成
-			if(!this.undo_data){
-				this.undo_data={"difs":[]};
+		if(!vector_flg){
+			var dif= Hdrpaint.createDif(img,left,top,right-left+1,bottom-top+1);
+			this.undo_data.difs.push(dif);
+		}
+		
+		this.drawBetween(img
+			,points[Math.max(0,n-2)]
+			,points[Math.max(0,n-1)]
+			,points[n]
+			,points[Math.min(n+1,points.length-1)]
+		)
+
+		if(!vector_flg){
+			//再描画
+			var keys = Object.keys(hdrpaint.layers);
+			for(var i=0;i<keys.length;i++){
+				var layer = hdrpaint.layers[keys[i]];
+				if(layer.img_id === param.img_id){
+					layer.refreshImg(left,top,right-left+1,bottom-top+1);
+				}
 			}
-			if(this.undo_data.difs.length<n){
-				var dif= Hdrpaint.createDif(img,left,top,right-left+1,bottom-top+1);
-				this.undo_data.difs.push(dif);
-			}
+		}else{
+			hdrpaint.redraw_ui=true;
+		}
+	}
+
+		
+	calck(k,p0,p1,p2,p3){
+		k.c = (p2-p0)*0.5;
+		k.d = p1;
+
+		k.a = (p3-p1)*0.5 -2*p2+k.c+2*p1;
+		k.b = p2 -k.a-k.c-p1;
+
+
+		return k;
+	}
+
+	drawBetween(img,a0,a1,a2,a3){
+		var param = this.param;
+		var delta0;
+		var delta1;
+		var k =[{},{}];
 		
 
-		for(var i=0;i<devide;i++){
-			drawPen(img,_p[i],_p[i+1],param);
+		this.calck(k[0],a0.pos[0],a1.pos[0],a2.pos[0],a3.pos[0])
+		this.calck(k[1],a0.pos[1],a1.pos[1],a2.pos[1],a3.pos[1])
+		var members=["pressure"];
+		for(var i=0;i<members.length;i++){
+			var member = members[i];
+			k[i+2]={};
+			this.calck(k[i+2],a0[member],a1[member],a2[member],a3[member])
+		};
+
+
+		var dummy0={pos:[0,0],bold:1}
+		dummy0.pos[0]=a1.pos[0];
+		dummy0.pos[1]=a1.pos[1];
+
+		for(var i=0;i<members.length;i++){
+			var member = members[i];
+			dummy0[member]=a1[member];
 		}
 
-		//再描画
-		var keys = Object.keys(hdrpaint.layers);
-		for(var i=0;i<keys.length;i++){
-			var layer = hdrpaint.layers[keys[i]];
-			if(layer.img_id === param.img_id){
-				layer.refreshImg(left,top,right-left+1,bottom-top+1);
-			}
-		}
+		var dummy1={pos:[0,0],pressure:1}
 
+		var sep_num= (Vec2.len(a1.pos,a2.pos)>>3)+1;
+		if(!param.brush.stroke_interpolation){
+			sep_num = 1;
+		}
+		var _sep_num = 1/sep_num;
+		var param = this.param;
+		for(var i=0;i<sep_num;i++){
+			var r = (i+1)*_sep_num;
+			var r2 = r*r;
+			var r3 = r*r*r;
+			dummy1.pos[0]= r3 * k[0].a +  r2 * k[0].b + r * k[0].c + k[0].d;
+			dummy1.pos[1]= r3 * k[1].a +  r2 * k[1].b + r * k[1].c + k[1].d;
+			for(var j=0;j<members.length;j++){
+				var member = members[j];
+				dummy1[member]= r3 * k[2+j].a +  r2 * k[2+j].b + r * k[2+j].c + k[2+j].d;
+			};
+			
+			drawPen(img,dummy0,dummy1,param); //drawLine(dummy0,dummy1);
+
+			var buf = dummy0;
+			dummy0 = dummy1;
+			dummy1 = buf;
+			
+			
+		}
 	}
+
 };
 Brush.prototype.name="brush";
 
@@ -169,15 +186,6 @@ Eraser.prototype.name="eraser";
 Hdrpaint.commandObjs["eraser"]=Eraser;
 Hdrpaint.commandObjs["brush"]=Brush;
 
-	var absolute=new Vec2();
-	var A = new Vec2(),B= new Vec2(),C= new Vec2(),D=new Vec2();
-	var q0=new Vec2();
-	var q1=new Vec2();
-	var _p = [];
-	var MAX=32;
-	for(var i=0;i<MAX;i++){
-		_p.push(new PenPoint());
-	}
 
 	var clamp=function(value,min,max){
 		return Math.min(max,Math.max(min,value));
@@ -185,29 +193,33 @@ Hdrpaint.commandObjs["brush"]=Brush;
 	var brush_blend=function(dst,idx,pressure,dist,flg,weight,param){
 		var alpha_mask = param.alpha_mask;
 		var color = param.color;
-		var sa = color[3] * param.alpha; 
-		if(param.eraser){
-			sa = param.alpha;
+		var brush =param.brush;
+		var sa = color[3] * brush.alpha; 
+		if(brush.eraser){
+			sa = brush.alpha;
 		}
-		if(param.alpha_pressure_effect){
+		if(brush.alpha_pressure_effect){
 			sa *= pressure;
 		}
 		var l = Vec2.scalar(dist);
-		if(param.softness){
-			sa = sa  * Math.min(1,( weight - (weight*l))/(weight*param.softness));
+		if(brush.softness){
+			sa = sa  *((1- l/weight )/ (brush.softness))
 		}else{
-			if(param.antialias){
-				sa = sa  * Math.min(1,( weight - (weight*l)));
+			if(brush.antialias){
+				l = Math.min(Math.max(weight-l,0),1);
+				sa = sa * l;
 			}	
 		}
-		if(param.eraser){
-			if(param.overlap===2){
-				dst[idx+3]=(1-sa) * (1-param.alpha);
+		sa = Math.max(Math.min(sa,1),0);
+		if(brush.eraser){
+			if(brush.overlap===2){
+				dst[idx+3]=(1-sa) * (1-brush.alpha);
 			return;
 			}
 		}
 
-		if(param.overlap===2){
+		if(brush.overlap===2){
+			//直接上書き
 			dst[idx+0] =  color[0] ;
 			dst[idx+1] =  color[1] ;
 			dst[idx+2] =  color[2] ;
@@ -217,7 +229,8 @@ Hdrpaint.commandObjs["brush"]=Brush;
 			return;
 		}
 
-		if(param.overlap==0){
+		if(brush.overlap==0){
+			//アルファが大きい場合に上書き
 			if(flg[idx>>2]>=sa){
 				return;
 			}
@@ -225,17 +238,18 @@ Hdrpaint.commandObjs["brush"]=Brush;
 			flg[idx>>2]=sa;
 			sa = (sa - olda)/(1-olda);
 		}
-		if(param.eraser){
-			dst[idx+3] = dst[idx+3] * (1-sa) + 0* sa;
+		if(brush.eraser){
+			dst[idx+3] = dst[idx+3] * (1-sa);
 			return;
 		}
 
 		var da = dst[idx+3]*(1-sa);
 		if(!alpha_mask){
+			//アルファマスク指定時以外はアルファを更新
 			dst[idx+3] = da + sa;
 		}
 
-		if( dst[idx+3] && !param.eraser){
+		if( dst[idx+3] && !brush.eraser){
 			var rr = 1/dst[idx+3];
 			da*=rr;
 			sa*=rr;
@@ -246,30 +260,34 @@ Hdrpaint.commandObjs["brush"]=Brush;
 	}
 
 	var vec2 =new Vec2();
-	var side = new Vec2();
 	var dist = new Vec2();
 	var drawPen=function(img,point0,point1,param){
-		var weight = param.weight;
-		var pressure_mask = param.pressure_effect_flgs;
-		var softness= param.softness;
+		var brush = param.brush;
+		var weight = brush.weight;
+		var softness= brush.softness;
 		//描画
 		var img_data = img.data;
 	
 		weight*=0.5;
 
-		var weight_pressure_effect = pressure_mask&1;
-		var alpha_pressure_effect = (pressure_mask&2)>>1;
+		var weight_pressure_effect = brush.weight_pressure_effect;
+		if(weight_pressure_effect){
+			weight_pressure_effect= 1;
+		}else{
+			weight_pressure_effect= 0;
+		}
+		var alpha_pressure_effect = brush.alpha_pressure_effect;
 		var pos1 = point1.pos;
 		var pos0 = point0.pos;
 
+		var max_pressure = Math.max(point0.pressure,point1.pressure);
 		var pressure_0=point0.pressure;
 		var d_pressure=point1.pressure - point0.pressure;
 
-		var weight_0pow2 = weight  *( ( pressure_0 - 1)*weight_pressure_effect + 1);
-		var weight_1pow2 = weight  *( (d_pressure + pressure_0 - 1)*weight_pressure_effect + 1);
-		var max_weight = Math.max(weight_0pow2,weight_1pow2);
-		var weight_0pow2 = weight_0pow2 * weight_0pow2;
-		var weight_1pow2 = weight_1pow2 * weight_1pow2;
+		var max_weight = max_pressure * weight;
+		if(weight_pressure_effect){
+			max_weight = weight;
+		};
 
 		var left = Math.min(pos1[0],pos0[0]);
 		var right= Math.max(pos1[0],pos0[0])+1;
@@ -288,59 +306,30 @@ Hdrpaint.commandObjs["brush"]=Brush;
 		}else{
 			Vec2.setValues(vec2,0,0);
 		}
-		Vec2.setValues(side,vec2[1],-vec2[0]);
-		Vec2.norm(side);
 
 
-		var drawfunc=brush_blend;
 		for(var dy=top;dy<bottom;dy++){
 			for(var dx=left;dx<right;dx++){
-				dist[0]=dx-pos0[0]+0.5;
-				dist[1]=dy-pos0[1]+0.5;
-				var dp = Vec2.dot(vec2,dist);
+				dist[0]=dx-pos0[0];
+				dist[1]=dy-pos0[1];
+				var dp = Math.max(Math.min(Vec2.dot(vec2,dist),1),0);
 				var l=0;
 				var l2=0;
 				var local_pressure=0;
-				if(dp<=0){
-					//始点より前
 					
-					if(Vec2.scalar2(dist)>=weight_0pow2){
-						continue;
-					}
-					dp=0;
-					l = Vec2.scalar(dist);
-					local_pressure = d_pressure * dp + pressure_0 ;
-					local_weight = weight  *( (local_pressure - 1)*weight_pressure_effect + 1);
-				}else if(dp>=1){
-					//終端より後
+				var local_pressure = d_pressure * dp + pressure_0 ;
+				var local_weight = ((local_pressure*weight_pressure_effect)+  (1-weight_pressure_effect)) * weight ;
 
-					dist[0]=dx-pos1[0]+0.5;
-					dist[1]=dy-pos1[1]+0.5;
-					
-					if(Vec2.scalar2(dist)>=weight_1pow2){
-						continue;
-					}
-					dp=1;
-					l = Vec2.scalar(dist);
-					local_pressure = d_pressure * dp + pressure_0 ;
-					local_weight = weight  *( (local_pressure - 1)*weight_pressure_effect + 1);
-				}else{
-					//線半ば
-					
-					local_pressure = d_pressure * dp + pressure_0 ;
-					var local_weight = weight  *( (local_pressure - 1)*weight_pressure_effect + 1);
-					l = Vec2.dot(dist,side);
-					if(l*l>=local_weight*local_weight){
-						//線幅より外の場合
-						continue;
-					}
-					Vec2.mul(dist,side,l);
-					l=Math.abs(l);
+				dist[0]=dx-(pos0[0] * (1-dp) + pos1[0]*(dp));
+				dist[1]=dy-(pos0[1] * (1-dp) + pos1[1]*(dp));
+				
+				
+				if(Vec2.scalar2(dist)>=local_weight * local_weight){
+					continue;
 				}
 				var idx = dy*img.width+ dx|0;
 
-				Vec2.mul(dist,dist,1/local_weight);
-				drawfunc(img_data,idx<<2,local_pressure,dist,painted_mask,local_weight,param);
+				brush_blend(img_data,idx<<2,local_pressure,dist,painted_mask,local_weight,param);
 			}
 		}
 

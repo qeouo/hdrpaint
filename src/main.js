@@ -14,8 +14,8 @@ import Layer from "./layer.js";
 import Util from "./lib/util.js";
 import ColorpickerHDR from "./lib/colorpickerhdr.js";
 import ColorSelector from "./lib/colorselector.js";
-import Binder from "./lib/binder.js";
-import Watcher from "./lib/watcher.js";
+import Binder from "./lib/binder/binder.js";
+import Watcher from "./lib/binder/watcher.js";
 var binder =new Binder();
 window.binder=binder;
 var watcher =new Watcher();
@@ -55,6 +55,8 @@ import "./command/resizeCanvas.js"
 import "./command/resizeLayer.js"
 import "./command/translate.js"
 import "./command/crop.js"
+import "./command/deleteanchor.js"
+import "./command/cutstroke.js"
 
 
 
@@ -74,6 +76,7 @@ import "./modifier/colormap.js";
 import "./modifier/noise.js";
 import "./modifier/link.js";
 import "./modifier/composite.js";
+import "./modifier/vector_layer.js";
 
 window.Brush= Brush;
 
@@ -111,12 +114,13 @@ var canvas_field;
 			shortcuts.push(shortcut);
 		}
 	}
-
+	
 
 	var getPos=function(e){
-		var rect = preview.getBoundingClientRect();
-		Hdrpaint.cursor_pos[0] =(e.clientX- rect.left)-1;
-		Hdrpaint.cursor_pos[1] = (e.clientY- rect.top)-1;
+		var canvas_field = document.querySelector("#canvas_field");
+		var rect = canvas_field.getBoundingClientRect();
+		Hdrpaint.cursor_pos[0] =(e.clientX- rect.left)-1 | 0;
+		Hdrpaint.cursor_pos[1] = (e.clientY- rect.top)-1 | 0;
 		
 		Hdrpaint.cursor_pos[0]*=100/Hdrpaint.doc.scale;
 		Hdrpaint.cursor_pos[1]*=100/Hdrpaint.doc.scale;
@@ -130,6 +134,10 @@ var onloadfunc=function(e){
 		return;
 	}
 
+
+	binder.init(document,Hdrpaint);
+	var colorpickerhdr = new ColorpickerHDR();
+	colorpickerhdr.init(document.getElementsByClassName("colorpickerhdr"));
 
 	preview=  document.getElementById('preview');
 	preview_ctx =  preview.getContext('2d')
@@ -145,9 +153,9 @@ var onloadfunc=function(e){
 
 	//blendfuncセット
 	var layer_blendfunc = document.querySelector("#layer_blendfunc");
-	 while(layer_blendfunc.firstChild){
-	 	layer_blendfunc.removeChild(layer_blendfunc.firstChild);
-	 }
+	while(layer_blendfunc.firstChild){
+		layer_blendfunc.removeChild(layer_blendfunc.firstChild);
+	}
 	for(var i=0;i<Hdrpaint.blendfuncsname.length;i++){
 		var name = Hdrpaint.blendfuncsname[i];
 		var option = document.createElement("option");
@@ -155,15 +163,6 @@ var onloadfunc=function(e){
 		Util.setText(option,name);
 		layer_blendfunc.appendChild(option);
 	}
-
-		
-
-	//ダイアログ閉じる処理
-	//document.querySelector(".dialog_parent").addEventListener("click",function(e){
-	//	if(this !== e.target)return false;
-	//	Hdrpaint.closeDialog();
-	//});
-
 
 	var keys=Object.keys(inputs);
 	for(var i=0;i<keys.length;i++){
@@ -174,7 +173,6 @@ var onloadfunc=function(e){
 		}
 	}
 
-	
 	var rag=null;
 
 	var absolute=new Vec2();
@@ -190,7 +188,15 @@ var onloadfunc=function(e){
 			if(inputs["selected_layer_only"].checked){
 				layer_id = Hdrpaint.selected_layer_id;
 			}
-			var img = hdrpaint.getLayerById(layer_id).img;
+			var layer = hdrpaint.getLayerById(layer_id);
+
+			var img = hdrpaint.getImgById(layer.img_id);
+
+			var vec3 = new Vec3(x,y,0);
+			layer.toRelative(vec3);
+			x = vec3[0];
+			y = vec3[1];
+
 			if(x<0 || x>=img.width || y<0 || y>img.height){
 			}else{
 				var data = img.data;
@@ -212,27 +218,31 @@ var onloadfunc=function(e){
 			if(!(e.buttons&1)){
 				return;
 			}
-			//矩形選択時
-			var rectangle = Hdrpaint.select_rectangle;
-			var x2 = Math.floor(x);
-			var y2 = Math.floor(y);
-			if(Hdrpaint.mode==="areamove"){
-				rectangle.x += (-drag_start[0] +x2);
-				rectangle.y += (-drag_start[1] +y2);
-				rectangle.x = Math.floor(rectangle.x);
-				rectangle.y = Math.floor(rectangle.y);
-				drag_start[0]=x2;
-				drag_start[1]=y2;
+			var layer =hdrpaint.getLayerById(hdrpaint.selected_layer_id);
+			if(layer.modifier==="vector"){
 			}else{
-				if(!rectangle){
-					rectangle={x:0,y:0,w:0,h:0};
-					Hdrpaint.select_rectangle=rectangle;
-				}
+				//矩形選択時
+				var rectangle = Hdrpaint.select_rectangle;
+				var x2 = Math.floor(x);
+				var y2 = Math.floor(y);
+				if(Hdrpaint.mode==="areamove"){
+					rectangle.x += (-drag_start[0] +x2);
+					rectangle.y += (-drag_start[1] +y2);
+					rectangle.x = Math.floor(rectangle.x);
+					rectangle.y = Math.floor(rectangle.y);
+					drag_start[0]=x2;
+					drag_start[1]=y2;
+				}else{
+					if(!rectangle){
+						rectangle={x:0,y:0,w:0,h:0};
+						Hdrpaint.select_rectangle=rectangle;
+					}
 
-				rectangle.x = Math.floor(Math.min(drag_start[0],x2));
-				rectangle.y = Math.floor(Math.min(drag_start[1],y2));
-				rectangle.w = Math.floor(Math.abs(drag_start[0]-x2));
-				rectangle.h = Math.floor(Math.abs(drag_start[1]-y2));
+					rectangle.x = Math.floor(Math.min(drag_start[0],x2));
+					rectangle.y = Math.floor(Math.min(drag_start[1],y2));
+					rectangle.w = Math.floor(Math.abs(drag_start[0]-x2));
+					rectangle.h = Math.floor(Math.abs(drag_start[1]-y2));
+				}
 			}
 
 
@@ -241,7 +251,14 @@ var onloadfunc=function(e){
 			//ペンのとき
 			if(!pen_log)return;
 
-			var point=new PenPoint();
+			var points= pen_log.obj.param.points;
+			var point;
+			if(e.buttons&1){
+				point=new PenPoint();
+				points.push(point);
+			}else{
+				point = pen_log.obj.param.points[pen_log.obj.param.points.length-1];
+			}
 			var layer = hdrpaint.getLayerById(hdrpaint.selected_layer_id);
 			var vec3 = new Vec3(x,y,0);
 			layer.toRelative(vec3);
@@ -256,43 +273,12 @@ var onloadfunc=function(e){
 			}else{
 				point.pressure=0;
 			}	
-			var points= pen_log.obj.param.points;
 
 			//今回座標をパスに追加
 			point.time=Date.now();
 
-			points.push(point);
-			if(inputs["stroke_correction"].checked){
-				if(points.length>=3 && pen_func.idx <points.length-2){
-					var buf=new Vec2();
-					Vec2.sub(buf,points[points.length-2].pos,points[points.length-3].pos);
-					var a=Vec2.scalar(buf);
-					if(a>20){
-						Vec2.norm(buf);
-						Vec2.mul(buf,buf,a-20);
-					}
-					Vec2.add(points[points.length-2].pos,points[points.length-3].pos,buf);
-				}
-			}
-
-			if(!(e.buttons&1)){
-
-				//描画前ポイントを補正
-					var points = pen_log.obj.param.points;
-				if(pen_func.idx +1<points.length){
-					var len = points.length - (pen_func.idx + 1) ;
-					var a = points[pen_func.idx].pressure;
-					var b = points[points.length-1].pressure;
-					for(var pi=pen_func.idx+1;pi<points.length;pi++){
-						var r = ((pi-pen_func.idx)/len);
-						points[pi].pressure = a + (b-a) * r;
-					}
-				}
-			}
-
 			if(!(e.buttons&1)){
 				pen_func.end();
-				point.pressure=0;
 				pen_log=null;
 			}	
 
@@ -332,30 +318,30 @@ var onloadfunc=function(e){
 						pen_log.obj.param.value=[Math.atan2(vec3[1] - layer.height*0.5,vec3[0]-layer.width*0.5)*(360/(Math.PI*2)) - pen_log.obj.param.offset];
 					}else{
 
-					var x =Hdrpaint.cursor_pos[0];
-					var y = Hdrpaint.cursor_pos[1];
+						var x =Hdrpaint.cursor_pos[0];
+						var y = Hdrpaint.cursor_pos[1];
 
-					var vec3 = new Vec3(x,y,0);
-					var parent_layer =  hdrpaint.getLayerById(layer.parent);
-					x=vec3[0];
-					y=vec3[1];
-					layer.scale[0]=1;
-					layer.scale[1]=1;
-					layer.toRelative(vec3);
-					x = (vec3[0] - pen_log.obj.param.offsetx - layer.width*0.5)/(layer.width*0.5);
-					y = (vec3[1] - pen_log.obj.param.offsety - layer.height*0.5)/(layer.height*0.5);
-					if(!pen_log.obj.param.areax){
-						x=pen_log.obj.undo_data.value[0];
-					}else{
-						x*=pen_log.obj.param.areax;
-					}
-					if(!pen_log.obj.param.areay){
-						y=pen_log.obj.undo_data.value[1];
-					}else{
-						y*=pen_log.obj.param.areay;
-					}
-					//一旦元の座標に戻してから再度移動させる
-					pen_log.obj.param.value=[x,y];
+						var vec3 = new Vec3(x,y,0);
+						var parent_layer =  hdrpaint.getLayerById(layer.parent);
+						x=vec3[0];
+						y=vec3[1];
+						layer.scale[0]=1;
+						layer.scale[1]=1;
+						layer.toRelative(vec3);
+						x = (vec3[0] - pen_log.obj.param.offsetx - layer.width*0.5)/(layer.width*0.5);
+						y = (vec3[1] - pen_log.obj.param.offsety - layer.height*0.5)/(layer.height*0.5);
+						if(!pen_log.obj.param.areax){
+							x=pen_log.obj.undo_data.value[0];
+						}else{
+							x*=pen_log.obj.param.areax;
+						}
+						if(!pen_log.obj.param.areay){
+							y=pen_log.obj.undo_data.value[1];
+						}else{
+							y*=pen_log.obj.param.areay;
+						}
+						//一旦元の座標に戻してから再度移動させる
+						pen_log.obj.param.value=[x,y];
 					}
 					pen_log.obj.func();
 
@@ -381,6 +367,18 @@ var onloadfunc=function(e){
 
 	window.addEventListener("pointerup",function(e){
 		getPos(e);
+
+		if(!(e.buttons&1) && (hdrpaint.mouse_button ===1 || hdrpaint.mouse_button===2)){
+			hdrpaint.mouse_button=3;
+		}
+
+		var layer = Hdrpaint.selected_layer;
+		if(layer.modifier ==="vector"){
+
+			layer.edit();
+		}
+
+
 		if(pen_log){
 			drawfunc(e);
 			e.preventDefault();
@@ -405,8 +403,6 @@ var onloadfunc=function(e){
 			down_target[0] = (e.clientX + down_offset[0]);
 			down_target[1] = (e.clientY + down_offset[1]);
 
-			var x =Hdrpaint.cursor_pos[0];
-			var y = Hdrpaint.cursor_pos[1];
 
 			layer.toRelative(down_target);
 			down_target[0] /=layer.width;
@@ -421,6 +417,14 @@ var onloadfunc=function(e){
 
 			return;
 		}
+	});
+	window.addEventListener("resize",function(e){
+		var ui_canvas =  document.getElementById('ui_canvas');
+		hdrpaint.ui_canvas = ui_canvas;
+		ui_canvas.width =  canvas_field.clientWidth;
+		ui_canvas.height= canvas_field.clientHeight;
+		hdrpaint.ui_ctx = ui_canvas.getContext('2d')
+
 	});
 	window.addEventListener("pointerdown",function(e){
 		if(e.target.classList[0] == "trapezoid_handle"){
@@ -446,7 +450,22 @@ var onloadfunc=function(e){
 
 
 	var canvas_field = document.querySelector("#canvas_field");
+	var ui_canvas =  document.getElementById('ui_canvas');
+	hdrpaint.ui_canvas = ui_canvas;
+	hdrpaint.ui_ctx = ui_canvas.getContext('2d')
+	window.setTimeout(()=>{
+		ui_canvas.width =  canvas_field.clientWidth;
+		ui_canvas.height= canvas_field.clientHeight;
+		hdrpaint.ui_ctx = ui_canvas.getContext('2d')
+	},100);
+
 	canvas_field.addEventListener("pointermove",function(e){
+		if(e.buttons&1 && hdrpaint.mouse_button ===1){
+			hdrpaint.mouse_button=2;
+		}
+		if(!(e.buttons&1)&& hdrpaint.mouse_button ===3){
+			hdrpaint.mouse_button=0;
+		}
 		getPos(e);
 		//Redraw.refreshPreviewStatus(e);
 		if(e.buttons){
@@ -454,14 +473,25 @@ var onloadfunc=function(e){
 			e.preventDefault();
 		}
 
+		var layer = Hdrpaint.selected_layer;
+		if(layer.modifier ==="vector"){
+			layer.edit();
+		}
+
+
 		if(e.buttons&4){
 			//中ボタンドラッグでキャンバス移動
 			//c.scrollLeft-=e.pageX-oldpos[0];
 			//c.scrollTop-=e.pageY-oldpos[1];
 			var doc = Hdrpaint.doc;
+			
+			var root_layer = hdrpaint.root_layer;
 
-			doc.canvas_pos[0]+=(e.pageX-oldpos[0]);
-			doc.canvas_pos[1]+=(e.pageY-oldpos[1]);
+			doc.canvas_pos = root_layer.position;
+			//doc.canvas_pos[0]+=(e.pageX-oldpos[0]);
+			//doc.canvas_pos[1]+=(e.pageY-oldpos[1]);
+			root_layer.position[0]+=(e.pageX-oldpos[0]);
+			root_layer.position[1]+=(e.pageY-oldpos[1]);
 
 			var c=document.getElementById("canvas_field");
 			var spacer=document.getElementById("spcaer");
@@ -479,11 +509,12 @@ var onloadfunc=function(e){
 			oldpos[0]=e.pageX;
 			oldpos[1]=e.pageY;
 
+			hdrpaint.redraw_ui=true;
 			
 		}
 	});
 
-	preview.addEventListener("contextmenu",function(e){
+	hdrpaint.ui_canvas.addEventListener("contextmenu",function(e){
 		event.preventDefault();
 	},false);
 	var handle_field= document.querySelector("#handles");
@@ -566,6 +597,9 @@ var onloadfunc=function(e){
 			e.preventDefault();
 			return;
 		}
+		if(e.buttons&1){
+			hdrpaint.mouse_button=1;
+		}
 
 		getPos(e);
 		var x =Hdrpaint.cursor_pos[0];
@@ -579,6 +613,11 @@ var onloadfunc=function(e){
 			return;
 		}
 
+		var layer = Hdrpaint.selected_layer;
+		if(layer.modifier ==="vector"){
+			layer.edit();
+		}
+		
 
 
 		Hdrpaint.mode="";
@@ -610,6 +649,11 @@ var onloadfunc=function(e){
 			}
 			//塗りつぶし
 
+			var vec3 = new Vec3(x,y,0);
+			hdrpaint.root_layer.toRelative(vec3);
+			x = vec3[0];
+			y = vec3[1];
+
 			var joined_img = Hdrpaint.root_layer.img;
 			if(x<0 || x>=joined_img.width || y<0 || y>=joined_img.height){
 				//範囲外は無視
@@ -619,10 +663,17 @@ var onloadfunc=function(e){
 			//Hdrpaint.selected_layer.getAbsolutePosition(absolute);
 			//x -= absolute[0];
 			//y -= absolute[1];
+			x =Hdrpaint.cursor_pos[0];
+			y = Hdrpaint.cursor_pos[1];
+			vec3 = new Vec3(x,y,0);
+			layer.toRelative(vec3);
+			x = vec3[0];
+			y = vec3[1];
 			if(x<0 || x>=layer.width || y<0 || y>=layer.height){
 				//範囲外は無視
 				return;
 			}
+
 			var color = new Float32Array(4);
 			Vec4.copy(color,Hdrpaint.color);
 			var flg_active_layer_only = inputs["selected_layer_only"].checked;
@@ -632,8 +683,11 @@ var onloadfunc=function(e){
 
 		}else if((Hdrpaint.selected_tool==="pen") && (e.buttons &1) ){
 			//ペンもしくは消しゴム
-			if(Hdrpaint.selected_layer.type !== 0){
-				//通常レイヤ以外は無効
+			if(Hdrpaint.selected_layer.modifier==="layer"){
+			//	param.img_id= Hdrpaint.selected_layer.img_id;
+			}else if(Hdrpaint.selected_layer.modifier==="vector"){
+			//	param.layer_id = Hdrpaint.selected_laye.idr
+			}else{
 				return;
 			}
 
@@ -647,21 +701,19 @@ var onloadfunc=function(e){
 			//ペン状態取得
 
 			var param={};
+			if(Hdrpaint.selected_layer.modifier==="layer"){
+				param.img_id= Hdrpaint.selected_layer.img_id;
+			}else if(Hdrpaint.selected_layer.modifier==="vector"){
+				param.layer_id = Hdrpaint.selected_layer.id;
+				param.img_id = -1;
+			}
 			Brush.setParam(param);
 			param.alpha_mask = Hdrpaint.selected_layer.mask_alpha;
 			param.points=[];
-			param.img_id= Hdrpaint.selected_layer.img_id;
 			pen_log = Hdrpaint.executeCommand("brush",param);
 			if(pen_log){
 				pen_func= new PenFunc();
 				pen_func.pen_log=pen_log;
-				if(inputs["stroke_correction"].checked){
-					pen_func.ragtime=40;
-				}else{
-					pen_func.ragtime=18;
-				}
-
-				drawfunc(e);
 			}
 		}
 
@@ -690,10 +742,7 @@ var onloadfunc=function(e){
 			break;
 		//case 32://space
 		case 87://w
-			//flg_active_layer_only=false;
 			Hdrpaint.selected_layer_only =false;
-		//	inputs["selected_layer_only"].checked=false;
-		//	Util.fireEvent(inputs["selected_layer_only"],"change");
 		}
 	});
 
@@ -755,6 +804,15 @@ var onloadfunc=function(e){
 				Img.copy(img,0,0,src_layer.img,range.x,range.y,range.w,range.h);
 
 				Hdrpaint.clipboard = img;
+			}else{
+				if(Hdrpaint.selected_tool !== "rectangle"){
+					break;
+				}
+				var layer = hdrpaint.selected_layer;
+				if(layer.modifier!=="vector"){
+					break;
+				}
+				layer.cutStroke();
 			}
 			break;
 
@@ -799,6 +857,15 @@ var onloadfunc=function(e){
 
 				//選択範囲をクリア
 				Hdrpaint.executeCommand("clear",{"layer_id":Hdrpaint.selected_layer.id,"range":range});
+			}else{
+				if(Hdrpaint.selected_tool !== "rectangle"){
+					break;
+				}
+				var layer = hdrpaint.selected_layer;
+				if(layer.modifier!=="vector"){
+					break;
+				}
+				layer.deleteAnchor();
 			}
 			break;
 		case 122-32://Z
@@ -1185,8 +1252,6 @@ function dataURIConverter(dataURI) {
 		Hdrpaint.doc.canvas_pos[0]=(canvas_field.clientWidth-512)>>1;
 		Hdrpaint.doc.canvas_pos[1]=(canvas_field.clientHeight-512)>>1;
 		
-		preview.style.left = Hdrpaint.doc.canvas_pos[0] + "px";
-		preview.style.top = Hdrpaint.doc.canvas_pos[1] + "px";
 
 		CommandLog.reset();
 
@@ -1200,28 +1265,33 @@ function dataURIConverter(dataURI) {
 	}
 
 	binder.bind(document.querySelector("#status2")
-		,"",Hdrpaint,["cursor_pos","cursor_pos","doc.scale"],(v)=>{
+		,"",Hdrpaint,["cursor_pos","doc.scale"],(v)=>{
 			var root_layer =hdrpaint.root_layer;
 			var img = root_layer.img;
 			var data = img.data;
 			var width=img.width;
 			var height=img.height;
 
-			if(v[0]<0 || v[1]<0 || v[0]>=width || v[1]>=height){
+			var vec3 = new Vec3(v[0][0],v[0][1],0);
+			root_layer.toRelative(vec3);
+			var x = vec3[0];
+			var y = vec3[1];
+
+			if(x<0 || y<0 || x>=width || y>=height){
 
 				Hdrpaint.cursor_color[0]=NaN;
 				Hdrpaint.cursor_color[1]=NaN;
 				Hdrpaint.cursor_color[2]=NaN;
 				Hdrpaint.cursor_color[3]=NaN;
-				return "倍率:" ; v[2] + " X:- Y:-";
+				return "倍率:" ; v[1] + " X:- Y:-";
 			}
 
-			var idx=img.getIndex(v[0]|0,v[1]|0)<<2;
+			var idx=img.getIndex(x|0,y|0)<<2;
 			Hdrpaint.cursor_color[0]= data[idx];
 			Hdrpaint.cursor_color[1]= data[idx+1];
 			Hdrpaint.cursor_color[2]= data[idx+2];
 			Hdrpaint.cursor_color[3]= data[idx+3];
-			return "倍率:" + v[2] + " X:" + v[0] +" Y:" + v[1];
+			return "倍率:" + (v[1]*0.01) + " X:" + x +" Y:" + y;
 	});
 
 	var f = (v)=>isNaN(v[0])?"-":v[0].toFixed(3);
@@ -1235,6 +1305,45 @@ function dataURIConverter(dataURI) {
 	binder.bind(document.querySelector("#pos_A")
 		,"",Hdrpaint,["cursor_color.3"],f);
 
+	var members = ["antialias","eraser","weight","softness","alpha","weight_pressure_effect","alpha_pressure_effect","stroke_interpolation","overlap"];
+	for(var i=0;i<members.length;i++){
+		var member = members[i];
+		watcher.watch(hdrpaint,["brush_status."+member],function(values){
+			var layer = hdrpaint.selected_layer;
+			if(layer.modifier==="vector" ){
+				var watch = this.watches[0];
+				var name = watch.variable_direction[watch.variable_direction.length-1];
+				layer.changeParam("brush."+name,values[0]);
+			}
+		});
+	}
+	var members = ["antialias","eraser","weight","softness","alpha","weight_pressure_effect","alpha_pressure_effect","stroke_interpolation","overlap"];
+	for(var i=0;i<members.length;i++){
+		var member = members[i];
+		watcher.watch(hdrpaint,["brush_status."+member],function(values){
+			var layer = hdrpaint.selected_layer;
+			if(layer.modifier==="vector" ){
+				var watch = this.watches[0];
+				var name = watch.variable_direction[watch.variable_direction.length-1];
+				layer.changeParam("brush."+name,values[0]);
+			}
+		});
+	}
+	watcher.watch(hdrpaint,["selected_tool"],function(old){
+		if(hdrpaint.selected_tool !== "pen"){
+			//アクティブブラシなし
+			//Hdrpaint.selected_brush=null;
+			for(var bi=0;bi<Hdrpaint.brushes.length;bi++){
+				var brush = Hdrpaint.brushes[bi];
+				brush.dom.classList.remove("active");
+			}
+		}else{
+			if(hdrpaint.selected_brush){
+				Hdrpaint.selected_brush.select();
+				}
+		}
+	});
+	
 	watcher.watch(hdrpaint,["doc.scale","doc.canvas_pos.0","doc.canvas_pos.1"],function(old){
 		hdrpaint.refreshSelectedRectangle()
 		hdrpaint.refreshLayerRectangle();
@@ -1273,20 +1382,20 @@ watcher.init();
 	brush1.select();
 
 
-	var colorpickerhdr = new ColorpickerHDR();
-	colorpickerhdr.init(document.getElementsByClassName("colorpickerhdr"));
-
-	binder.init(document,Hdrpaint);
 
 	var selectorhdr = new ColorSelector(true);
 	document.querySelector("#color_selector").appendChild(selectorhdr.div);
 	selectorhdr.changeCallback= function(){
-
+		var layer = hdrpaint.selected_layer;
 		Hdrpaint.color[0]= Number(this.R_txt.value);
 		Hdrpaint.color[1]= Number(this.G_txt.value);
 		Hdrpaint.color[2]= Number(this.B_txt.value);
 		Hdrpaint.color[3]= Number(this.A_txt.value);
 
+		if(layer.modifier==="vector" ){
+			layer.changeColor();
+
+		}
 		Brush.refreshPreview();
 	}
 
@@ -1295,7 +1404,6 @@ watcher.init();
 	selectorhdr.setColor(Hdrpaint.color);
 
 }
-
 
 
 document.body.onload=onloadfunc;

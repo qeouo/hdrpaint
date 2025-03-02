@@ -117,6 +117,8 @@ class Fill extends CommandBase{
 		var layer = Layer.findById(param.layer_id);
 
 		layer.getAbsolutePosition(offset);
+		offset[0] = 0;
+		offset[1] = 0;
 		var point_x = param.x;
 		var point_y = param.y;
 		var col = param.color;

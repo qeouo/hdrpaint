@@ -37,6 +37,15 @@ export default class CommandBase{
 				}
 			}
 		}
+		if(this.param.layer_id>=0){
+			var layer = Layer.findById(this.param.layer_id);
+			if(layer.modifier==="vector"){
+				layer.commands.pop();
+				var parent = hdrpaint.getLayerById(layer.parent);
+				parent.bubbleComposite();
+			}
+		}
+		hdrpaint.redraw_ui= true;
 	};
 	func(){
 		//メイン処理

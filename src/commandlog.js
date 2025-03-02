@@ -41,7 +41,6 @@ export default class CommandLog{
 		pen_log=null;
 		if(pen_func){
 			pen_func.end_flg=1;
-			pen_func.pen_log.obj.param.points.length=pen_func.idx;
 			pen_func=null;
 		}
 
@@ -75,7 +74,7 @@ export default class CommandLog{
 				if(command === log_command.name){
 					if(command === "changeLayerAttribute"){
 						if(log_command.param.layer_id === param.layer_id
-						&& log_command.param.name === param.name){
+						&& log_command.param.name.toString() === param.name.toString()){
 							log = current_log;
 						}
 					}else if(command === "translateLayer"){

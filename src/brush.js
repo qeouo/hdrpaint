@@ -222,26 +222,34 @@ export default class Brush{
 			Brush.refreshBrush();
 		}
 
-		static setParam(param){
-			var brush = Hdrpaint.brush_status;
-			param.color = new Float32Array(4);
-			param.color[0] = Hdrpaint.color[0];
-			param.color[1] = Hdrpaint.color[1];
-			param.color[2] = Hdrpaint.color[2];
-			param.color[3] = Hdrpaint.color[3];
-			param.weight=Number(brush.weight);
-			param.softness=Number(brush.softness);
-			param.antialias=Number(brush.antialias);
-			param.eraser = Number(brush.eraser);
-			param.alpha = brush.alpha;
-
-			
-			param.overlap=parseInt(brush.overlap);
-			param.pressure_effect_flgs= 
-				  (1 * Number(brush.weight_pressure_effect))
-				| (2 * Number(brush.alpha_pressure_effect));
-			param.alpha_pressure_effect = brush.alpha_pressure_effect;
-			param.stroke_interpolation = brush.stroke_interpolation;
+		static setParam(param,brush,_color){
+			if(!brush){
+				brush = Hdrpaint.brush_status;
+			}
+			var _brush = {};
+			var color = new Float32Array(4);
+			if(!_color){
+				color[0] = Hdrpaint.color[0];
+				color[1] = Hdrpaint.color[1];
+				color[2] = Hdrpaint.color[2];
+				color[3] = Hdrpaint.color[3];
+			}else{
+				color[0] = _color[0];
+				color[1] = _color[1];
+				color[2] = _color[2];
+				color[3] = _color[3];
+			}
+			param.color = color;
+			_brush.weight=Number(brush.weight);
+			_brush.softness=Number(brush.softness);
+			_brush.antialias=Number(brush.antialias);
+			_brush.eraser = Number(brush.eraser);
+			_brush.alpha = brush.alpha;
+			_brush.overlap=parseInt(brush.overlap);
+			_brush.weight_pressure_effect = brush.weight_pressure_effect;
+			_brush.alpha_pressure_effect = brush.alpha_pressure_effect;
+			_brush.stroke_interpolation = brush.stroke_interpolation;
+			param.brush= _brush;
 
 		}
 
@@ -251,24 +259,11 @@ export default class Brush{
 				Brush.setParam(param);
 			}else{
 				param.color = new Float32Array([0,0,0,1]);
-				param.weight=parseFloat(brush["weight"]);
-				param.softness=parseFloat(brush["softness"]);
-				param.antialias=brush.antialias;
-				param.alpha = brush.alpha;
-
-				param.eraser = brush.eraser;
-				
-				param.overlap=parseInt(brush.overlap);
-				param.pressure_effect_flgs= 
-					  (1 * brush.weight_pressure_effect)
-					| (2 * brush.alpha_pressure_effect);
-				param.alpha_pressure_effect= 
-					brush.alpha_pressure_effect;
-				param.stroke_interpolation = brush.stroke_interpolation;
+				param.brush = brush;
 			}
 
 			Hdrpaint.painted_mask.fill(0);
-			if(param.eraser){
+			if(param.brush.eraser){
 				//消しゴムの場合は黒でクリア
 				var data = pen_preview_img.data;
 				var size = data.length;

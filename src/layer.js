@@ -19,6 +19,9 @@ var DA=new Vec3();
 
 var refreshThumbnail=function(){
 	//サムネイル更新
+	if(stackThumbnail.length<=0){
+		return;
+	}
 	if(Layer.enableRefreshThumbnail){
 		var layer = stackThumbnail.shift();
 		layer.refreshThumbnail();
@@ -230,11 +233,12 @@ export default class Layer{
 
 		this.dom = dom;
 
-		binder.bind(dom.querySelector(".name"),"",this,"name");
+		var bind = binder.bind(dom.querySelector(".name"),"",this,"name");
 
 
 	};
-	init(){ };
+	init(){};
+	redraw(){};
 
 	static enableRefreshThumbnail=true;
 
@@ -517,7 +521,7 @@ calcYugami(A,B,C,D,P){
 		this.registRefreshThumbnail();
 	}
 	composite(left,top,right,bottom){
-		this.refreshImg(left,top,right,bottom);
+		this.refreshImg(left,top,right-left+1,bottom-top+1);
 	}
 
 	bubbleComposite(x,y,w,h){

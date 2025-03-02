@@ -10,7 +10,7 @@ import Mat43 from "./lib/mat43.js";
 class Hdrpaint{
 	constructor(){
 		this.root_layer=null; //最上位レイヤ
-		this.selected_tool="pen"; //選択しているツール
+		this.selected_tool=""; //選択しているツール
 		this.selected_layer_only=false; //選択レイヤのみプレビューに表示
 		this.color=new Vec4();
 		this.cursor_color=new Vec4(); //カーソル下のピクセル色
@@ -46,6 +46,10 @@ class Hdrpaint{
 			,ch_gamma:false
 			,gamma:2.2
 		};
+
+
+		//再描画フラグ
+		this.redraw_ui=false;
 	}
 
 	// レイヤの範囲を表す点線 
@@ -58,8 +62,8 @@ class Hdrpaint{
 		var absolute=new Vec2();
 		var mat43 = new Mat43();
 		this.selected_layer.getAbsoluteMatrix(mat43);
-		mat43[9] = mat43[9] * scale + doc.canvas_pos[0];
-		mat43[10] = mat43[10] * scale + doc.canvas_pos[1];
+		mat43[9] = mat43[9] * scale;// + doc.canvas_pos[0];
+		mat43[10] = mat43[10] * scale;// + doc.canvas_pos[1];
 
 		var l = new Vec3();
 		var s = new Vec3();
@@ -143,6 +147,7 @@ class Hdrpaint{
 			}
 		});
 
+		hdrpaint.redraw_ui=true;
 
 		if(inputs["selected_layer_only"].checked){
 			refreshPreview(1);
@@ -190,8 +195,6 @@ class Hdrpaint{
 		if(layer.type == 1){
 			layer.dom.classList.add("group");
 		}
-
-		//layer_div.addEventListener("click",layerSelect);
 
 		layer.img_id=img_id;
 		var img = this.imgs[img_id];
@@ -411,7 +414,6 @@ class Hdrpaint{
 
 		var log = CommandLog.createLog(command,param,flg);
 		CommandLog.appendOption();
-		var commandObjs = this.commandObjs;
 		if(!log.obj){
 			log.obj = this.createCommand(command,param);
 		}
